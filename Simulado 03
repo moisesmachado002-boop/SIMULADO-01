@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado Tático - Direito Administrativo (Poderes)</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151f32;
+            --primary-color: #1e3a8a;
+            --text-color: #f3f4f6;
+            --accent-color: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .question-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .question-number {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .option-item:hover {
+            background-color: #334155;
+            border-color: var(--accent-color);
+        }
+
+        .option-item.selected {
+            background-color: var(--primary-color);
+            border-color: var(--accent-color);
+        }
+
+        .option-item.correct {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-color: var(--success) !important;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .option-item.wrong {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-color: var(--danger) !important;
+            color: #ef4444;
+        }
+
+        .feedback {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .feedback.correct-bg {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+        }
+
+        .feedback.wrong-bg {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+        }
+
+        .btn-submit {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-submit:hover {
+            background-color: #2563eb;
+        }
+
+        #result-box {
+            background-color: #1e293b;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #result-box h2 {
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+        }
+
+        #score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Simulado Tático Nº 02</h1>
+        <p>Matéria: Direito Administrativo | Assunto: Poderes da Administração</p>
+    </header>
+
+    <form id="quiz-form" onsubmit="evaluateQuiz(event)">
+        
+        <!-- Questão 1 -->
+        <div class="question-card" data-correct="C">
+            <span class="question-number">QUESTÃO 01</span>
+            <div class="question-text">
+                A prerrogativa conferida à Administração Pública para condicionar, restringir ou limitar o exercício de direitos individuais ou atividades privadas, em benefício do interesse público ou da coletividade, refere-se ao Poder:
+            </div>
+            <ul class="options-list">
+                <li class="option-item" data-value="A">A) Disciplinar.</li>
+                <li class="option-item" data-value="B) Hierárquico.</li>
+                <li class="option-item" data-value="C) de Polícia.</li>
+                <li class="option-item" data-value="D) Regulamentar.</li>
+            </ul>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Questão 2 -->
+        <div class="question-card" data-correct="B">
+            <span class="question-number">QUESTÃO 02</span>
+            <div class="question-text">
+                Quando um Comandante de uma Unidade Policial Militar aplica uma sanção de suspensão a um soldado subordinado, após o devido processo administrativo, ele está fazendo uso imediato e combinado de quais poderes?
+            </div>
+            <ul class="options-list">
+                <li class="option-item" data-value="A">A) Poder de Polícia e Poder Vinculado.</li>
+                <li class="option-item" data-value="B) Poder Hierárquico e Poder Disciplinar.</li>
+                <li class="option-item" data-value="C) Poder Regulamentar e Poder de Polícia.</li>
+                <li class="option-item" data-value="D) Poder Discricionário e Poder de Polícia.</li>
+            </ul>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Questão 3 -->
+        <div class="question-card" data-correct="D">
+            <span class="question-number">QUESTÃO 03</span>
+            <div class="question-text">
+                O Poder de Polícia Administrativa se diferencia da Polícia Judiciária, dentre outros fatores, pelo fato de que a Polícia Administrativa:
+            </div>
+            <ul class="options-list">
+                <li class="option-item" data-value="A">A) É executada predominantemente por corporações de polícia civil e federal.</li>
+                <li class="option-item" data-value="B) Atua de forma eminentemente repressiva sobre as pessoas que cometem crimes.</li>
+                <li class="option-item" data-value="C) É regida predominantemente pelas normas do Código de Processo Penal.</li>
+                <li class="option-item" data-value="D) Incide sobre bens, direitos ou atividades, tendo caráter predominantemente preventivo.</li>
+            </ul>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Questão 4 -->
+        <div class="question-card" data-correct="A">
+            <span class="question-number">QUESTÃO 04</span>
+            <div class="question-text">
+                Os atributos que caracterizam o Poder de Polícia, permitindo que a Administração execute suas decisões diretamente, inclusive com o uso da força se necessário, sem autorização prévia do Poder Judiciário, são:
+            </div>
+            <ul class="options-list">
+                <li class="option-item" data-value="A">A) Autoexecutoriedade e Coercibilidade.</li>
+                <li class="option-item" data-value="B) Hierarquia e Disciplina.</li>
+                <li class="option-item" data-value="C) Discricionariedade e Legalidade estrita.</li>
+                <li class="option-item" data-value="D) Impessoalidade e Publicidade absoluta.</li>
+            </ul>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Questão 5 -->
+        <div class="question-card" data-correct="B">
+            <span class="question-number">QUESTÃO 05</span>
+            <div class="question-text">
+                Sobre a relação de coordenação e subordinação existente entre os órgãos e agentes no âmbito da Administração Pública, assinale a alternativa que indica o poder que permite delegar competências e avocar atribuições:
+            </div>
+            <ul class="options-list">
+                <li class="option-item" data-value="A">A) Poder Regulamentar.</li>
+                <li class="option-item" data-value="B) Poder Hierárquico.</li>
+                <li class="option-item" data-value="C) Poder de Polícia.</li>
+                <li class="option-item" data-value="D) Poder Disciplinar.</li>
+            </ul>
+            <div class="feedback"></div>
+        </div>
+
+        <button type="submit" class="btn-submit">Finalizar Missão e Corrigir</button>
+    </form>
+
+    <div id="result-box">
+        <h2>RESULTADO DO COMBATENTE</h2>
+        <p id="score"></p>
+        <p id="performance-msg"></p>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.question-card').forEach(card => {
+        const options = card.querySelectorAll('.option-item');
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                if(card.classList.contains('evaluated')) return;
+                
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+    });
+
+    function evaluateQuiz(event) {
+        event.preventDefault();
+        
+        const cards = document.querySelectorAll('.question-card');
+        let correctCount = 0;
+        let totalQuestions = cards.length;
+
+        cards.forEach(card => {
+            card.classList.add('evaluated');
+            const correctAnswer = card.getAttribute('data-correct');
+            const selectedOption = card.querySelector('.option-item.selected');
+            const feedbackBox = card.querySelector('.feedback');
+            
+            const explanations = {
+                "1": "Gabarito: C. O Poder de Polícia restringe e condiciona bens e direitos individuais em prol do interesse público.",
+                "2": "Gabarito: B. A punição interna decorre do Poder Disciplinar, que por sua vez pressupõe a relação de subordinação do Poder Hierárquico.",
+                "3": "Gabarito: D. A Polícia Administrativa foca em ilícitos administrativos (incide sobre bens/atividades e é preventiva), enquanto a Judiciária foca em ilícitos penais (pessoas).",
+                "4": "Gabarito: A. A autoexecutoriedade permite agir sem o Judiciário; a coercibilidade traz a imposição e o uso da força se necessário.",
+                "5": "Gabarito: B. A distribuição de funções, a delegação e a avocação são expressões típicas da relação de subordinação do Poder Hierárquico."
+            };
+            
+            const qNum = card.querySelector('.question-number').innerText.replace('QUESTÃO ', '').replace(/^0/, '');
+
+            card.querySelectorAll('.option-item').forEach(opt => {
+                if(opt.getAttribute('data-value') === correctAnswer) {
+                    opt.classList.add('correct');
+                }
+            });
+
+            if (selectedOption) {
+                const selectedValue = selectedOption.getAttribute('data-value');
+                
+                if (selectedValue === correctAnswer) {
+                    correctCount++;
+                    feedbackBox.innerText = "⚡ CORRETO! " + explanations[qNum];
+                    feedbackBox.className = "feedback correct-bg";
+                } else {
+                    selectedOption.classList.add('wrong');
+                    feedbackBox.innerText = "❌ ADVERTÊNCIA! " + explanations[qNum];
+                    feedbackBox.className = "feedback wrong-bg";
+                }
+            } else {
+                feedbackBox.innerText = "⚠️ NÃO RESPONDIDA. " + explanations[qNum];
+                feedbackBox.className = "feedback wrong-bg";
+            }
+            feedbackBox.style.display = "block";
+        });
+
+        const resultBox = document.getElementById('result-box');
+        const scoreText = document.getElementById('score');
+        const msgText = document.getElementById('performance-msg');
+        
+        scoreText.innerText = `${correctCount} de ${totalQuestions} Acertos (${(correctCount/totalQuestions*100).toFixed(0)}%)`;
+        
+        if(correctCount === totalQuestions) {
+            msgText.innerText = "Excelente, recruta! Desempenho digno de Força Especial. Mantenha o foco!";
+            msgText.style.color = "#10b981";
+        } else if(correctCount >= 3) {
+            msgText.innerText = "Bom desempenho! Está no caminho da aprovação, mas revise os erros para gabaritar.";
+            msgText.style.color = "#3b82f6";
+        } else {
+            msgText.innerText = "Atenção! Volte à doutrina e reforce os estudos sobre este poder. Não desista!";
+            msgText.style.color = "#ef4444";
+        }
+        
+        resultBox.style.display = "block";
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
