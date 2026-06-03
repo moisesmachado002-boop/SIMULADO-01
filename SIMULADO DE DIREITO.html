@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado Tático - Correção Detalhada</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #38bdf8; --correct: #22c55e; --wrong: #ef4444; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; padding-bottom: 60px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--accent); padding-bottom: 15px; }
+        .timer-box { position: fixed; top: 10px; right: 10px; background: #ef4444; color: white; padding: 10px 15px; border-radius: 5px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        input[type="text"] { width: 100%; padding: 12px; margin-top: 10px; background: var(--bg); color: white; border: 1px solid var(--accent); border-radius: 4px; box-sizing: border-box; text-transform: uppercase; }
+        .question-title { font-weight: bold; margin-bottom: 15px; color: var(--accent); }
+        .option { display: block; background: #334155; padding: 12px; margin: 8px 0; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .option:hover { background: #475569; }
+        .selected { background: #0284c7; border-color: var(--accent); }
+        .btn-submit { background: var(--correct); color: white; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .btn-submit:hover { opacity: 0.9; }
+        .badge { background: #475569; padding: 3px 8px; border-radius: 3px; font-size: 12px; margin-bottom: 5px; display: inline-block; }
+        
+        /* Estilos da Correção Pós-Envio */
+        .opt-correta { background: rgba(34, 197, 94, 0.2) !important; border: 1px solid var(--correct) !important; color: #6bf193; }
+        .opt-errada { background: rgba(239, 68, 68, 0.2) !important; border: 1px solid var(--wrong) !important; color: #fca5a5; }
+        
+        .feedback-detalhado { margin-top: 15px; padding: 15px; background: #0f172a; border-radius: 6px; font-size: 14px; display: none; line-height: 1.5; border-left: 4px solid var(--accent); }
+        .item-bizu { background: #1e293b; padding: 8px; border-radius: 4px; margin-top: 5px; border-left: 3px solid #eab308; color: #fef08a; }
+        #painel-nota { display: none; background: #0284c7; text-align: center; padding: 25px; border-radius: 8px; margin-bottom: 30px; font-size: 22px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="timer-box" id="box-tempo">⏱️ TEMPO: <span id="timer">45:00</span></div>
+
+    <div class="container">
+        <header>
+            <h2>⚡ SIMULADO OPERACIONAL DE DIREITO ⚡</h2>
+            <p>Foco: Carreiras Policiais Militares | Correção com Bizus Alternativa por Alternativa</p>
+        </header>
+
+        <div id="painel-nota"></div>
+
+        <div class="card" id="card-identificacao">
+            <label style="font-weight: bold; color: var(--accent);">NOME COMPLETO DO CANDIDATO:</label>
+            <input type="text" id="nome-aluno" placeholder="Digite seu nome para o Ranking">
+        </div>
+
+        <div id="caderno-questoes"></div>
+
+        <button class="btn-submit" id="btn-enviar" onclick="enviarSimulado()">FINALIZAR E ENVIAR RESPOSTAS</button>
+    </div>
+
+<script>
+    // Banco de dados com explicações completas para CADA alternativa e BIZUS
+    const questoes = [
+        { 
+            id: 1, tag: "D. Constitucional", g: "C",
+            q: "No que tange aos direitos e garantias fundamentais previstos na CF/88, a casa é asilo inviolável do indivíduo. Sob essa ótica, é correto afirmar que o ingresso forçado durante a noite SEM consentimento do morador só é admitido em caso de:", 
+            out: ["A) Determinação judicial.", "B) Flagrante delito ou desastre apenas.", "C) Flagrante delito, desastre, ou para prestar socorro.", "D) Investigação policial urgente.", "E) Intimação de oficial de justiça."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> Ordem judicial só vale durante o <b>DIA</b>. À noite, nem o juiz autoriza a entrada forçada.",
+                B: "<b>[ERRADA]</b> O termo 'apenas' excluiu a prestação de socorro, deixando a questão incompleta.",
+                C: "<b>[CORRETA - GABARITO]</b> É a literalidade do Art. 5º, XI. Nessas 3 situações, entra-se a qualquer hora.",
+                D: "<b>[ERRADA]</b> A urgência da polícia não quebra a regra da casa. Exige-se flagrante real ou mandado para o dia.",
+                E: "<b>[ERRADA]</b> O Oficial cumpre ordem judicial, logo, também se limita ao período do dia."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Para entrar à noite sem autorização, lembre-se do <b>🎨 P.D.F.</b> -> <b>P</b>restar socorro, <b>D</b>esastre, <b>F</b>lagrante delito. Ordem judicial = Apenas de <b>D</b>ia (<b>D</b>eterminação = <b>D</b>ia)."
+        },
+        { 
+            id: 2, tag: "D. Constitucional", g: "A",
+            q: "Qual dos remédios constitucionais a seguir é cabível para assegurar o conhecimento de informações relativas à pessoa do impetrante, constantes de registros ou bancos de dados de entidades governamentais ou de caráter público?", 
+            out: ["A) Habeas Data.", "B) Mandado de Segurança.", "C) Habeas Corpus.", "D) Mandado de Injunção.", "E) Ação Popular."], 
+            detalhes: {
+                A: "<b>[CORRETA - GABARITO]</b> O Habeas Data serve exatamente para garantir acesso ou retificação de dados pessoais.",
+                B: "<b>[ERRADA]</b> O MS protege direito líquido e certo, mas é residual (só se não couber HC ou HD).",
+                C: "<b>[ERRADA]</b> O Habeas Corpus protege o corpo, ou seja, a liberdade física de locomoção (ir e vir).",
+                D: "<b>[ERRADA]</b> O Mandado de Injunção é para quando a falta de uma lei impede o exercício de um direito.",
+                E: "<b>[ERRADA]</b> A Ação Popular serve para combater atos lesivos ao patrimônio público, meio ambiente e moralidade."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Associou as palavras? <b>D</b>ados Pessoais = Habeas <b>D</b>ata. Liberdade de Locomoção/<b>C</b>orpo = Habeas <b>C</b>orpus. Falta de regulamentação/<b>I</b>nexistência de lei = Mandado de <b>I</b>njunção."
+        },
+        { 
+            id: 3, tag: "D. Constitucional", g: "E",
+            q: "A Constituição Federal proíbe expressamente a criação de penas de caráter perpétuo e de trabalhos forçados. Contudo, admite-se legalmente em tempo de guerra declarada a pena de:", 
+            out: ["A) Banimento.", "B) Galés.", "C) Cruel.", "D) Prisão rigorosa.", "E) Morte."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> Pena de banimento é proibida de forma absoluta pela CF/88, sem exceções.",
+                B: "<b>[ERRADA]</b> Pena de galés (trabalho forçado em navios/obras) é totalmente proibida.",
+                C: "<b>[ERRADA]</b> Penas cruéis são rechaçadas de forma absoluta pela dignidade humana.",
+                D: "<b>[ERRADA]</b> Não possui previsão constitucional como exceção ao rol de penas vedadas.",
+                E: "<b>[CORRETA - GABARITO]</b> A pena de morte é a única do rol que possui uma exceção: caso de guerra declarada."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> A banca vai tentar te derrubar dizendo que 'não existe pena de morte no Brasil sob nenhuma hipótese'. Não caia! Em caso de guerra declarada, existe sim (será por fuzilamento, segundo o Código Penal Militar)."
+        },
+        { 
+            id: 4, tag: "D. Constitucional", g: "B",
+            q: "Qual dos seguintes direitos NÃO é classificado expressamente pela CF/88 como um direito social (Art. 6º)?", 
+            out: ["A) A moradia.", "B) A propriedade.", "C) A saúde.", "D) A segurança.", "E) A previdência social."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> A moradia é um direito social explícito incluído no Art. 6º.",
+                B: "<b>[CORRETA - GABARITO]</b> A propriedade é um direito <b>INDIVIDUAL</b> fundamental (Art. 5º, XXII), não social.",
+                C: "<b>[ERRADA]</b> A saúde é um direito social fundamental de dever do Estado.",
+                D: "<b>[ERRADA]</b> A segurança é direito social (Art. 6º) e dever do Estado/direito de todos (Art. 144).",
+                E: "<b>[ERRADA]</b> A previdência social faz parte dos direitos sociais desde a redação original."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Mnemônico para gabaritar Direitos Sociais: <i>'EDU MORA LÁ, SAÚDE TRABALHA ALI, ASSIS PROSEG TRANSPORTE NA PREVIDÊNCIA'</i> (Educação, Moradia, Lazer, Saúde, Trabalho, Alimentação, Assistência, Proteção, Segurança, Transporte, Previdência). Propriedade é individual!"
+        },
+        { 
+            id: 5, tag: "D. Penal", g: "D",
+            q: "Mário, mediante grave ameaça exercida com simulacro de arma de fogo, subtrai o aparelho celular de uma pedestre. Diante do Código Penal brasileiro, a conduta de Mário amolda-se perfeitamente ao crime de:", 
+            out: ["A) Furto qualificado.", "B) Extorsão.", "C) Constrangimento ilegal.", "D) Roubo simples.", "E) Roubo majorado pelo emprego de arma."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> No furto não pode haver violência nem grave ameaça contra a pessoa.",
+                B: "<b>[ERRADA]</b> Na extorsão é necessária a colaboração da vítima entregando algo. No roubo, o agente toma.",
+                C: "<b>[ERRADA]</b> O crime de constrangimento é genérico e acaba absorvido pelo Roubo quando há subtração.",
+                D: "<b>[CORRETA - GABARITO]</b> O uso de arma de brinquedo configura a grave ameaça do roubo simples (Art. 157, caput).",
+                E: "<b>[ERRADA]</b> O STJ cancelou a súmula que aumentava a pena por arma de brinquedo. Exige-se arma de verdade."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Arma de brinquedo (simulacro) <b>NÃO</b> aumenta pena no roubo! Ela serve apenas para assustar a vítima e enquadrar no roubo simples. Para majorar (subir a pena), a arma precisa ter poder de fogo ou corte real."
+        },
+        { 
+            id: 6, tag: "D. Penal", g: "C",
+            q: "Considera-se em estado de necessidade quem pratica o fato para salvar de perigo atual, que não provocou por sua vontade, nem podia de outro modo evitar, direito próprio ou alheio. O estado de necessidade é classificado juridicamente como uma causa de:", 
+            out: ["A) Exclusão da tipicidade.", "B) Exclusão da culpabilidade.", "C) Exclusão da ilicitude (excludente de ilicitude).", "D) Extinção da punibilidade.", "E) Isenção de pena por motivo relevante."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> O fato é típico (está na lei), o que muda é que ele deixa de ser contra o direito (ilícito).",
+                B: "<b>[ERRADA]</b> A culpabilidade analisa a imputabilidade e potencial consciência da ilicitude, não o perigo.",
+                C: "<b>[CORRETA - GABARITO]</b> Conforme o Art. 23 do CP, o Estado de Necessidade quebra a ilicitude do ato.",
+                D: "<b>[ERRADA]</b> Extinção ocorre por fatores como a morte do réu ou a prescrição do tempo.",
+                E: "<b>[ERRADA]</b> Não há crime, logo, não se discute mera isenção de aplicação de pena."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Decore as 4 causas que excluem a ilicitude pelo mnemônico <b>🎨 C.H.E.L.</b> -> <b>C</b>umprimento do dever legal, <b>E</b>xercício regular de direito, <b>E</b>stado de necessidade, <b>L</b>egítima defesa."
+        },
+        { 
+            id: 7, tag: "D. Penal", g: "A",
+            q: "Apropriar-se o funcionário público de dinheiro, valor ou qualquer outro bem móvel, público ou particular, de que tem a posse em razão do cargo, ou desviá-lo em proveito próprio ou alheio, configura o crime de:", 
+            out: ["A) Peculato.", "B) Concussão.", "C) Corrupção passiva.", "D) Prevaricação.", "E) Advocacia administrativa."], 
+            detalhes: {
+                A: "<b>[CORRETA - GABARITO]</b> É a cópia exata do Artigo 312 do Código Penal (Peculato-apropriação ou desvio).",
+                B: "<b>[ERRADA]</b> Na Concussão, o verbo principal obrigatoriamente é <b>EXIGIR</b>.",
+                C: "<b>[ERRADA]</b> Na Corrupção Passiva, os verbos são <b>SOLICITAR, RECEBER ou ACEITAR</b>.",
+                D: "<b>[ERRADA]</b> Na Prevaricação, o funcionário atrasa ou deixa de fazer o trabalho para agradar sentimento pessoal.",
+                E: "<b>[ERRADA]</b> Advocacia administrativa é usar o cargo para patrocinar interesse privado dentro da repartição."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Mate a questão pelo verbo! <b>Apropriar/Desviar</b> em razão do cargo = Peculato. <b>Exigir</b> = Concussão (lembre do C de Coação). <b>Solicitar/Receber</b> = Corrupção Passiva. <b>Sentimento pessoal</b> = Prevaricação."
+        },
+        { 
+            id: 8, tag: "D. Administrativo", g: "B",
+            q: "O princípio da Administração Pública que veda a promoção pessoal de agentes públicos em obras, serviços ou campanhas da máquina estatal, exigindo que a atuação seja imputada apenas ao órgão, é o princípio da:", 
+            out: ["A) Legalidade.", "B) Impessoalidade.", "C) Moralidade.", "D) Publicidade.", "E) Eficiência."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> A legalidade foca na subordinação total da atuação pública à lei existente.",
+                B: "<b>[CORRETA - GABARITO]</b> A impessoalidade impede que o agente use a máquina para fazer marketing de si mesmo.",
+                C: "<b>[ERRADA]</b> A moralidade impõe padrões éticos e de honestidade, indo além da simples lei.",
+                D: "<b>[ERRADA]</b> A publicidade exige transparência e publicação oficial para controle dos atos.",
+                E: "<b>[ERRADA]</b> A eficiência busca o melhor resultado com o menor gasto de recursos possível."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Viu a proibição de colocar 'nome, foto, marcas ou símbolos' de prefeitos/governadores em obras ou viaturas? O princípio violado é a <b>Impessoalidade</b>. O ato é do Estado, não do indivíduo."
+        },
+        { 
+            id: 9, tag: "D. Administrativo", g: "E",
+            q: "Os atributos dos atos administrativos conferem prerrogativas ao Poder Público. A prerrogativa que permite à Administração aplicar sanções ou executar suas decisões de forma direta, usando a força pública se necessário, sem precisar de autorização prévia do Judiciário, é a:", 
+            out: ["A) Presunção de legitimidade.", "B) Imperatividade.", "C) Tipicidade.", "D) Discricionariedade.", "E) Autoexecutoriedade."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> Significa que os atos do governo são considerados válidos e verdadeiros até que provem o contrário.",
+                B: "<b>[ERRADA]</b> É a capacidade de impor obrigações aos particulares (ex: você é obrigado a parar na blitz).",
+                C: "<b>[ERRADA]</b> Garante que o ato administrativo deve estar previamente definido em lei.",
+                D: "<b>[ERRADA]</b> É a margem de escolha do administrador baseada na conveniência e oportunidade.",
+                E: "<b>[CORRETA - GABARITO]</b> A autoexecutoriedade permite executar o ato diretamente (ex: guinchar carro, dispersar multidão)."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Falou que a Administração Pública age <b>'independente de ordem do juiz'</b> ou <b>'usando a força policial diretamente'</b>, o atributo é a <b>Autoexecutoriedade</b> (executa por si mesma)."
+        },
+        { 
+            id: 10, tag: "D. Administrativo", g: "D",
+            q: "A revogação de um ato administrativo ocorre por motivos de conveniência e oportunidade da própria Administração Pública. Os efeitos gerados por uma revogação operam de forma:", 
+            out: ["A) Retroativa (Ex tunc).", "B) Repristinatória.", "C) Suspensiva imediata.", "D) Não retroativa (Ex nunc).", "E) Anulatória absoluta."], 
+            detalhes: {
+                A: "<b>[ERRADA]</b> O efeito retroativo (Ex Tunc) pertence à <b>Anulação</b> (quando o ato praticado era ilegal).",
+                B: "<b>[ERRADA]</b> Efeito repristinatório é fazer um ato antigo voltar a valer, o que não é o caso aqui.",
+                C: "<b>[ERRADA]</b> A revogação extingue o ato em definitivo, não provoca mera suspensão.",
+                D: "<b>[CORRETA - GABARITO]</b> A revogação destrói um ato que era válido e legal. Logo, respeita o passado e vale dali para frente.",
+                E: "<b>[ERRADA]</b> A anulação extingue atos ilegais; a revogação extingue atos que perderam a conveniência."
+            },
+            bizu: "<b>🔥 BIZU DE QUARTEL:</b> Decore as direções do efeito pelo tapa: Tapinha na <b>T</b>esta -> a cabeça vai para trás (Ex <b>T</b>unc = Retroage/Apaga o passado - Anulação). Tapinha na <b>N</b>uca -> a cabeça vai para frente (Ex <b>N</b>unc = Não retroage/Vale do presente para frente - Revogação)."
+        }
+    ];
+
+    let respostasCandidato = {};
+    let finalizado = false;
+
+    // Renderizar caderno de prova dinamicamente
+    const containerQuestoes = document.getElementById('caderno-questoes');
+    questoes.forEach(item => {
+        let card = document.createElement('div');
+        card.className = 'card';
+        card.id = `card-q-${item.id}`;
+        card.innerHTML = `
+            <span class="badge">${item.tag}</span>
+            <div class="question-title">Questão 0${item.id}:</div>
+            <p>${item.q}</p>
+            ${item.out.map(opt => `<div class="option" data-q="${item.id}" data-letter="${opt[0]}" onclick="marcarOpcao(this)">${opt}</div>`).join('')}
+            
+            <!-- Painel Avançado Alternativa por Alternativa -->
+            <div class="feedback-detalhado" id="feedback-detalhado-${item.id}">
+                <strong style="color:var(--accent); display:block; margin-bottom:8px;">🔎 ANÁLISE COMPLETA DAS ALTERNATIVAS:</strong>
+                <div style="margin-bottom:6px;">${item.detalhes.A}</div>
+                <div style="margin-bottom:6px;">${item.detalhes.B}</div>
+                <div style="margin-bottom:6px;">${item.detalhes.C}</div>
+                <div style="margin-bottom:6px;">${item.detalhes.D}</div>
+                <div style="margin-bottom:8px;">${item.detalhes.E}</div>
+                <div class="item-bizu">${item.bizu}</div>
+            </div>
+        `;
+        containerQuestoes.appendChild(card);
+    });
+
+    function marcarOpcao(elemento) {
+        if (finalizado) return;
+        let qNum = elemento.getAttribute('data-q');
+        let letra = elemento.getAttribute('data-letter');
+        respostasCandidato[qNum] = letra;
+
+        let irmas = document.querySelectorAll(`.option[data-q="${qNum}"]`);
+        irmas.forEach(opt => opt.classList.remove('selected'));
+        elemento.classList.add('selected');
+    }
+
+    // Cronômetro
+    let tempoRestante = 45 * 60;
+    const displayTimer = document.getElementById('timer');
+    let intervalo = setInterval(() => {
+        let minutos = Math.floor(tempoRestante / 60);
+        let segundos = tempoRestante % 60;
+        displayTimer.innerText = `${minutos < 10 ? '0' : ''}${minutos}:${segundos < 10 ? '0' : ''}${segundos}`;
+        if (tempoRestante <= 0) {
+            clearInterval(intervalo);
+            alert("Tempo esgotado! Enviando respostas.");
+            enviarSimulado();
+        }
+        tempoRestante--;
+    }, 1000);
+
+    function enviarSimulado() {
+        let nome = document.getElementById('nome-aluno').value.trim();
+        if (!nome) { alert("Atenção, Recruta! Digite o seu nome para computar no Ranking."); return; }
+        
+        for (let i = 1; i <= 10; i++) {
+            if (!respostasCandidato[i]) { alert(`A questão ${i} não foi respondida!`); return; }
+        }
+
+        clearInterval(intervalo);
+        finalizado = true;
+
+        // URL e Chaves do seu Google Forms (Envio Oculto)
+        let urlForms = "https://docs.google.com/forms/d/e/1FAIpQLSeG4HI-t_Bsy4tg9m378iklMfUJMOkOZrJT6U88LovmCw93eA/formResponse";
+        let formData = new FormData();
+        
+        formData.append("entry.769243475", nome);
+        formData.append("entry.14996385", respostasCandidato[1]);
+        formData.append("entry.252826007", respostasCandidato[2]);
+        formData.append("entry.1650806709", respostasCandidato[3]);
+        formData.append("entry.882271258", respostasCandidato[4]);
+        formData.append("entry.1990026167", respostasCandidato[5]);
+        formData.append("entry.1977337795", respostasCandidato[6]);
+        formData.append("entry.868281785", respostasCandidato[7]);
+        formData.append("entry.1807095031", respostasCandidato[8]);
+        formData.append("entry.623181936", respostasCandidato[9]);
+        formData.append("entry.596543243", respostasCandidato[10]);
+
+        fetch(urlForms, { method: "POST", mode: "no-cors", body: formData })
+        .then(() => {
+            exibirCorrecaoNaTela();
+        }).catch(() => {
+            exibirCorrecaoNaTela();
+        });
+    }
+
+    function exibirCorrecaoNaTela() {
+        document.getElementById('box-tempo').style.display = 'none';
+        document.getElementById('btn-enviar').style.display = 'none';
+        
+        let acertos = 0;
+        
+        questoes.forEach(item => {
+            let userAns = respostasCandidato[item.id];
+            let correctAns = item.g;
+            
+            if (userAns === correctAns) { acertos++; }
+            
+            let opcoesDaQuestao = document.querySelectorAll(`.option[data-q="${item.id}"]`);
+            opcoesDaQuestao.forEach(opt => {
+                let letraOpt = opt.getAttribute('data-letter');
+                opt.classList.remove('selected');
+                
+                if (letraOpt === correctAns) {
+                    opt.classList.add('opt-correta'); 
+                } else if (letraOpt === userAns && userAns !== correctAns) {
+                    opt.classList.add('opt-errada'); 
+                }
+            });
+            
+            // Ativa o painel oculto de correção detalhada por letra + Bizu
+            document.getElementById(`feedback-detalhado-${item.id}`).style.display = 'block';
+        });
+
+        let porcentagem = (acertos / 10) * 100;
+        let painel = document.getElementById('painel-nota');
+        painel.style.display = 'block';
+        painel.innerHTML = `🏁 SIMULADO FINALIZADO E ENVIADO!<br><b>Resultado: ${acertos} Acertos de 10 (${porcentagem}%)</b><br><span style="font-size:14px; font-weight:normal;">Análise de cada alternativa liberada abaixo para estudo tático.</span>`;
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>
