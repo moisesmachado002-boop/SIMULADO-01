@@ -1,28 +1,40 @@
-# Mentor IA — V1.2
+# Mentor IA — V1.3
 
-Protótipo de uma mentora de estudos adaptativa. O objetivo é ir além de um simples percentual de acertos e transformar cada resposta em evidência sobre o conhecimento do aluno.
+Protótipo de uma mentora de estudos adaptativa focada em transformar desempenho real em um mapa de conhecimento.
 
-## O que a V1.2 já faz
+## Principal mudança da V1.3
 
-- diagnóstico com 12 questões próprias de demonstração;
-- registro de acerto/erro, dificuldade, confiança, tempo e raciocínio opcional;
-- mapa de domínio por matéria e por assunto;
-- confiabilidade da estimativa conforme a quantidade de evidências;
-- pequena perda de confiança quando um assunto passa muitos dias sem nova evidência;
-- detecção de erros com confiança alta, respostas lentas e erros muito rápidos;
-- missão diária gerada a partir da principal fraqueza;
-- objetivo configurável (concurso, meta de acertos e minutos por dia);
-- histórico local das tentativas;
-- mentora local baseada em regras para sugerir estudo, revisão e avanço.
+A plataforma deixa de depender de questões próprias de demonstração como fluxo principal. O aluno usa questões reais no Qconcursos e registra os resultados das baterias na Mentor IA.
+
+## Modo Q
+
+- botão direto para abrir o banco de questões do Qconcursos;
+- possibilidade de salvar o link de um filtro já montado no Q;
+- registro rápido de baterias (matéria, assunto, quantidade, acertos, confiança e tempo);
+- link opcional da origem e observações pessoais;
+- atualização automática do domínio por matéria e assunto;
+- resumo separado de quantas baterias e questões reais do Q foram registradas;
+- recomendações da mentora apontando a próxima matéria/assunto para testar no Q;
+- histórico identifica registros provenientes do Qconcursos.
+
+## O que a mentora considera
+
+- taxa de acertos;
+- quantidade de questões da bateria;
+- confiança informada pelo aluno;
+- tempo por questão quando disponível;
+- matéria e assunto;
+- recência das evidências;
+- quantidade acumulada de evidências.
 
 ## Limitações atuais
 
-- os dados ficam apenas no `localStorage` do navegador;
-- ainda não há login ou sincronização;
-- ainda não há modelo de IA externo;
-- as questões desta versão são próprias de demonstração;
-- não existe integração com banco de questões de terceiros.
+- o sistema não acessa a conta, a assinatura ou a senha do Qconcursos;
+- não existe API oficial do Q integrada nesta versão;
+- os resultados do Q são registrados manualmente pelo aluno;
+- os dados ainda ficam no `localStorage` do navegador;
+- ainda não há login, sincronização ou modelo de IA externo.
 
-## Próximas etapas
+## Próxima grande etapa
 
-A próxima grande versão deve conectar Supabase para autenticação e histórico persistente. Depois, uma IA real poderá consumir somente os dados necessários do perfil de conhecimento para orientar o aluno.
+Conectar Supabase para autenticação e histórico persistente. Depois, conectar uma IA real ao perfil de conhecimento. Se futuramente houver uma integração oficial/autorizada com o provedor de questões, o registro poderá ficar mais automático sem copiar o banco de terceiros.
