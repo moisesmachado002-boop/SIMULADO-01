@@ -1,0 +1,15 @@
+{
+  "id": "/SIMULADO-01/",
+  "name": "Mentor IA",
+  "short_name": "Mentor IA",
+  "description": "Mentora de estudos adaptativa com questões reais do Qconcursos.",
+  "start_url": "/SIMULADO-01/",
+  "scope": "/SIMULADO-01/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {"src":"icon.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"icon.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
