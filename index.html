@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
   <meta name="description" content="Mentora de estudos adaptativa com questões reais do Qconcursos e filtros prontos por assunto." />
-  <title>Mentor IA v1.3.1 — Qconcursos + mentoria adaptativa</title>
+  <title>Mentor IA v1.3.2 — Qconcursos + mentoria adaptativa</title>
+  <link rel="manifest" href="manifest.json?v=1.3.2" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="q-mode.css" />
   <link rel="stylesheet" href="q-presets.css" />
@@ -16,7 +18,7 @@
       <div class="brand">
         <div class="brand-mark">M</div>
         <div>
-          <div class="brand-line"><strong>Mentor IA</strong><span class="version-badge">v1.3.1</span></div>
+          <div class="brand-line"><strong>Mentor IA</strong><span class="version-badge">v1.3.2</span></div>
           <span>Questões reais + mentoria adaptativa</span>
         </div>
       </div>
@@ -27,7 +29,7 @@
       <section class="view active" data-view="inicio">
         <div class="hero-card">
           <div>
-            <span class="eyebrow">MENTORA ADAPTATIVA • V1.3.1</span>
+            <span class="eyebrow">MENTORA ADAPTATIVA • V1.3.2</span>
             <h1>Questões reais no Q. Eu interpreto o seu desempenho.</h1>
             <p id="heroText">Abra o Qconcursos já com filtros prontos, resolva uma bateria e registre o resultado para eu construir seu mapa de conhecimento.</p>
           </div>
@@ -67,7 +69,7 @@
       </section>
 
       <section class="view" data-view="diagnostico">
-        <div class="section-heading standalone"><div><span class="eyebrow">DIAGNÓSTICO LEGADO</span><h1>Questões de demonstração desativadas como caminho principal.</h1><p>A V1.3.1 prioriza questões reais do Qconcursos. Esta estrutura permanece apenas para preservar compatibilidade com dados anteriores.</p></div></div>
+        <div class="section-heading standalone"><div><span class="eyebrow">DIAGNÓSTICO LEGADO</span><h1>Questões de demonstração desativadas como caminho principal.</h1><p>A V1.3.2 prioriza questões reais do Qconcursos. Esta estrutura permanece apenas para preservar compatibilidade com dados anteriores.</p></div></div>
         <div id="diagnosticEmpty" class="empty-card"><div class="empty-icon">Q</div><h2>Use o Modo Q</h2><p>Ao tocar no botão abaixo, você será levado ao novo modo de questões reais.</p><button class="primary" data-action="start-diagnostic">Ir para questões reais</button></div>
         <div id="quizCard" class="quiz-card hidden">
           <div class="quiz-topline"><span id="questionMeta">Questão</span><span id="questionTimer">00:00</span></div>
@@ -87,7 +89,7 @@
       <section class="view" data-view="mentora">
         <div class="section-heading standalone"><div><span class="eyebrow">MENTORA</span><h1>O objetivo é orientar, não fabricar questões.</h1><p>A mentora usa seu histórico para sugerir o próximo foco. As questões ficam no Qconcursos.</p></div></div>
         <div class="chat-card"><div id="chatMessages" class="chat-messages"></div><div class="prompt-grid"><button data-mentor="today">Monte meu estudo de hoje</button><button data-mentor="weakness">Analise minhas fraquezas</button><button data-mentor="pattern">Analise meus padrões de erro</button><button data-mentor="advance">Posso mudar de assunto?</button><button data-mentor="review">O que devo revisar?</button></div></div>
-        <article class="roadmap-card"><span class="eyebrow">PRÓXIMAS CAMADAS</span><h2>Depois da V1.3.1</h2><div class="roadmap-list"><div><strong>01</strong><span>Supabase: conta, sincronização e histórico permanente.</span></div><div><strong>02</strong><span>IA real lendo seu perfil de conhecimento e histórico.</span></div><div><strong>03</strong><span>Mais filtros prontos por banca, edital e assunto.</span></div><div><strong>04</strong><span>Importação mais automática de resultados, sem pedir sua senha do Q.</span></div></div></article>
+        <article class="roadmap-card"><span class="eyebrow">PRÓXIMAS CAMADAS</span><h2>Depois da V1.3.2</h2><div class="roadmap-list"><div><strong>01</strong><span>Supabase: conta, sincronização e histórico permanente.</span></div><div><strong>02</strong><span>IA real lendo seu perfil de conhecimento e histórico.</span></div><div><strong>03</strong><span>Mais filtros prontos por banca, edital e assunto.</span></div><div><strong>04</strong><span>Importação mais automática de resultados, sem pedir sua senha do Q.</span></div></div></article>
       </section>
 
       <section class="view" data-view="historico">
@@ -108,6 +110,27 @@
       <button class="nav-item" data-go="historico"><span>↺</span><small>Histórico</small></button>
     </nav>
   </div>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+          registration.update();
+          const controller = navigator.serviceWorker.controller;
+          if (!controller || !controller.scriptURL.includes('/SIMULADO-01/sw.js')) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (!sessionStorage.getItem('mentor-sw-reloaded')) {
+                sessionStorage.setItem('mentor-sw-reloaded', '1');
+                location.reload();
+              }
+            }, { once: true });
+          }
+        } catch (error) {
+          console.warn('Mentor IA offline não pôde ser ativado:', error);
+        }
+      });
+    }
+  </script>
   <script src="app.js"></script>
   <script src="q-mode.js"></script>
   <script src="q-presets.js"></script>
