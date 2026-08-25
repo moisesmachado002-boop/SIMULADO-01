@@ -1,25 +1,28 @@
-# Mentor IA — protótipo V1
+# Mentor IA — V1.2
 
-Projeto iniciado a partir do antigo repositório SIMULADO-01.
+Protótipo de uma mentora de estudos adaptativa. O objetivo é ir além de um simples percentual de acertos e transformar cada resposta em evidência sobre o conhecimento do aluno.
 
-## Objetivo
-Criar uma mentora de estudos adaptativa que avalia o conhecimento do aluno a partir de evidências de desempenho e recomenda a próxima ação de estudo.
+## O que a V1.2 já faz
 
-## V1 implementada
-- Dashboard de desempenho
-- Diagnóstico com questões próprias de demonstração
-- Registro de confiança na resposta
-- Estimativa de domínio por matéria e tópico
-- Recomendações automáticas da mentora
-- Persistência local via localStorage
-- Interface responsiva para celular
+- diagnóstico com 12 questões próprias de demonstração;
+- registro de acerto/erro, dificuldade, confiança, tempo e raciocínio opcional;
+- mapa de domínio por matéria e por assunto;
+- confiabilidade da estimativa conforme a quantidade de evidências;
+- pequena perda de confiança quando um assunto passa muitos dias sem nova evidência;
+- detecção de erros com confiança alta, respostas lentas e erros muito rápidos;
+- missão diária gerada a partir da principal fraqueza;
+- objetivo configurável (concurso, meta de acertos e minutos por dia);
+- histórico local das tentativas;
+- mentora local baseada em regras para sugerir estudo, revisão e avanço.
+
+## Limitações atuais
+
+- os dados ficam apenas no `localStorage` do navegador;
+- ainda não há login ou sincronização;
+- ainda não há modelo de IA externo;
+- as questões desta versão são próprias de demonstração;
+- não existe integração com banco de questões de terceiros.
 
 ## Próximas etapas
-1. Supabase: autenticação, perfis, matérias, assuntos, respostas, sessões e revisões.
-2. Motor de conhecimento: recência, dificuldade calibrada, tempo de resposta e reincidência de erros.
-3. IA real: contexto resumido do desempenho e histórico do aluno.
-4. Integração legítima com provedores de questões via API/licenciamento ou fontes permitidas.
-5. PWA instalável e notificações de revisão.
 
-## Princípio do produto
-A plataforma não deve ser apenas um banco de questões. O diferencial é transformar respostas em um mapa de conhecimento e usar esse mapa para orientar o aluno como uma mentora.
+A próxima grande versão deve conectar Supabase para autenticação e histórico persistente. Depois, uma IA real poderá consumir somente os dados necessários do perfil de conhecimento para orientar o aluno.
