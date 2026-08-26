@@ -56,9 +56,11 @@
   function keepVisualLockLast() {
     removeLegacyVisualTheme();
     const refresh = document.getElementById('mentorLayoutRefresh');
-    if (refresh && refresh !== document.head.lastElementChild) document.head.appendChild(refresh);
     const lock = addCss('mentorLayoutLock', './layout-lock.css?v=8.1');
-    if (lock !== document.head.lastElementChild) document.head.appendChild(lock);
+    const alreadyOrdered = lock === document.head.lastElementChild && (!refresh || refresh.nextElementSibling === lock);
+    if (alreadyOrdered) return;
+    if (refresh) document.head.appendChild(refresh);
+    document.head.appendChild(lock);
   }
 
   function installVisualGuard() {
@@ -94,7 +96,6 @@
     normalizeLegacyQMode();
     installVisualGuard();
 
-    // Alguns módulos antigos terminam a montagem de forma assíncrona.
     [150, 500, 1200, 2500].forEach(delay => setTimeout(() => {
       normalizeLegacyQMode();
       keepVisualLockLast();
