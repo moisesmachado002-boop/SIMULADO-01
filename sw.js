@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v1-7';
+const CACHE = 'mentor-ia-v1-8';
 const ASSETS = [
   './',
   './index.html',
