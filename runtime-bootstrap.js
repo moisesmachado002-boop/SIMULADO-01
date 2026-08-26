@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '5.0';
+  const VERSION = '6.0';
 
   function loadScript(id, src) {
     return new Promise((resolve, reject) => {
@@ -31,7 +31,7 @@
   }
 
   async function boot() {
-    addCss('mentorAuthCss', './auth.css?v=5.0');
+    addCss('mentorAuthCss', './auth.css?v=6.0');
 
     if (!window.supabase?.createClient) {
       await loadScript('mentorSupabaseSdk', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
@@ -43,6 +43,18 @@
 
     if (!window.MentorQgMode) {
       await loadScript('mentorQgModeScript', './qg-mode.js?v=5.0');
+    }
+
+    if (!window.MentorReviewEngine) {
+      await loadScript('mentorReviewEngine', './review-engine.js?v=6.0');
+    }
+
+    if (!window.MentorScheduleEngine) {
+      await loadScript('mentorScheduleEngine', './schedule-engine.js?v=6.0');
+    }
+
+    if (!window.MentorStudyProfile) {
+      await loadScript('mentorStudyProfile', './study-profile.js?v=6.0');
     }
   }
 
