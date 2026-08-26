@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '8.1';
+  const VERSION = '8.2';
   let visualGuardInstalled = false;
   let guardBusy = false;
 
@@ -56,7 +56,7 @@
   function keepVisualLockLast() {
     removeLegacyVisualTheme();
     const refresh = document.getElementById('mentorLayoutRefresh');
-    const lock = addCss('mentorLayoutLock', './layout-lock.css?v=8.1');
+    const lock = addCss('mentorLayoutLock', './layout-lock.css?v=8.2');
     const alreadyOrdered = lock === document.head.lastElementChild && (!refresh || refresh.nextElementSibling === lock);
     if (alreadyOrdered) return;
     if (refresh) document.head.appendChild(refresh);
@@ -83,13 +83,16 @@
   }
 
   async function boot() {
-    addCss('mentorAuthCss', './auth.css?v=8.1');
+    addCss('mentorAuthCss', './auth.css?v=8.2');
     if (!window.supabase?.createClient) await loadScript('mentorSupabaseSdk', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
     if (!window.mentorCloud) await loadScript('mentorCloudSync', './cloud-sync.js?v=5.0');
     if (!window.MentorQgMode) await loadScript('mentorQgModeScript', './qg-mode.js?v=5.0');
     if (!window.MentorReviewEngine) await loadScript('mentorReviewEngine', './review-engine.js?v=6.0');
     if (!window.MentorScheduleEngine) await loadScript('mentorScheduleEngine', './schedule-engine.js?v=6.0');
     if (!window.MentorStudyProfile) await loadScript('mentorStudyProfile', './study-profile.js?v=6.0');
+
+    addCss('mentorEngineCss', './mentor-engine.css?v=7.0');
+    if (!window.MentorEngine) await loadScript('mentorEngineScript', './mentor-engine.js?v=7.0');
 
     addCss('mentorLayoutRefresh', './layout-refresh.css?v=8.0');
     keepVisualLockLast();
