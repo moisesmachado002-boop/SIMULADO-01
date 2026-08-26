@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v2-3-p4-release';
+const CACHE = 'mentor-ia-v2-3-p5-qg';
 const ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   './auth.css',
   './bank-mode.css',
   './qg-theme.css',
+  './qg-mode.css',
   './edital-core.css',
   './question-filters.css',
   './question-difficulty.css',
@@ -16,7 +17,9 @@ const ASSETS = [
   './q-mode.js',
   './q-presets.js',
   './cloud-sync.js',
+  './runtime-bootstrap.js',
   './bank-mode.js',
+  './qg-mode.js',
   './edital-core.js',
   './question-state.js',
   './question-filters.js',
