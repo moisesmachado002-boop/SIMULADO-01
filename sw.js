@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v1-6';
+const CACHE = 'mentor-ia-v1-7';
 const ASSETS = [
   './',
   './index.html',
@@ -8,11 +8,13 @@ const ASSETS = [
   './auth.css',
   './bank-mode.css',
   './qg-theme.css',
+  './edital-core.css',
   './app.js',
   './q-mode.js',
   './q-presets.js',
   './cloud-sync.js',
   './bank-mode.js',
+  './edital-core.js',
   './manifest.json',
   './icon.svg'
 ];
