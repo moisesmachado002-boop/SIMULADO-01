@@ -24,7 +24,8 @@
     - P3.1c — auditoria/reconciliação do lote existente de Crase ✅
     - P3.1d — Voz passiva/Sintaxe, questão 17 ✅
     - P3.1e — Sintaxe/finalidade, questão 1 ✅
-    - P3.1f — próximo lote seguro de Português ⏳
+    - P3.1f — Sintaxe/pronomes e funções sintáticas, questão 2 ✅
+    - P3.1g — próximo lote seguro de Português ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -41,11 +42,11 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1e — importação segura da questão 1 da seção Sintaxe, sobre noção de finalidade, vinculada a LP7.
+**Última subparte concluída:** P3.1f — importação segura da questão 2 da seção Sintaxe, sobre funções sintáticas do pronome “lhe”, vinculada a LP7.
 
-**Próxima subparte:** P3.1f — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1g — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
 
-**Último deploy confirmado antes de P3.1e:** GitHub Pages run 62 — `completed/success`, commit `4b66f413c04c1559f021b6ded105e787f8bf81b9`.
+**Último deploy confirmado antes de P3.1f:** GitHub Pages run 63 — `completed/success`, commit `726332ede85ded65e12e048f071c56f17097aefa`.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
@@ -57,38 +58,34 @@
 
 ### P3.1b
 - Recorte seguro: questão 16 da seção de Português localizada no módulo.
-- Encontradas/examinadas neste lote: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
-- Com gabarito do PDF: 1; sem gabarito confiável: 0; alternativas completas: 5/5.
+- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
+- Com gabarito do PDF: 1; alternativas completas: 5/5.
 - INT-16 → LP7 `Sintaxe da oração e do período`, gabarito E, `medium/estimated`.
 - `source_page` nulo porque não foi possível confirmar a página com segurança.
 
 ### P3.1c
-- Subparte de auditoria, sem nova importação, necessária porque o banco já continha um lote de Crase não documentado no mapa.
-- 18 registros `P3-*` localizados em Língua Portuguesa, todos vinculados a `Uso do sinal indicativo de crase` e ao documento `Módulo Questões Gerais FCC (QUAD)`.
-- Todos os 18 estão `private`, com `difficulty_origin=estimated` e gabarito preenchido.
-- Numeração presente: P3-1 a P3-6, P3-8 e P3-10 a P3-20; P3-7 e P3-9 não existem no banco e não foram inventadas/recriadas nesta auditoria.
-- Verificação global por enunciado normalizado: 0 grupos duplicados.
-- Nenhum conteúdo licenciado foi enviado ao GitHub.
-- O lote não foi reimportado nem teve gabaritos alterados nesta subparte; a auditoria apenas reconciliou o estado real do banco com o mapa.
+- Auditoria, sem nova importação: 18 registros `P3-*` de Crase já existentes foram reconciliados com o mapa.
+- Todos privados, `difficulty_origin=estimated`, gabarito preenchido e 0 grupos de enunciados duplicados.
+- P3-7 e P3-9 não existem no banco e não foram inventadas/recriadas.
 
 ### P3.1d
-- Recorte seguro: questão 17 da seção `Interpretação e Tipologia Textual`, sobre identificação de voz passiva.
-- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
-- Alternativas completas: 5/5.
-- Gabarito confirmado diretamente na seção de gabarito do PDF: 17-D.
 - INT-17 → LP7 `Sintaxe da oração e do período`, gabarito D, `medium/estimated`, `private`.
-- `source_page` ficou nulo porque o número da página da questão não foi confirmado de modo confiável no recorte recuperado.
-- Após inserção: 22 questões no banco, 22 de Português, 0 não privadas e 0 `source_external_id` duplicados.
+- Questão sobre voz passiva; 5/5 alternativas; 0 duplicadas.
 
 ### P3.1e
-- Recorte seguro: questão 1 da seção `SINTAXE`, sobre expressão de finalidade.
+- SIN-1 → LP7 `Sintaxe da oração e do período`, gabarito C, `medium/estimated`, `private`.
+- Questão sobre expressão de finalidade; 5/5 alternativas; 0 duplicadas.
+
+### P3.1f
+- Recorte seguro: questão 2 da seção `SINTAXE`, sobre funções sintáticas do pronome “lhe”.
 - Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
 - Alternativas completas: 5/5.
-- Gabarito confirmado diretamente na seção de gabarito do PDF: Sintaxe 1-C.
-- SIN-1 → LP7 `Sintaxe da oração e do período`, gabarito C, `medium/estimated`, `private`.
+- Gabarito confirmado diretamente no gabarito do PDF: Sintaxe 2-E.
+- SIN-2 → LP7 `Sintaxe da oração e do período`, gabarito E, `medium/estimated`, `private`.
 - `source_page` ficou nulo porque o número da página da questão não foi confirmado com segurança.
-- Antes da inserção: 0 ocorrência do mesmo enunciado e 0 duplicidade de `source_external_id`.
-- Após inserção: 23 questões no banco, 23 de Português e 0 não privadas.
+- Antes da inserção: 0 ocorrência do mesmo enunciado e 0 ocorrência de `source_external_id=gerais-portugues-sintaxe-2`.
+- Após inserção: 24 questões no banco, 24 de Português, 0 não privadas.
+- `source_documents.question_count` foi reconciliado para 24, igual ao total real vinculado ao módulo.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
