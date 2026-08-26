@@ -22,7 +22,8 @@
     - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅
     - P3.1b — Sintaxe, lote seguro (questão 16) ✅
     - P3.1c — auditoria/reconciliação do lote existente de Crase ✅
-    - P3.1d — próximo lote seguro de Português ⏳
+    - P3.1d — Voz passiva/Sintaxe, questão 17 ✅
+    - P3.1e — próximo lote seguro de Português ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -39,9 +40,11 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1c — auditoria/reconciliação do lote de Crase já presente no Supabase.
+**Última subparte concluída:** P3.1d — importação segura da questão 17 de Português sobre voz passiva, vinculada a LP7.
 
-**Próxima subparte:** P3.1d — continuar Português com um novo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1e — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
+
+**Último deploy confirmado antes de P3.1d:** GitHub Pages run 61 — `completed/success`, commit `f8f05b3eea3a9fbeddaef0c3286b2ba4cbf64e9f`.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
@@ -66,6 +69,15 @@
 - Verificação global por enunciado normalizado: 0 grupos duplicados.
 - Nenhum conteúdo licenciado foi enviado ao GitHub.
 - O lote não foi reimportado nem teve gabaritos alterados nesta subparte; a auditoria apenas reconciliou o estado real do banco com o mapa.
+
+### P3.1d
+- Recorte seguro: questão 17 da seção `Interpretação e Tipologia Textual`, sobre identificação de voz passiva.
+- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
+- Alternativas completas: 5/5.
+- Gabarito confirmado diretamente na seção de gabarito do PDF: 17-D.
+- INT-17 → LP7 `Sintaxe da oração e do período`, gabarito D, `medium/estimated`, `private`.
+- `source_page` ficou nulo porque o número da página da questão não foi confirmado de modo confiável no recorte recuperado.
+- Após inserção: 22 questões no banco, 22 de Português, 0 não privadas e 0 `source_external_id` duplicados.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
