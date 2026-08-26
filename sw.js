@@ -41,9 +41,11 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       const cached = await caches.match(SUPABASE_SDK);
       if (cached) {
-        event.waitUntil(fetch(SUPABASE_SDK, { cache:'no-store', mode:'cors' })
-          .then(async response => { if (response.ok) await (await caches.open(CACHE)).put(SUPABASE_SDK, response.clone()); })
-          .catch(() => {}));
+        fetch(SUPABASE_SDK, { cache:'no-store', mode:'cors' })
+          .then(async response => {
+            if (response.ok) await (await caches.open(CACHE)).put(SUPABASE_SDK, response.clone());
+          })
+          .catch(() => {});
         return cached;
       }
       const response = await fetch(event.request);
