@@ -27,7 +27,8 @@
     - P3.1e — Sintaxe, questão 1 ✅
     - P3.1f — Sintaxe, questão 2 ✅
     - P3.1g — lote seguro Sintaxe/Pontuação (6 questões) ✅
-    - P3.1h — próximo lote seguro de Português ⏳
+    - P3.1h — lote mínimo de 30 questões: Ortografia/Grafia + Concordância ✅
+    - P3.1i — próximo lote de Português com no mínimo 30 questões válidas ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -44,11 +45,16 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1g — importação segura de 6 questões da seção Sintaxe, com classificação fina entre LP7 e LP8.
+**Última subparte concluída:** P3.1h — importação de 30 questões em um único lote, sendo 20 da seção Ortografia/Grafia e 10 da seção Concordância Verbal e Nominal.
 
-**Próxima subparte:** P3.1h — continuar Português com novo lote validado diretamente contra questão + alternativas + gabarito do PDF; não avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1i — continuar Português com outro lote de no mínimo 30 questões válidas, sem reduzir a qualidade para completar quantidade.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
+
+## Regra de tamanho dos lotes P3
+- A partir da P3.1h, cada novo lote de importação deve ter **no mínimo 30 questões válidas**.
+- A quantidade nunca autoriza importar questão quebrada, ilegível, duplicada, sem gabarito confiável ou fora do edital.
+- Se a matéria/subparte não tiver 30 questões válidas restantes, não completar artificialmente: registrar a quantidade real disponível e informar a limitação antes de encerrar a matéria.
 
 ## Resultados acumulados da P3.1
 ### P3.1a
@@ -71,16 +77,18 @@
 - Após P3.1f: 24 questões vinculadas ao módulo.
 
 ### P3.1g
-- Questões examinadas para o lote: 6; válidas/importadas: 6; duplicadas: 0; descartadas no lote final: 0.
-- SIN-18 → LP7 `Sintaxe da oração e do período`, gabarito B, `hard/estimated`, página PDF 24.
-- SIN-24 → LP8 `Pontuação`, gabarito C, `easy/estimated`, página PDF 26.
-- SIN-25 → LP8 `Pontuação`, gabarito D, `easy/estimated`, página PDF 26.
-- SIN-27 → LP7 `Sintaxe da oração e do período`, gabarito E, `easy/estimated`, página PDF 26.
-- SIN-28 → LP7 `Sintaxe da oração e do período`, gabarito B, `medium/estimated`, página PDF 26.
-- SIN-30 → LP8 `Pontuação`, gabarito D, `medium/estimated`, página PDF 27.
-- Validação do lote: 6/6 gabaritos válidos, 6/6 privadas, 6/6 `difficulty_origin=estimated`, 0 `source_external_id` duplicado.
-- Total real vinculado ao módulo após o lote: **30 questões**, todas de Português nesta fase; `source_documents.question_count=30`, `import_status=processing`.
-- O gabarito geral do PDF confirma os blocos de Português, incluindo Sintaxe, Pontuação, Crase, Classes de Palavras, Ortografia, Concordância e Regência.
+- 6 importadas: SIN-18, SIN-24, SIN-25, SIN-27, SIN-28 e SIN-30.
+- Classificação entre LP7 `Sintaxe da oração e do período` e LP8 `Pontuação`.
+- Após P3.1g: 30 questões vinculadas ao módulo.
+
+### P3.1h
+- Lote solicitado: **30 questões**; inseridas: **30**; puladas/duplicadas: **0**.
+- ORT-1 a ORT-20: 20 questões da seção `ORTOGRAFIA E GRAFIA`.
+- CON-1 a CON-10: 10 questões da seção `CONCORDÂNCIA VERBAL E NOMINAL`.
+- Mapeamento primário: LP3 `Ortografia oficial`, LP4 `Acentuação gráfica`, LP7 `Sintaxe da oração e do período` e LP9 `Concordância nominal e verbal`, conforme o conteúdo efetivamente cobrado.
+- Validação: 30/30 gabaritos A–E válidos; 30/30 com alternativas A–E; 30/30 privadas; 30/30 `difficulty_origin=estimated`; 30/30 vinculadas a matéria e tópico oficiais.
+- Gabaritos confirmados no gabarito geral do próprio PDF antes do insert.
+- Total real vinculado ao módulo após P3.1h: **60 questões**; `source_documents.question_count=60`; importação de Português continua em `processing`.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
@@ -131,15 +139,16 @@
 ## Protocolo de importação P3
 1. localizar questão e gabarito no PDF licenciado;
 2. trabalhar somente a matéria/subparte atual;
-3. extrair enunciado e alternativas completas;
-4. confirmar gabarito no próprio material;
-5. mapear para tópico oficial/subitem aplicável;
-6. consultar duplicidade por `source_external_id` e enunciado antes de inserir;
-7. usar `estimated` se a fonte não informar dificuldade;
-8. descartar/adiar questão quebrada, dependente de imagem ou com destaque essencial perdido;
-9. manter conteúdo `private` no Supabase;
-10. atualizar `source_documents.question_count` com o total real vinculado;
-11. validar integridade e registrar o lote neste mapa.
+3. montar lotes com no mínimo 30 questões válidas quando houver estoque suficiente;
+4. extrair enunciado e alternativas completas;
+5. confirmar gabarito no próprio material;
+6. mapear para tópico oficial/subitem aplicável;
+7. consultar duplicidade por `source_external_id` e enunciado antes de inserir;
+8. usar `estimated` se a fonte não informar dificuldade;
+9. descartar/adiar questão quebrada, dependente de imagem ou com destaque essencial perdido;
+10. manter conteúdo `private` no Supabase;
+11. atualizar `source_documents.question_count` com o total real vinculado;
+12. validar integridade e registrar o lote neste mapa.
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
