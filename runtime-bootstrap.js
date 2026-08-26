@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '6.1';
+  const VERSION = '8.0';
 
   function loadScript(id, src) {
     return new Promise((resolve, reject) => {
@@ -31,34 +31,14 @@
   }
 
   async function boot() {
-    addCss('mentorAuthCss', './auth.css?v=6.0');
-
-    if (!window.supabase?.createClient) {
-      await loadScript('mentorSupabaseSdk', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
-    }
-
-    if (!window.mentorCloud) {
-      await loadScript('mentorCloudSync', './cloud-sync.js?v=5.0');
-    }
-
-    if (!window.MentorQgMode) {
-      await loadScript('mentorQgModeScript', './qg-mode.js?v=5.0');
-    }
-
-    if (!window.MentorReviewEngine) {
-      await loadScript('mentorReviewEngine', './review-engine.js?v=6.0');
-    }
-
-    if (!window.MentorScheduleEngine) {
-      await loadScript('mentorScheduleEngine', './schedule-engine.js?v=6.0');
-    }
-
-    if (!window.MentorStudyProfile) {
-      await loadScript('mentorStudyProfile', './study-profile.js?v=6.0');
-    }
-
-    // Deve ser o último CSS da aplicação: harmoniza as camadas legadas/P4/P5/P6.
-    addCss('mentorLayoutRefresh', './layout-refresh.css?v=1.0');
+    addCss('mentorAuthCss', './auth.css?v=8.0');
+    if (!window.supabase?.createClient) await loadScript('mentorSupabaseSdk', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+    if (!window.mentorCloud) await loadScript('mentorCloudSync', './cloud-sync.js?v=5.0');
+    if (!window.MentorQgMode) await loadScript('mentorQgModeScript', './qg-mode.js?v=5.0');
+    if (!window.MentorReviewEngine) await loadScript('mentorReviewEngine', './review-engine.js?v=6.0');
+    if (!window.MentorScheduleEngine) await loadScript('mentorScheduleEngine', './schedule-engine.js?v=6.0');
+    if (!window.MentorStudyProfile) await loadScript('mentorStudyProfile', './study-profile.js?v=6.0');
+    addCss('mentorLayoutRefresh', './layout-refresh.css?v=8.0');
   }
 
   window.MentorRuntimeBootstrap = Object.freeze({ version: VERSION, boot });
