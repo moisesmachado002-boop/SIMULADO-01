@@ -23,7 +23,8 @@
     - P3.1b — Sintaxe, lote seguro (questão 16) ✅
     - P3.1c — auditoria/reconciliação do lote existente de Crase ✅
     - P3.1d — Voz passiva/Sintaxe, questão 17 ✅
-    - P3.1e — próximo lote seguro de Português ⏳
+    - P3.1e — Sintaxe/finalidade, questão 1 ✅
+    - P3.1f — próximo lote seguro de Português ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -40,11 +41,11 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1d — importação segura da questão 17 de Português sobre voz passiva, vinculada a LP7.
+**Última subparte concluída:** P3.1e — importação segura da questão 1 da seção Sintaxe, sobre noção de finalidade, vinculada a LP7.
 
-**Próxima subparte:** P3.1e — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1f — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
 
-**Último deploy confirmado antes de P3.1d:** GitHub Pages run 61 — `completed/success`, commit `f8f05b3eea3a9fbeddaef0c3286b2ba4cbf64e9f`.
+**Último deploy confirmado antes de P3.1e:** GitHub Pages run 62 — `completed/success`, commit `4b66f413c04c1559f021b6ded105e787f8bf81b9`.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
@@ -78,6 +79,16 @@
 - INT-17 → LP7 `Sintaxe da oração e do período`, gabarito D, `medium/estimated`, `private`.
 - `source_page` ficou nulo porque o número da página da questão não foi confirmado de modo confiável no recorte recuperado.
 - Após inserção: 22 questões no banco, 22 de Português, 0 não privadas e 0 `source_external_id` duplicados.
+
+### P3.1e
+- Recorte seguro: questão 1 da seção `SINTAXE`, sobre expressão de finalidade.
+- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
+- Alternativas completas: 5/5.
+- Gabarito confirmado diretamente na seção de gabarito do PDF: Sintaxe 1-C.
+- SIN-1 → LP7 `Sintaxe da oração e do período`, gabarito C, `medium/estimated`, `private`.
+- `source_page` ficou nulo porque o número da página da questão não foi confirmado com segurança.
+- Antes da inserção: 0 ocorrência do mesmo enunciado e 0 duplicidade de `source_external_id`.
+- Após inserção: 23 questões no banco, 23 de Português e 0 não privadas.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
