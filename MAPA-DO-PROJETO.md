@@ -11,70 +11,59 @@
 - Nunca alterar o projeto Financeiro.
 - Gabarito do material é a fonte de verdade; IA nunca substitui silenciosamente o gabarito.
 
-## REGRA DE EXECUÇÃO — ETAPAS COMPLETAS
-A partir de 26/08/2026, a unidade de trabalho do projeto é a **etapa P completa**.
-
-- Não usar mais P4.1, P4.2, P5.1 etc. como pontos de parada ou autorização.
-- Pode haver organização técnica interna em vários arquivos/migrações, mas o usuário recebe e aprova apenas **P1, P2, P3, P4, P5, P6, P7 e P8**.
-- Ao iniciar uma etapa, executar tudo que pertence àquela P antes de parar, salvo erro real, bloqueio de segurança ou necessidade inevitável de informação do usuário.
-- Uma P só recebe ✅ quando banco, frontend, integrações necessárias e deploy estiverem validados.
-- Não declarar uma P concluída apenas porque uma parte interna dela foi implementada.
+## REGRA DE EXECUÇÃO POR ETAPA
+- O projeto avança somente por etapas inteiras: **P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8**.
+- Não usar numeração operacional `.1`, `.2`, `.3` no status do projeto.
+- Pode haver alterações técnicas internas em vários arquivos ou tabelas durante uma P, mas a etapa só termina quando o conjunto inteiro estiver implementado, validado e publicado.
+- Ao concluir uma P, atualizar este mapa e apontar apenas a próxima P.
 
 ## STATUS DO PROJETO
-- **P1 — Edital e Taxonomia ✅ concluída**
-- **P2 — Estrutura das Questões ✅ concluída**
-- **P3 — Banco de Questões ✅ concluída no novo escopo**
-  - Carga em massa foi abandonada por decisão do usuário.
-  - Novas questões serão adicionadas sob demanda, conforme a necessidade diária.
-  - Banco preservado com 98 questões no momento da mudança de estratégia.
-  - O abastecimento futuro não bloqueia o avanço do produto.
-- **P4 — Correção Completa 🔄 em andamento**
-  - Parte da infraestrutura já foi criada (`question-feedback.js`, `question-feedback.css` e campos de explicação no Supabase), mas P4 só será marcada concluída quando todo o fluxo de correção previsto estiver fechado e validado.
-- **P5 — Modo QG ⏳**
-- **P6 — Cronograma e Revisões ⏳**
-- **P7 — Mentora Inteligente ⏳**
-- **P8 — Qconcursos + Internet ⏳**
+- P1 — Edital e Taxonomia ✅ concluída
+- P2 — Estrutura das Questões ✅ concluída
+- P3 — Banco de Questões ✅ concluída no modelo **sob demanda**
+- P4 — Correção Completa ✅ concluída
+- P5 — Modo QG ⏳ próxima etapa
+- P6 — Cronograma e Revisões ⏳
+- P7 — Mentora Inteligente ⏳
+- P8 — Qconcursos + Internet ⏳
 
-**Etapa ativa:** P4 — Correção Completa.
+**Última etapa concluída:** P4 — Correção Completa.
 
-**Próxima parada permitida:** somente após concluir e validar a P4 inteira, salvo erro real/bloqueio.
+**Próxima etapa:** P5 — Modo QG.
 
-## Decisão permanente sobre o banco de questões
+## P3 — decisão permanente sobre o banco de questões
 - Não tentar abastecer todas as matérias antecipadamente.
-- Quando o usuário precisar estudar uma matéria/tópico e o estoque estiver baixo, buscar/importar apenas o necessário naquele momento.
+- Novas questões entram conforme a necessidade diária do usuário.
 - Prioridade de fonte: PDFs privados → banco próprio → Qconcursos → internet.
-- Toda questão nova deve continuar vinculada ao edital oficial, deduplicada e com gabarito confiável.
+- Toda questão nova deve estar vinculada ao edital oficial, deduplicada e com gabarito confiável.
+- Banco preservado no fechamento da estratégia: **98 questões**.
+- Questões ainda sem correção completa podem permanecer armazenadas, mas não entram no treino enquanto `explanation` estiver nulo.
 
 ## P4 — Correção Completa
-A P4 inteira deve entregar, no fluxo pós-resposta:
-1. informar claramente se acertou ou errou;
-2. mostrar a alternativa marcada;
-3. mostrar o gabarito registrado como fonte de verdade;
-4. explicar por que a alternativa correta está correta;
+A P4 está fechada com o seguinte contrato funcional:
+1. ao confirmar uma resposta, mostrar imediatamente se acertou ou errou;
+2. mostrar a alternativa marcada pelo usuário;
+3. mostrar o gabarito registrado no material;
+4. explicar especificamente por que a alternativa correta está correta;
 5. quando houver erro, explicar especificamente por que a alternativa marcada está errada;
-6. oferecer análise de todas as alternativas A–E;
-7. nunca inventar justificativa ausente;
-8. distinguir explicação geral, explicação por alternativa e observação/divergência de gabarito;
-9. manter dificuldade oculta antes da resposta e revelá-la apenas depois;
-10. preservar salvamento da tentativa, estado da questão, confiança e tempo;
-11. funcionar de forma coerente nas questões antigas e nas novas questões adicionadas sob demanda;
-12. validar Supabase, frontend, cache/PWA e GitHub Pages antes de marcar P4 ✅.
+6. oferecer **ANALISAR TODAS AS ALTERNATIVAS** com análise A–E (ou todas as alternativas realmente existentes);
+7. mostrar observação de divergência de gabarito separadamente em `answer_key_note`, sem alterar silenciosamente o gabarito oficial;
+8. a correção completa aparece ao revelar o gabarito e não depende do sucesso do salvamento da tentativa na nuvem;
+9. dificuldade continua oculta durante a resolução e aparece somente após a resposta;
+10. a plataforma não inventa justificativa para alternativa sem análise cadastrada.
 
-## P5 — Modo QG
-Quando iniciada, deve ser concluída inteira antes de parar. Escopo: experiência de resolução, selecionar/eliminar/confirmar, timer, confiança, feedback, avançar, estados visuais e caderno de erros, sem quebrar P1–P4.
-
-## P6 — Cronograma e Revisões
-Quando iniciada, deve ser concluída inteira antes de parar. Escopo: perfil de estudo, capacidade diária, revisões adaptativas, dívida/rebalanceamento, ciclo flexível, missão diária e projeção semanal.
-
-## P7 — Mentora Inteligente
-Quando iniciada, deve ser concluída inteira antes de parar. Escopo: sinais de desempenho, diagnóstico, pré-requisitos, recomendações e IA real somente por backend seguro.
-
-## P8 — Qconcursos + Internet
-Quando iniciada, deve ser concluída inteira antes de parar. Escopo: links/filtros Qconcursos, prioridade de fontes, abastecimento sob demanda e integração segura sem scraping não autorizado.
+### Estado validado da P4
+- `questions` possui `option_explanations jsonb`, `explanation_status` e `answer_key_note`.
+- **29 questões** atualmente elegíveis no treino possuem `explanation_status='per_option'`.
+- Essas 29 possuem análise para todas as alternativas existentes: **0 análises de opção faltando**.
+- **0 questões visíveis** estão com correção incompleta.
+- **0 gabaritos** apontam para alternativa inexistente.
+- **69 questões** permanecem aguardando abastecimento/correção conforme a necessidade diária e ficam fora da rotação atual porque `explanation` está nulo.
+- O banco possui o contrato `questions_p4_ready_visibility_check`: uma questão só pode ter `explanation` não nulo se estiver `per_option` e tiver explicação para todas as alternativas. Isso impede que novas importações coloquem questão incompleta no treino.
 
 ## Arquivos e responsabilidades
 - `MAPA-DO-PROJETO.md`: status, arquitetura e decisões operacionais.
-- `index.html`: estrutura HTML base.
+- `index.html`: estrutura HTML base e carregamento dos módulos globais.
 - `app.js`: motor legado/local; evitar novas regras de negócio.
 - `styles.css`: estilos globais.
 - `cloud-sync.js`: autenticação Supabase e sincronização.
@@ -85,26 +74,38 @@ Quando iniciada, deve ser concluída inteira antes de parar. Escopo: links/filtr
 - `question-state.js`: estados `new|answered|correct|wrong|review|mastered`.
 - `question-filters.js` / `question-filters.css`: filtros e rotação por estado.
 - `question-difficulty.js` / `question-difficulty.css`: dificuldade `easy|medium|hard`, origem e revelação pós-resposta.
-- `question-feedback.js` / `question-feedback.css`: P4, correção estruturada por alternativa.
-- `q-mode.js` / `q-mode.css`: modo legado/manual do Qconcursos; mudanças maiores na P8.
-- `q-presets.js` / `q-presets.css`: atalhos Qconcursos; reservar para P8.
+- `question-feedback.js` / `question-feedback.css`: P4, correção estruturada completa e análise por alternativa.
+- `q-mode.js` / `q-mode.css`: modo legado/manual do Qconcursos; será tratado na P8.
+- `q-presets.js` / `q-presets.css`: atalhos Qconcursos; será tratado na P8.
 - `sw.js`: cache PWA.
 - `manifest.json` / `icon.svg`: PWA.
 
 ## Supabase — estrutura relevante
-- `questions`: questão canônica privada, gabarito e explicações; contém `option_explanations`, `explanation_status` e `answer_key_note`.
+- `questions`: questão canônica privada, gabarito e explicações P4.
 - `question_attempts`: histórico imutável de respostas.
 - `user_question_state`: resumo por usuário+questão.
 - `subjects`, `topics`, `topic_components` e aliases: currículo oficial.
 - `topic_mastery`: domínio agregado por tópico.
 - `source_documents`: origem/licença e contagem do acervo.
 
-## Regras gerais
-1. Executar uma **P inteira** por ciclo de trabalho, não subpartes como unidades de parada.
+## Matriz “quero mudar X → onde mexer”
+- Estado/badge → `question-state.js` + wiring mínimo `bank-mode.js` + `user_question_state`.
+- Filtros/rotação → `question-filters.js`/CSS + wiring mínimo `bank-mode.js`.
+- Dificuldade → `question-difficulty.js`/CSS + `questions`.
+- Correção → `question-feedback.js`/CSS + campos P4 em `questions`.
+- Importar questão sob demanda → `questions`, `source_documents`, taxonomia P1 e fonte privada; a questão só entra no treino com correção P4 completa.
+- Edital/taxonomia → `edital-core.js` + tabelas P1.
+- Cronograma → futuros `study-profile.js`, `schedule-engine.js`, `review-engine.js` na P6.
+- Mentora/IA → futuro `mentor-engine.js` + backend seguro na P7.
+- Qconcursos → futuro `qconcursos-links.js` na P8.
+- Cache/PWA → `sw.js` quando assets frontend mudarem.
+
+## Regras permanentes
+1. Concluir uma P inteira antes de avançar para a próxima.
 2. Preferir módulos separados a ampliar monólitos.
 3. Nunca inventar gabarito, fonte ou metadado.
 4. Nunca publicar material licenciado ou segredo.
-5. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa/status e GitHub Pages.
-6. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
-7. Ao concluir uma P, a próxima execução começa diretamente na próxima P.
-8. Ao concluir P8, parar e aguardar orientação.
+5. Questão nova destinada ao treino deve entrar com correção completa por alternativa.
+6. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
+7. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
+8. Se P1–P8 terminarem, parar e aguardar orientação.
