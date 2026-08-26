@@ -28,13 +28,13 @@
 - P3 — Banco de Questões ✅ concluída no modelo **sob demanda**
 - P4 — Correção Completa ✅ concluída
 - P5 — Modo QG ✅ concluída
-- P6 — Cronograma e Revisões ⏳ próxima etapa
-- P7 — Mentora Inteligente ⏳
+- P6 — Cronograma e Revisões ✅ concluída
+- P7 — Mentora Inteligente ⏳ próxima etapa
 - P8 — Qconcursos + Internet ⏳
 
-**Última etapa concluída:** P5 — Modo QG.
+**Última etapa concluída:** P6 — Cronograma e Revisões.
 
-**Próxima etapa:** P6 — Cronograma e Revisões.
+**Próxima etapa:** P7 — Mentora Inteligente.
 
 ## P3 — decisão permanente sobre o banco de questões
 - Não tentar abastecer todas as matérias antecipadamente.
@@ -87,23 +87,52 @@ Snapshot de validação no momento da implementação:
 - questões novas: **20**;
 - revisões vencidas naquele momento: **0**;
 - questões que já haviam sido erradas e estavam no caderno: **7**;
-- erros ainda pendentes: **7**;
-- questões com revisão agendada para o futuro: **7**;
-- teste de rotação confirmou: nova é priorizada; depois revisão vencida; revisão futura não é reciclada pelo automático.
+- erros ainda pendentes: **7**.
 
 Esses números são apenas snapshot de validação e mudam naturalmente conforme o usuário responde.
 
+## P6 — Cronograma e Revisões
+A P6 está fechada com o seguinte contrato funcional:
+1. o usuário configura **minutos por dia** e os **dias da semana em que estuda**;
+2. o cronograma funciona como **ciclo flexível**, sem prender matérias a dias fixos da semana;
+3. cada dia possui limite duro de minutos; nenhuma redistribuição pode ultrapassar esse teto;
+4. existe buffer configurável; dívida alta de revisão pode usar o buffer, mas nunca ultrapassar o limite duro;
+5. revisões e estudo novo disputam a mesma capacidade diária, evitando empilhamento artificial;
+6. a base de revisão é **1 dia → 7 dias → 30 dias**, com manutenção limitada a no máximo 45 dias;
+7. erro com confiança alta volta em cerca de **6 horas**; erro médio em **12 horas** e erro de baixa confiança em até **24 horas**; erro recorrente ganha prioridade adicional;
+8. acerto frágil encurta o intervalo; acerto rápido com alta confiança pode alongá-lo moderadamente;
+9. uma revisão vencida há vários dias recebe proteção de prioridade para não ser adiada indefinidamente;
+10. atividades perdidas ou deslocadas retornam à fila com `displaced_from` e são redistribuídas dentro da capacidade dos próximos dias;
+11. os botões **HOJE ESTOU SEM TEMPO**, **QUERO ESTUDAR MAIS HOJE**, **FOLGAR HOJE** e **NORMALIZAR HOJE** recalculam a semana sem criar avalanche;
+12. o painel inicial substitui a missão legada por **Missão de hoje + projeção de 7 dias**;
+13. o progresso das tarefas é persistido em `study_plan_items.progress_count`, `status` e `completed_at`;
+14. responder uma questão atualiza automaticamente o progresso da missão e agenda a próxima revisão;
+15. depois de tentativa, mudança de revisão, alteração de tempo ou mudança dos dias de estudo, a projeção de 7 dias é recalculada;
+16. tarefas de questões novas priorizam tópicos oficiais com menor domínio/menor evidência e rotacionam pelo ciclo em vez de fixar um dia da semana;
+17. a P6 usa o mesmo `user_question_state` da P5 e não cria um estado paralelo de questão.
+
+### Estado validado da P6 no fechamento
+- `study_preferences`: **1 perfil** existente e protegido por RLS.
+- `reviews`: **9 revisões pendentes** sincronizadas com o histórico atual.
+- `user_question_state`: **9 estados com próxima revisão** e **0 questões respondidas sem intervalo P6**.
+- intervalos acima do teto de 45 dias: **0**.
+- itens de plano com duração inválida: **0**.
+- histórico anterior foi normalizado para a regra P6: erros médios atuais em 12h, erro de baixa confiança em 24h, primeiro acerto em 24h e acerto forte em 30h.
+
 ## Arquivos e responsabilidades
 - `MAPA-DO-PROJETO.md`: status, arquitetura e decisões operacionais.
-- `index.html`: estrutura HTML base e carregamento dos módulos legados.
+- `index.html`: estrutura HTML base e carregamento dos módulos legados + `runtime-bootstrap.js`.
 - `app.js`: motor legado/local; evitar novas regras de negócio.
 - `styles.css`: estilos globais.
-- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas atuais sobre o HTML legado.
+- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas P5/P6.
 - `cloud-sync.js`: autenticação Supabase e sincronização; carrega a Central privada.
 - `bank-mode.js`: orquestrador da Central de Questões; manter wiring fino.
 - `bank-mode.css`: estilos base da Central.
 - `qg-theme.css`: tema QG compartilhado.
 - `qg-mode.js` / `qg-mode.css`: P5, painel operacional, caderno de erros e entradas de treino.
+- `review-engine.js`: P6, intervalos adaptativos e sincronização `user_question_state` ↔ `reviews`.
+- `schedule-engine.js`: P6, capacidade diária, dívida, ciclo flexível, projeção de 7 dias e progresso persistente.
+- `study-profile.js`: P6, missão de hoje, configuração de tempo/dias, overrides e projeção semanal.
 - `edital-core.js` / `edital-core.css`: currículo/taxonomia oficial.
 - `question-state.js`: estados `new|answered|correct|wrong|review|mastered`.
 - `question-filters.js` / `question-filters.css`: filtros e rotação; automático = novas → revisões vencidas.
@@ -117,9 +146,14 @@ Esses números são apenas snapshot de validação e mudam naturalmente conforme
 ## Supabase — estrutura relevante
 - `questions`: questão canônica privada, gabarito e explicações P4.
 - `question_attempts`: histórico imutável de respostas.
-- `user_question_state`: resumo por usuário+questão; também é a fonte do Caderno QG (`wrong_count`) e da fila (`next_review_at`).
+- `user_question_state`: resumo por usuário+questão; fonte do Caderno QG e da próxima revisão adaptativa P6.
+- `reviews`: fila persistente de revisões por questão/tópico, com estágio, intervalo e motivo.
+- `study_preferences`: limite diário, dias de estudo, buffer e proporção inicial de revisões.
+- `study_day_overrides`: ajustes de capacidade por data (`normal|low_time|extra|rest`).
+- `study_plan_items`: missão diária/projeção, duração, prioridade, origem, deslocamento e progresso.
+- `study_sessions`: sessões de estudo registráveis.
 - `subjects`, `topics`, `topic_components` e aliases: currículo oficial.
-- `topic_mastery`: domínio agregado por tópico.
+- `topic_mastery`: domínio agregado por tópico e próxima revisão.
 - `source_documents`: origem/licença e contagem do acervo.
 
 ## Matriz “quero mudar X → onde mexer”
@@ -128,9 +162,11 @@ Esses números são apenas snapshot de validação e mudam naturalmente conforme
 - Modo QG/caderno → `qg-mode.js`/CSS + `user_question_state`.
 - Dificuldade → `question-difficulty.js`/CSS + `questions`.
 - Correção → `question-feedback.js`/CSS + campos P4 em `questions`.
+- Revisões adaptativas → `review-engine.js` + `reviews` + campos P6 de `user_question_state`.
+- Cronograma/capacidade/projeção → `schedule-engine.js` + `study_preferences` + `study_day_overrides` + `study_plan_items`.
+- Painel/tempo/dias/atalhos do dia → `study-profile.js`.
 - Importar questão sob demanda → `questions`, `source_documents`, taxonomia P1 e fonte privada; a questão só entra no treino com correção P4 completa.
 - Edital/taxonomia → `edital-core.js` + tabelas P1.
-- Cronograma → futuros `study-profile.js`, `schedule-engine.js`, `review-engine.js` na P6.
 - Mentora/IA → futuro `mentor-engine.js` + backend seguro na P7.
 - Qconcursos → futuro `qconcursos-links.js` na P8.
 - Cache/PWA → `sw.js` quando assets frontend mudarem.
@@ -143,6 +179,8 @@ Esses números são apenas snapshot de validação e mudam naturalmente conforme
 5. Questão nova destinada ao treino deve entrar com correção completa por alternativa.
 6. No automático, questão antiga só volta se a revisão estiver vencida; filtros manuais podem chamá-la antes.
 7. Erro histórico permanece no Caderno QG mesmo após recuperação.
-8. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
-9. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
-10. Se P1–P8 terminarem, parar e aguardar orientação.
+8. O cronograma nunca ultrapassa o limite duro configurado para o dia.
+9. Revisões adiadas acumulam prioridade e retornam à fila sem avalanche.
+10. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
+11. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
+12. Se P1–P8 terminarem, parar e aguardar orientação.
