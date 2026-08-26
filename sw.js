@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v2-3-p5-qg';
+const CACHE = 'mentor-ia-v2-4-p6-schedule';
 const ASSETS = [
   './',
   './index.html',
@@ -20,6 +20,9 @@ const ASSETS = [
   './runtime-bootstrap.js',
   './bank-mode.js',
   './qg-mode.js',
+  './review-engine.js',
+  './schedule-engine.js',
+  './study-profile.js',
   './edital-core.js',
   './question-state.js',
   './question-filters.js',
