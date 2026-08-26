@@ -1,11 +1,11 @@
-const CACHE = 'mentor-ia-v9-1-stability';
+const CACHE = 'mentor-ia-v9-1-1-presets';
 const SUPABASE_SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4';
 const LOCAL_ASSETS = [
   './','./index.html','./styles.css','./layout-refresh.css','./layout-lock.css','./auth.css',
   './bank-mode.css','./qg-mode.css','./edital-core.css','./question-filters.css','./question-difficulty.css',
-  './question-feedback.css','./mentor-engine.css','./qconcursos-links.css','./app.js','./cloud-sync.js',
+  './question-feedback.css','./mentor-engine.css','./qconcursos-links.css','./q-presets-p8.css','./app.js','./cloud-sync.js',
   './runtime-bootstrap.js','./bank-mode.js','./qg-mode.js','./review-engine.js','./schedule-engine.js',
-  './study-profile.js','./mentor-engine.js','./mentor-p8-bridge.js','./qconcursos-links.js','./stability-9.1.js',
+  './study-profile.js','./mentor-engine.js','./mentor-p8-bridge.js','./qconcursos-links.js','./q-presets-p8.js','./stability-9.1.js',
   './edital-core.js','./question-state.js','./question-filters.js','./question-difficulty.js','./question-feedback.js',
   './manifest.json','./icon.svg'
 ];
