@@ -9,7 +9,8 @@
 - PDFs licenciados e banco privado de questões nunca devem ser publicados no GitHub.
 - Nunca expor service role, chaves privadas ou tokens.
 - Não alterar o projeto/repositório Financeiro.
-- Nunca inventar gabarito: em PDF, vale o gabarito do próprio material.
+- Nunca inventar gabarito: para questões extraídas de PDF, vale o gabarito do próprio material.
+- Edge Function `import-mentor-questions`: desde P3.1g está com `verify_jwt=true`, sem token fixo embutido e bloqueada para mutações públicas; importações P3 são feitas pelo pipeline administrativo controlado.
 
 ## STATUS DO PROJETO
 - P1 — Edital e Taxonomia ✅ concluída
@@ -19,13 +20,14 @@
   - P2.3 — dificuldade e origem ✅
 - P3 — Importação dos PDFs 🔄 em andamento
   - P3.1 — Português 🔄 em andamento
-    - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅
-    - P3.1b — Sintaxe, lote seguro (questão 16) ✅
-    - P3.1c — auditoria/reconciliação do lote existente de Crase ✅
-    - P3.1d — Voz passiva/Sintaxe, questão 17 ✅
-    - P3.1e — Sintaxe/finalidade, questão 1 ✅
-    - P3.1f — Sintaxe/pronomes e funções sintáticas, questão 2 ✅
-    - P3.1g — próximo lote seguro de Português ⏳
+    - P3.1a — Interpretação/Tipologia, questões 1–2 ✅
+    - P3.1b — Sintaxe, questão 16 ✅
+    - P3.1c — auditoria/reconciliação de Crase ✅
+    - P3.1d — Sintaxe, questão 17 ✅
+    - P3.1e — Sintaxe, questão 1 ✅
+    - P3.1f — Sintaxe, questão 2 ✅
+    - P3.1g — lote seguro Sintaxe/Pontuação (6 questões) ✅
+    - P3.1h — próximo lote seguro de Português ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -42,50 +44,43 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1f — importação segura da questão 2 da seção Sintaxe, sobre funções sintáticas do pronome “lhe”, vinculada a LP7.
+**Última subparte concluída:** P3.1g — importação segura de 6 questões da seção Sintaxe, com classificação fina entre LP7 e LP8.
 
-**Próxima subparte:** P3.1g — continuar Português com o próximo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
-
-**Último deploy confirmado antes de P3.1f:** GitHub Pages run 63 — `completed/success`, commit `726332ede85ded65e12e048f071c56f17097aefa`.
+**Próxima subparte:** P3.1h — continuar Português com novo lote validado diretamente contra questão + alternativas + gabarito do PDF; não avançar para História antes de fechar P3.1.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
-## Resultados da P3.1
+## Resultados acumulados da P3.1
 ### P3.1a
-- Questões examinadas: 2; válidas/importadas: 2; duplicadas: 0; descartadas: 0.
-- INT-1 → LP2 `Tipologia textual e gêneros textuais`, gabarito B, `easy/estimated`.
-- INT-2 → LP1 `Compreensão e interpretação de textos`, gabarito C, `medium/estimated`.
+- 2 importadas: INT-1 → LP2, gabarito B; INT-2 → LP1, gabarito C.
 
 ### P3.1b
-- Recorte seguro: questão 16 da seção de Português localizada no módulo.
-- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
-- Com gabarito do PDF: 1; alternativas completas: 5/5.
-- INT-16 → LP7 `Sintaxe da oração e do período`, gabarito E, `medium/estimated`.
-- `source_page` nulo porque não foi possível confirmar a página com segurança.
+- INT-16 → LP7, gabarito E.
 
 ### P3.1c
-- Auditoria, sem nova importação: 18 registros `P3-*` de Crase já existentes foram reconciliados com o mapa.
-- Todos privados, `difficulty_origin=estimated`, gabarito preenchido e 0 grupos de enunciados duplicados.
-- P3-7 e P3-9 não existem no banco e não foram inventadas/recriadas.
+- 18 registros de Crase já existentes foram auditados/reconciliados; P3-7 e P3-9 não foram recriadas sem confirmação segura.
 
 ### P3.1d
-- INT-17 → LP7 `Sintaxe da oração e do período`, gabarito D, `medium/estimated`, `private`.
-- Questão sobre voz passiva; 5/5 alternativas; 0 duplicadas.
+- INT-17 → LP7, gabarito D.
 
 ### P3.1e
-- SIN-1 → LP7 `Sintaxe da oração e do período`, gabarito C, `medium/estimated`, `private`.
-- Questão sobre expressão de finalidade; 5/5 alternativas; 0 duplicadas.
+- SIN-1 → LP7, gabarito C.
 
 ### P3.1f
-- Recorte seguro: questão 2 da seção `SINTAXE`, sobre funções sintáticas do pronome “lhe”.
-- Encontradas/examinadas: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
-- Alternativas completas: 5/5.
-- Gabarito confirmado diretamente no gabarito do PDF: Sintaxe 2-E.
-- SIN-2 → LP7 `Sintaxe da oração e do período`, gabarito E, `medium/estimated`, `private`.
-- `source_page` ficou nulo porque o número da página da questão não foi confirmado com segurança.
-- Antes da inserção: 0 ocorrência do mesmo enunciado e 0 ocorrência de `source_external_id=gerais-portugues-sintaxe-2`.
-- Após inserção: 24 questões no banco, 24 de Português, 0 não privadas.
-- `source_documents.question_count` foi reconciliado para 24, igual ao total real vinculado ao módulo.
+- SIN-2 → LP7, gabarito E.
+- Após P3.1f: 24 questões vinculadas ao módulo.
+
+### P3.1g
+- Questões examinadas para o lote: 6; válidas/importadas: 6; duplicadas: 0; descartadas no lote final: 0.
+- SIN-18 → LP7 `Sintaxe da oração e do período`, gabarito B, `hard/estimated`, página PDF 24.
+- SIN-24 → LP8 `Pontuação`, gabarito C, `easy/estimated`, página PDF 26.
+- SIN-25 → LP8 `Pontuação`, gabarito D, `easy/estimated`, página PDF 26.
+- SIN-27 → LP7 `Sintaxe da oração e do período`, gabarito E, `easy/estimated`, página PDF 26.
+- SIN-28 → LP7 `Sintaxe da oração e do período`, gabarito B, `medium/estimated`, página PDF 26.
+- SIN-30 → LP8 `Pontuação`, gabarito D, `medium/estimated`, página PDF 27.
+- Validação do lote: 6/6 gabaritos válidos, 6/6 privadas, 6/6 `difficulty_origin=estimated`, 0 `source_external_id` duplicado.
+- Total real vinculado ao módulo após o lote: **30 questões**, todas de Português nesta fase; `source_documents.question_count=30`, `import_status=processing`.
+- O gabarito geral do PDF confirma os blocos de Português, incluindo Sintaxe, Pontuação, Crase, Classes de Palavras, Ortografia, Concordância e Regência.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
@@ -94,20 +89,18 @@
 - `styles.css`: estilos globais/base.
 - `cloud-sync.js`: autenticação Supabase, perfil e sincronização legada.
 - `auth.css`: estilos de autenticação.
-- `bank-mode.js`: orquestrador da Central de Questões; wiring fino apenas.
+- `bank-mode.js`: orquestrador da Central de Questões; apenas wiring fino.
 - `bank-mode.css`: estilos base da Central.
 - `qg-theme.css`: tema QG compartilhado.
-- `edital-core.js` / `edital-core.css`: P1, currículo/taxonomia oficial e UI do edital; não ampliar via fontes externas.
+- `edital-core.js` / `edital-core.css`: P1, currículo/taxonomia oficial e UI do edital; fontes externas não ampliam currículo.
 - `q-mode.js` / `q-mode.css`: modo legado/manual do Qconcursos; mudanças maiores só na P8.
 - `q-presets.js` / `q-presets.css`: atalhos Qconcursos; reservar para P8.
+- `question-state.js`: P2.1, estados `new|answered|correct|wrong|review|mastered`.
+- `question-filters.js` / `question-filters.css`: P2.2, filtros e rotação por estado.
+- `question-difficulty.js` / `question-difficulty.css`: P2.3, `easy|medium|hard`, origem `source|estimated|calibrated`, revelação somente pós-gabarito.
 - `sw.js`: Service Worker/PWA; alterar apenas quando assets frontend mudarem.
-- `manifest.json` / `icon.svg`: manifesto e ícone PWA.
+- `manifest.json` / `icon.svg`: PWA.
 - `README.md`: documentação pública geral.
-
-## Módulos concluídos
-- `question-state.js` — P2.1: `new|answered|correct|wrong|review|mastered`.
-- `question-filters.js` + CSS — P2.2: Automático/Novas/Erradas/Acertadas/Revisão/Dominadas/Todas.
-- `question-difficulty.js` + CSS — P2.3: `easy|medium|hard`, origem `source|estimated|calibrated`, revelação só após gabarito.
 
 ## Módulos planejados
 - `question-feedback.js` — P4.
@@ -116,18 +109,18 @@
 - `qconcursos-links.js` — P8.
 
 ## Supabase — estrutura relevante
-- `questions`: questão canônica; P3 guarda conteúdo licenciado privado, dificuldade e origem.
-- `source_documents`: material de origem/licença/status/contagem.
-- `question_attempts`: histórico imutável das respostas.
+- `questions`: questão canônica; P3 guarda conteúdo licenciado como `private`, gabarito, tópico, dificuldade e origem.
+- `source_documents`: origem/licença/status/contagem real do material.
+- `question_attempts`: histórico imutável de respostas.
 - `user_question_state`: resumo por usuário+questão, contadores, última resposta, tempo, confiança, revisão e status.
-- `subjects`, `topics`, `topic_components` e aliases: currículo oficial P1; fontes externas não ampliam.
+- `subjects`, `topics`, `topic_components` e aliases: currículo oficial P1.
 - `topic_mastery`: domínio agregado por tópico.
 
 ## Matriz “quero mudar X → onde mexer”
 - Estado/badge → `question-state.js` + wiring mínimo `bank-mode.js` + `user_question_state`.
 - Filtros/rotação → `question-filters.js`/CSS + wiring mínimo `bank-mode.js`.
 - Dificuldade → `question-difficulty.js`/CSS + `questions`.
-- Importação P3 → `questions`, `source_documents`, taxonomia P1 e fonte licenciada; não publicar questões/PDF no GitHub.
+- Importação P3 → `questions`, `source_documents`, taxonomia P1 e fonte licenciada; não publicar conteúdo no GitHub.
 - Correção → futuro `question-feedback.js`.
 - Edital/taxonomia → `edital-core.js` + tabelas P1.
 - Cronograma → `study-profile.js`, `schedule-engine.js`, `review-engine.js`.
@@ -136,23 +129,24 @@
 - Cache/PWA → `sw.js` apenas se assets mudarem.
 
 ## Protocolo de importação P3
-1. localizar trecho e gabarito no PDF licenciado;
+1. localizar questão e gabarito no PDF licenciado;
 2. trabalhar somente a matéria/subparte atual;
 3. extrair enunciado e alternativas completas;
 4. confirmar gabarito no próprio material;
-5. mapear a tópico oficial/subitem quando aplicável;
-6. consultar duplicidade antes de inserir;
+5. mapear para tópico oficial/subitem aplicável;
+6. consultar duplicidade por `source_external_id` e enunciado antes de inserir;
 7. usar `estimated` se a fonte não informar dificuldade;
-8. descartar questão quebrada, ilegível ou sem gabarito confiável;
-9. manter conteúdo privado no Supabase;
-10. atualizar contagem, validar integridade e registrar o lote neste mapa.
+8. descartar/adiar questão quebrada, dependente de imagem ou com destaque essencial perdido;
+9. manter conteúdo `private` no Supabase;
+10. atualizar `source_documents.question_count` com o total real vinculado;
+11. validar integridade e registrar o lote neste mapa.
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
 2. Atualizar este mapa antes de tocar arquivo não previsto.
 3. Preferir módulo separado a ampliar monólitos.
 4. Um commit claro por subparte sempre que possível.
-5. Nunca inventar gabarito ou página de origem.
+5. Nunca inventar gabarito, página ou metadado de fonte.
 6. Nunca publicar material licenciado ou segredo.
 7. Conferir Supabase, GitHub, mapa/status e Pages antes de marcar concluído.
 8. Se Pages não estiver `completed/success`, não declarar concluído.
