@@ -33,8 +33,7 @@
     const groups=new Map(subjects.map(subject=>[subject.id,{subject,rows:[]} ]));
     mastery.forEach(row=>{
       const topic=topicMap.get(row.topic_id);
-      if (!topic) return;
-      if (!groups.has(topic.subject_id)) return;
+      if (!topic||!groups.has(topic.subject_id)) return;
       groups.get(topic.subject_id).rows.push({...row,topic});
     });
     return [...groups.values()].sort((a,b)=>Number(a.subject.position||0)-Number(b.subject.position||0));
@@ -43,12 +42,10 @@
   function subjectStats(group) {
     const rows=group.rows;
     const evidence=rows.reduce((sum,row)=>sum+Number(row.attempts_count||0),0);
-    const weighted=evidence?rows.reduce((sum,row)=>sum+Number(row.mastery_score||0)*Math.max(1,Number(row.attempts_count||0)),0)/rows.reduce((sum,row)=>sum+Math.max(1,Number(row.attempts_count||0)),0):0;
+    const denominator=rows.reduce((sum,row)=>sum+Math.max(1,Number(row.attempts_count||0)),0);
+    const weighted=evidence&&denominator?rows.reduce((sum,row)=>sum+Number(row.mastery_score||0)*Math.max(1,Number(row.attempts_count||0)),0)/denominator:0;
     const correct=rows.reduce((sum,row)=>sum+Number(row.correct_count||0),0);
-    const last=rows.reduce((latest,row)=>{
-      const time=row.last_attempt_at?new Date(row.last_attempt_at).getTime():0;
-      return Math.max(latest,time);
-    },0);
+    const last=rows.reduce((latest,row)=>Math.max(latest,row.last_attempt_at?new Date(row.last_attempt_at).getTime():0),0);
     return {evidence,score:Math.round(weighted||0),correct,last};
   }
 
@@ -56,13 +53,12 @@
     const measured=groups.map(group=>({group,stats:subjectStats(group)})).filter(item=>item.stats.evidence>0);
     const totalEvidence=measured.reduce((sum,item)=>sum+item.stats.evidence,0);
     const overall=totalEvidence?Math.round(measured.reduce((sum,item)=>sum+item.stats.score*item.stats.evidence,0)/totalEvidence):null;
-    const priority=measured.sort((a,b)=>a.stats.score-b.stats.score||b.stats.evidence-a.stats.evidence)[0];
-
+    const priority=[...measured].sort((a,b)=>a.stats.score-b.stats.score||b.stats.evidence-a.stats.evidence)[0];
     if ($('#overallMastery')) $('#overallMastery').textContent=overall==null?'—':`${overall}%`;
     if ($('#totalAnswered')) $('#totalAnswered').textContent=String(totalAttempts||0);
     if ($('#accuracy')) $('#accuracy').textContent=totalAttempts?`${Math.round(correctAttempts/totalAttempts*100)}%`:'—';
     if ($('#prioritySubject')) $('#prioritySubject').textContent=priority?.group?.subject?.name||'Aguardando dados';
-    if ($('#heroText') && priority) $('#heroText').textContent=`Sua prioridade atual é ${priority.group.subject.name} (${priority.stats.score}%). Abra as questões para seguir o ciclo.`;
+    if ($('#heroText')&&priority) $('#heroText').textContent=`Sua prioridade atual é ${priority.group.subject.name} (${priority.stats.score}%). Abra as questões para seguir o ciclo.`;
   }
 
   function renderMiniMap(groups) {
@@ -70,8 +66,7 @@
     if (!host) return;
     host.innerHTML=groups.map(group=>{
       const stats=subjectStats(group);
-      const label=stats.evidence?`${stats.score}%`:'Sem dados';
-      return `<div class="subject-row"><div class="subject-top"><strong>${esc(group.subject.name)}</strong><span>${label}</span></div><div class="bar"><span style="width:${stats.evidence?stats.score:0}%"></span></div></div>`;
+      return `<div class="subject-row"><div class="subject-top"><strong>${esc(group.subject.name)}</strong><span>${stats.evidence?`${stats.score}%`:'Sem dados'}</span></div><div class="bar"><span style="width:${stats.evidence?stats.score:0}%"></span></div></div>`;
     }).join('');
   }
 
@@ -108,6 +103,17 @@
     }).join('');
   }
 
+  function lockEvidenceTaskButtons(plan) {
+    (plan?.items||[]).filter(item=>['questions','review'].includes(item.task_type)).forEach(item=>{
+      const button=document.querySelector(`[data-p6-complete="${CSS.escape(item.id)}"]`);
+      if (!button) return;
+      const badge=document.createElement('span');
+      badge.className='p6-badge';
+      badge.textContent='CONCLUI AUTOMATICAMENTE';
+      button.replaceWith(badge);
+    });
+  }
+
   async function refresh() {
     if (refreshing) { queued=true; return; }
     refreshing=true;
@@ -141,15 +147,19 @@
 
   window.addEventListener('mentor:attempt-saved',()=>setTimeout(refresh,180));
   window.addEventListener('mentor:external-practice-saved',()=>setTimeout(refresh,220));
-  window.addEventListener('mentor:plan-updated',()=>setTimeout(refresh,180));
+  window.addEventListener('mentor:plan-updated',event=>{
+    lockEvidenceTaskButtons(event.detail);
+    setTimeout(refresh,180);
+  });
   window.addEventListener('mentor:analysis-updated',()=>setTimeout(refresh,180));
 
   async function boot() {
     await refresh();
+    try { lockEvidenceTaskButtons(await window.MentorScheduleEngine?.getPlan?.()); } catch(error) { console.warn('Stability 9.1: plano não lido',error); }
     const db=window.mentorCloud?.client;
     db?.auth?.onAuthStateChange?.(event=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT')setTimeout(refresh,160);});
   }
 
-  window.MentorStability=Object.freeze({version:VERSION,refresh});
+  window.MentorStability=Object.freeze({version:VERSION,refresh,lockEvidenceTaskButtons});
   boot();
 })();
