@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '6.0';
+  const VERSION = '6.1';
 
   function loadScript(id, src) {
     return new Promise((resolve, reject) => {
@@ -56,6 +56,9 @@
     if (!window.MentorStudyProfile) {
       await loadScript('mentorStudyProfile', './study-profile.js?v=6.0');
     }
+
+    // Deve ser o último CSS da aplicação: harmoniza as camadas legadas/P4/P5/P6.
+    addCss('mentorLayoutRefresh', './layout-refresh.css?v=1.0');
   }
 
   window.MentorRuntimeBootstrap = Object.freeze({ version: VERSION, boot });
