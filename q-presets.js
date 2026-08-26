@@ -217,3 +217,35 @@ renderQRecommendation = function() {
   originalRenderQRecommendationForPresets();
   renderPresetRecommendation();
 };
+
+(function loadMentorCloudV14() {
+  if (document.querySelector('#mentorAuthCss')) return;
+
+  const style = document.createElement('link');
+  style.id = 'mentorAuthCss';
+  style.rel = 'stylesheet';
+  style.href = './auth.css?v=1.4';
+  document.head.appendChild(style);
+
+  function loadCloudModule() {
+    if (document.querySelector('#mentorCloudScript')) return;
+    const cloud = document.createElement('script');
+    cloud.id = 'mentorCloudScript';
+    cloud.src = './cloud-sync.js?v=1.4';
+    cloud.defer = true;
+    document.body.appendChild(cloud);
+  }
+
+  if (window.supabase?.createClient) {
+    loadCloudModule();
+    return;
+  }
+
+  const sdk = document.createElement('script');
+  sdk.id = 'supabaseSdk';
+  sdk.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3';
+  sdk.crossOrigin = 'anonymous';
+  sdk.onload = loadCloudModule;
+  sdk.onerror = () => console.error('Não foi possível carregar o SDK do Supabase.');
+  document.body.appendChild(sdk);
+})();
