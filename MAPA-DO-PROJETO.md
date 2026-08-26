@@ -14,177 +14,124 @@
 ## STATUS DO PROJETO
 - P1 — Edital e Taxonomia ✅ concluída
 - P2 — Estrutura das Questões ✅ concluída
-  - P2.1 — estados individuais ✅ concluída
-  - P2.2 — filtros e integração visual ✅ concluída
-  - P2.3 — dificuldade e origem ✅ concluída
+  - P2.1 — estados individuais ✅
+  - P2.2 — filtros e integração visual ✅
+  - P2.3 — dificuldade e origem ✅
 - P3 — Importação dos PDFs 🔄 em andamento
   - P3.1 — Português 🔄 em andamento
-    - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅ concluída
-    - P3.1b — próximo lote de Português ⏳ pendente
-  - P3.2 — História ⏳ pendente
-  - P3.3 — Geografia ⏳ pendente
-  - P3.4 — Matemática ⏳ pendente
-  - P3.5 — Informática ⏳ pendente
-  - P3.6 — Direito Constitucional ⏳ pendente
-  - P3.7 — Direitos Humanos ⏳ pendente
-  - P3.8 — Direito Administrativo ⏳ pendente
-  - P3.9 — Direito Penal ⏳ pendente
-  - P3.10 — Igualdade Racial e de Gênero ⏳ pendente
-  - P3.11 — Direito Penal Militar ⏳ pendente
-- P4 — Correção Completa ⏳ pendente
-- P5 — Modo QG ⏳ pendente
-- P6 — Cronograma e Revisões ⏳ pendente
-- P7 — Mentora Inteligente ⏳ pendente
-- P8 — Qconcursos + Internet ⏳ pendente
+    - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅
+    - P3.1b — Sintaxe, lote seguro (questão 16) ✅
+    - P3.1c — próximo lote de Português ⏳
+  - P3.2 — História ⏳
+  - P3.3 — Geografia ⏳
+  - P3.4 — Matemática ⏳
+  - P3.5 — Informática ⏳
+  - P3.6 — Direito Constitucional ⏳
+  - P3.7 — Direitos Humanos ⏳
+  - P3.8 — Direito Administrativo ⏳
+  - P3.9 — Direito Penal ⏳
+  - P3.10 — Igualdade Racial e de Gênero ⏳
+  - P3.11 — Direito Penal Militar ⏳
+- P4 — Correção Completa ⏳
+- P5 — Modo QG ⏳
+- P6 — Cronograma e Revisões ⏳
+- P7 — Mentora Inteligente ⏳
+- P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1a — primeiro lote auditável de Português.
+**Última subparte concluída:** P3.1b — lote seguro de Português, questão INT-16.
 
-**Próxima subparte:** P3.1b — continuar Português, sem avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1c — continuar Português, sem avançar para História antes de fechar P3.1.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
-**Último deploy confirmado antes da P3:** GitHub Pages run 58 — `completed/success` (P2.3).
+## Resultados da P3.1
+### P3.1a
+- Questões examinadas: 2; válidas/importadas: 2; duplicadas: 0; descartadas: 0.
+- INT-1 → LP2 `Tipologia textual e gêneros textuais`, gabarito B, `easy/estimated`.
+- INT-2 → LP1 `Compreensão e interpretação de textos`, gabarito C, `medium/estimated`.
 
-## Resultado P3.1a
-- Recorte: seção **Interpretação e Tipologia Textual**.
-- Questões examinadas neste lote: 2.
-- Válidas: 2.
-- Importadas: 2.
-- Duplicadas encontradas antes da inserção: 0.
+### P3.1b
+- Recorte seguro: questão 16 da seção de Português localizada no módulo.
+- Encontradas/examinadas neste lote: 1.
+- Válidas/importadas: 1.
+- Duplicadas antes da inserção: 0.
 - Descartadas: 0.
-- Com gabarito do PDF: 2.
-- Sem gabarito confiável: 0.
-- Alternativas completas: 2/2, com 5 alternativas cada.
-- Vinculadas ao edital: 2/2.
-- Questão INT-1 → LP2 `Tipologia textual e gêneros textuais`, gabarito B, dificuldade `easy/estimated`.
-- Questão INT-2 → LP1 `Compreensão e interpretação de textos`, gabarito C, dificuldade `medium/estimated`.
-- Banco após o lote: 20 questões totais, todas privadas; documento-fonte com 20 questões registradas.
+- Com gabarito do PDF: 1; sem gabarito confiável: 0.
+- Alternativas completas: 5/5.
+- Vinculada ao edital: INT-16 → LP7 `Sintaxe da oração e do período`.
+- Gabarito preservado do PDF: E.
+- Dificuldade: `medium/estimated`; a fonte não informa nível oficial.
+- `source_page` ficou nulo porque o recorte recuperado não permitiu confirmar com segurança o número da página; não foi inventado.
+- Banco após o lote: 21 questões totais, todas privadas; documento-fonte com 21 questões registradas.
 - O PDF não foi enviado nem copiado para o GitHub.
 
 ## Arquivos atuais e responsabilidades
-
-### `MAPA-DO-PROJETO.md`
-Status persistente, arquitetura, dependências e matriz de alteração. Atualizar ao final de cada subparte.
-
-### `index.html`
-Estrutura HTML base e carregamento estático de assets. Não guardar regras de negócio aqui.
-
-### `app.js`
-Motor legado/local de dashboard e diagnóstico. **Evitar novas funcionalidades**; alterar apenas em etapa específica de migração/limpeza.
-
-### `styles.css`
-Estilos globais/base. Módulos novos devem preferir CSS próprio.
-
-### `cloud-sync.js`
-Autenticação Supabase, perfil e sincronização do estado legado. Não usar para regras de questão/revisão.
-
-### `auth.css`
-Estilos de autenticação.
-
-### `bank-mode.js`
-Orquestrador da Central de Questões: carrega currículo, questões e estado; integra módulos; renderiza e salva tentativas. Alterar somente para wiring fino.
-
-### `bank-mode.css`
-Estilos base da Central de Questões.
-
-### `qg-theme.css`
-Tema QG compartilhado: alternativas, eliminação, acerto/erro, botões, timer e badges.
-
-### `edital-core.js`
-P1 — núcleo do edital/taxonomia: 12 matérias, 99 tópicos oficiais e subitens. Não ampliar currículo a partir de PDFs/internet.
-
-### `edital-core.css`
-Estilos da aba Edital.
-
-### `q-mode.js` / `q-mode.css`
-Modo legado/manual do Qconcursos. Reservar mudanças maiores para P8.
-
-### `q-presets.js` / `q-presets.css`
-Atalhos atuais do Qconcursos. Reservar para P8/migração futura.
-
-### `sw.js`
-Service Worker/PWA e cache dos assets. Alterar apenas quando assets frontend mudarem.
-
-### `manifest.json` / `icon.svg`
-Manifesto e ícone PWA.
-
-### `README.md`
-Documentação pública geral; não substitui este mapa.
+- `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
+- `index.html`: estrutura HTML base e carregamento estático; sem regras de negócio.
+- `app.js`: motor legado/local; evitar novas funcionalidades.
+- `styles.css`: estilos globais/base.
+- `cloud-sync.js`: autenticação Supabase, perfil e sincronização legada.
+- `auth.css`: estilos de autenticação.
+- `bank-mode.js`: orquestrador da Central de Questões; wiring fino apenas.
+- `bank-mode.css`: estilos base da Central.
+- `qg-theme.css`: tema QG compartilhado.
+- `edital-core.js` / `edital-core.css`: P1, currículo/taxonomia oficial e UI do edital; não ampliar via fontes externas.
+- `q-mode.js` / `q-mode.css`: modo legado/manual do Qconcursos; mudanças maiores só na P8.
+- `q-presets.js` / `q-presets.css`: atalhos Qconcursos; reservar para P8.
+- `sw.js`: Service Worker/PWA; alterar apenas quando assets frontend mudarem.
+- `manifest.json` / `icon.svg`: manifesto e ícone PWA.
+- `README.md`: documentação pública geral.
 
 ## Módulos concluídos
-
-### `question-state.js` — P2.1 ✅
-Classifica `new`, `answered`, `correct`, `wrong`, `review`, `mastered`, considerando `next_review_at`.
-
-### `question-filters.js` + `question-filters.css` — P2.2 ✅
-Filtros Automático/Novas/Erradas/Acertadas/Revisão/Dominadas/Todas. Automático prioriza inéditas, depois revisões, depois aprendizado; dominadas ficam fora da rotação normal.
-
-### `question-difficulty.js` + `question-difficulty.css` — P2.3 ✅
-Dificuldade `easy|medium|hard` e origem `source|estimated|calibrated`. O nível só aparece após confirmação do gabarito.
+- `question-state.js` — P2.1: `new|answered|correct|wrong|review|mastered`.
+- `question-filters.js` + CSS — P2.2: Automático/Novas/Erradas/Acertadas/Revisão/Dominadas/Todas.
+- `question-difficulty.js` + CSS — P2.3: `easy|medium|hard`, origem `source|estimated|calibrated`, revelação só após gabarito.
 
 ## Módulos planejados
-- `question-feedback.js` — P4: correta, motivo da correta, motivo específico da alternativa errada e análise de todas.
-- `review-engine.js` — P6: revisões adaptativas.
-- `study-profile.js` — P6: disponibilidade e teto diário.
-- `schedule-engine.js` — P6: distribuição de aulas/revisões.
-- `mentor-engine.js` — P7: prioridades e explicabilidade da Mentora; IA real somente por backend seguro.
-- `qconcursos-links.js` — P8: tópico oficial → filtros/links Qconcursos.
+- `question-feedback.js` — P4.
+- `review-engine.js`, `study-profile.js`, `schedule-engine.js` — P6.
+- `mentor-engine.js` — P7; IA real somente por backend seguro.
+- `qconcursos-links.js` — P8.
 
 ## Supabase — estrutura relevante
-
-### `questions`
-Questão canônica privada/pública. Guarda fonte, prova, banca, ano, matéria/tópico, número/página, enunciado, alternativas, gabarito, explicação e dificuldade.
-- P3: conteúdo licenciado fica aqui, privado.
-- `difficulty`: `easy|medium|hard`.
-- `difficulty_origin`: `source|estimated|calibrated`.
-
-### `source_documents`
-Registro do material de origem, licença, status e contagem importada. O módulo de questões gerais está registrado como `personal_module`, licença `private` e permanece `processing` enquanto P3.1/P3 estiver em andamento.
-
-### `question_attempts`
-Histórico imutável de cada resposta.
-
-### `user_question_state`
-Resumo por usuário+questão: `seen_count`, `correct_count`, `wrong_count`, última resposta, tempo, confiança, `next_review_at` e status.
-
-### `subjects`, `topics`, `topic_components`, aliases
-Currículo oficial da P1. Fontes externas não podem expandi-lo.
-
-### `topic_mastery`
-Domínio agregado por tópico.
+- `questions`: questão canônica; P3 guarda conteúdo licenciado privado, dificuldade e origem.
+- `source_documents`: material de origem/licença/status/contagem.
+- `question_attempts`: histórico imutável das respostas.
+- `user_question_state`: resumo por usuário+questão, contadores, última resposta, tempo, confiança, revisão e status.
+- `subjects`, `topics`, `topic_components` e aliases: currículo oficial P1; fontes externas não ampliam.
+- `topic_mastery`: domínio agregado por tópico.
 
 ## Matriz “quero mudar X → onde mexer”
-- Estado/badge → `question-state.js` + integração mínima em `bank-mode.js` + `user_question_state`.
-- Filtros/rotação → `question-filters.js`/CSS + integração mínima em `bank-mode.js`.
+- Estado/badge → `question-state.js` + wiring mínimo `bank-mode.js` + `user_question_state`.
+- Filtros/rotação → `question-filters.js`/CSS + wiring mínimo `bank-mode.js`.
 - Dificuldade → `question-difficulty.js`/CSS + `questions`.
-- Importação P3 → `questions`, `source_documents`, taxonomia existente e fonte licenciada; **não publicar questões/PDF no GitHub**.
+- Importação P3 → `questions`, `source_documents`, taxonomia P1 e fonte licenciada; não publicar questões/PDF no GitHub.
 - Correção → futuro `question-feedback.js`.
-- Edital/taxonomia → `edital-core.js` + tabelas da P1.
+- Edital/taxonomia → `edital-core.js` + tabelas P1.
 - Cronograma → `study-profile.js`, `schedule-engine.js`, `review-engine.js`.
 - Mentora/IA → `mentor-engine.js` + backend/Edge Function com JWT.
 - Qconcursos → `qconcursos-links.js`.
-- Cache/PWA → `sw.js` apenas quando assets mudarem.
+- Cache/PWA → `sw.js` apenas se assets mudarem.
 
 ## Protocolo de importação P3
-Para cada lote:
 1. localizar trecho e gabarito no PDF licenciado;
 2. trabalhar somente a matéria/subparte atual;
 3. extrair enunciado e alternativas completas;
 4. confirmar gabarito no próprio material;
-5. mapear a tópico oficial e subitem quando aplicável;
-6. consultar o banco por duplicidade antes de inserir;
-7. usar dificuldade `estimated` quando a fonte não informar;
+5. mapear a tópico oficial/subitem quando aplicável;
+6. consultar duplicidade antes de inserir;
+7. usar `estimated` se a fonte não informar dificuldade;
 8. descartar questão quebrada, ilegível ou sem gabarito confiável;
 9. manter conteúdo privado no Supabase;
-10. atualizar contagem do documento-fonte, validar integridade e registrar o lote neste mapa.
+10. atualizar contagem, validar integridade e registrar o lote neste mapa.
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
 2. Atualizar este mapa antes de tocar arquivo não previsto.
-3. Preferir módulo separado a ampliar arquivos monolíticos.
+3. Preferir módulo separado a ampliar monólitos.
 4. Um commit claro por subparte sempre que possível.
-5. Nunca inventar gabarito.
+5. Nunca inventar gabarito ou página de origem.
 6. Nunca publicar material licenciado ou segredo.
 7. Conferir Supabase, GitHub, mapa/status e Pages antes de marcar concluído.
-8. Se Pages não estiver `completed/success`, não declarar a etapa concluída.
+8. Se Pages não estiver `completed/success`, não declarar concluído.
 9. Se P1–P8 terminarem, parar e aguardar orientação.
