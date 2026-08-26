@@ -6,8 +6,8 @@
   let bootRegenerated = false;
 
   const $ = selector => document.querySelector(selector);
-  const esc = (value = '') => String(value).replace(/[&<>'\"]/g, char => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '\"': '&quot;'
+  const esc = (value = '') => String(value).replace(/[&<>'"]/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
   }[char]));
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
