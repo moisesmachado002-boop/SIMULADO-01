@@ -93,12 +93,22 @@
     return true;
   }
 
+  function loadFeedbackModule() {
+    if (window.MentorQuestionFeedback || document.querySelector('#mentorQuestionFeedbackScript')) return;
+    const script = document.createElement('script');
+    script.id = 'mentorQuestionFeedbackScript';
+    script.src = './question-feedback.js?v=4.1';
+    document.body.appendChild(script);
+  }
+
   window.addEventListener('mentor:attempt-saved', async event => {
     const questionId = event.detail?.questionId;
     if (!questionId) return;
     const question = await fetchQuestion(questionId);
     if (question) reveal(question);
   });
+
+  loadFeedbackModule();
 
   window.MentorQuestionDifficulty = Object.freeze({
     version: VERSION,
