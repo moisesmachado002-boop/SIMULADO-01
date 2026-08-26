@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f5f7fb" />
   <meta name="description" content="Mentor IA para estudos da PMBA 2026 com questões reais, cronograma e revisões adaptativas." />
   <title>Mentor IA — PMBA 2026</title>
-  <link rel="manifest" href="manifest.json?v=8.0" />
+  <link rel="manifest" href="manifest.json?v=8.2" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="q-mode.css" />
@@ -123,8 +123,8 @@
           const controller = navigator.serviceWorker.controller;
           if (!controller || !controller.scriptURL.includes('/SIMULADO-01/sw.js')) {
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-              if (!sessionStorage.getItem('mentor-sw-reloaded-v8')) {
-                sessionStorage.setItem('mentor-sw-reloaded-v8', '1');
+              if (!sessionStorage.getItem('mentor-sw-reloaded-v82')) {
+                sessionStorage.setItem('mentor-sw-reloaded-v82', '1');
                 location.reload();
               }
             }, { once: true });
@@ -138,6 +138,6 @@
   <script src="question-feedback.js?v=4.0"></script>
   <script src="q-presets.js"></script>
   <script src="question-difficulty.js?v=2.3"></script>
-  <script src="runtime-bootstrap.js?v=8.0"></script>
+  <script src="runtime-bootstrap.js?v=8.2"></script>
 </body>
 </html>
