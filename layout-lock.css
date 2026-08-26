@@ -1,0 +1,260 @@
+/* Mentor IA — trava visual unificada pré-P7.
+   Esta camada existe apenas para neutralizar estilos legados carregados dinamicamente. */
+
+html body,
+html body .app-shell,
+html body .app-shell * {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  text-shadow: none !important;
+}
+
+html, body,
+html body .app-shell,
+html body main,
+html body .view {
+  background: #f4f6fa !important;
+  color: #172033 !important;
+}
+
+html body .topbar {
+  background: #ffffff !important;
+  border-color: #e4e9f1 !important;
+  box-shadow: none !important;
+}
+html body .brand-mark {
+  background: #3568e8 !important;
+  border: 0 !important;
+  color: #ffffff !important;
+}
+html body .brand strong,
+html body .brand-line strong { color: #172033 !important; }
+html body .brand > div > span { color: #7b8798 !important; }
+html body .version-badge { display: none !important; }
+html body .icon-button {
+  background: #ffffff !important;
+  border: 1px solid #dfe5ed !important;
+  color: #526178 !important;
+}
+
+html body h1,
+html body h2,
+html body h3,
+html body h4,
+html body .page-intro h1,
+html body .qg-bank-header h1,
+html body .edital-header h1 {
+  color: #172033 !important;
+  letter-spacing: -0.025em !important;
+}
+html body p,
+html body small,
+html body .page-intro p { color: #748197 !important; }
+html body .eyebrow,
+html body .qg-kicker,
+html body .edital-kicker,
+html body .qg-panel-title {
+  color: #597090 !important;
+  letter-spacing: .09em !important;
+}
+
+/* O antigo Modo Q não é mais uma tela visual do produto. O banco privado é a tela Questões. */
+html body [data-view="qconcursos"],
+html body .bottom-nav [data-go="qconcursos"] { display: none !important; }
+
+/* Navegação única */
+html body .bottom-nav {
+  background: #ffffff !important;
+  border-color: #e1e6ee !important;
+  box-shadow: 0 -5px 24px rgba(16,24,40,.07) !important;
+}
+html body .nav-item {
+  background: transparent !important;
+  border: 0 !important;
+  color: #7b8798 !important;
+  box-shadow: none !important;
+}
+html body .nav-item span,
+html body .nav-item small { color: inherit !important; }
+html body .nav-item.active {
+  background: #eef4ff !important;
+  color: #3568e8 !important;
+  box-shadow: none !important;
+}
+
+/* Superfícies comuns */
+html body .hero-card,
+html body .stat-card,
+html body .mentor-card,
+html body .chat-card,
+html body .profile-card,
+html body .knowledge-card,
+html body .history-item,
+html body .empty-card,
+html body .quiz-card,
+html body .subject-row,
+html body .qg-panel,
+html body .bank-home-card,
+html body .bank-filter-card,
+html body .qg-ops-shell,
+html body .qg-question-card,
+html body .p6-head,
+html body .p6-summary,
+html body .p6-tasks,
+html body .p6-week,
+html body .p6-settings {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #e4e9f1 !important;
+  box-shadow: none !important;
+}
+
+html body button,
+html body input,
+html body textarea,
+html body select {
+  letter-spacing: normal !important;
+}
+html body input,
+html body textarea,
+html body select {
+  background: #ffffff !important;
+  color: #26364c !important;
+  border: 1px solid #dce2eb !important;
+}
+html body .primary,
+html body .qg-btn-primary,
+html body .qg-btn-confirm,
+html body .p6-task-actions .start,
+html body .p6-save {
+  background: #3568e8 !important;
+  border-color: #3568e8 !important;
+  color: #ffffff !important;
+}
+html body .secondary,
+html body .qg-btn,
+html body .p6-today-actions button {
+  background: #ffffff !important;
+  border-color: #dce2eb !important;
+  color: #526178 !important;
+}
+
+/* P6 */
+html body .p6-shell { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html body .p6-head p,
+html body .p6-task-main span,
+html body .p6-task-main small,
+html body .p6-summary span,
+html body .p6-summary small,
+html body .p6-day span,
+html body .p6-day small { color: #8490a2 !important; }
+html body .p6-summary strong,
+html body .p6-task-main strong,
+html body .p6-day strong { color: #202b3e !important; }
+html body .p6-summary article,
+html body .p6-task,
+html body .p6-day {
+  background: #ffffff !important;
+  border-color: #e7ebf1 !important;
+}
+html body .p6-day.today { background: #f2f6ff !important; border-color: #b9cdfc !important; }
+
+/* Banco / QG */
+html body .qg-bank-header { border-color: #e4e9f1 !important; }
+html body .qg-bank-header p,
+html body .qg-ops-head p,
+html body .bank-status,
+html body .qg-source-line { color: #7b889b !important; }
+html body .bank-stats article,
+html body .qg-ops-stats article,
+html body .qg-ops-actions button,
+html body .qg-notebook-item,
+html body .qg-option-wrapper,
+html body .qg-timer-bar {
+  background: #f8fafc !important;
+  border-color: #e3e8f0 !important;
+  color: #344158 !important;
+}
+html body .bank-stats strong,
+html body .qg-ops-stats strong,
+html body .qg-enunciado,
+html body .qg-option-item { color: #202b3e !important; }
+html body .qg-option-wrapper.selected {
+  background: #eef4ff !important;
+  border-color: #9bb5fa !important;
+}
+html body .qg-error-notebook { background: #ffffff !important; border-color: #eadfe1 !important; }
+
+/* Edital */
+html body .edital-shell,
+html body .edital-header,
+html body .edital-overview,
+html body .edital-subject,
+html body .edital-topic-list,
+html body .edital-topic,
+html body .edital-priority,
+html body .edital-source-note,
+html body .edital-components {
+  background: #ffffff !important;
+  color: #26364c !important;
+  border-color: #e4e9f1 !important;
+  box-shadow: none !important;
+}
+html body .edital-overview article {
+  background: #ffffff !important;
+  border-color: #e4e9f1 !important;
+  color: #26364c !important;
+}
+html body .edital-overview strong,
+html body .edital-subject h2,
+html body .edital-topic-title { color: #202b3e !important; }
+html body .edital-overview span,
+html body .edital-overview small,
+html body .edital-subject small,
+html body .edital-code { color: #7f8b9d !important; }
+html body .edital-seal { background: #eef4ff !important; color: #3568e8 !important; border-color: #d7e3ff !important; }
+html body .edital-train { background: #3568e8 !important; color: #fff !important; border-color: #3568e8 !important; }
+html body .edital-train:disabled { background: #f1f3f6 !important; color: #9aa4b2 !important; border-color: #e1e5eb !important; }
+
+/* Mobile: cinco itens em uma única linha e conteúdo sem ficar escondido pela barra. */
+@media (max-width: 899px) {
+  html body .app-shell { padding-bottom: 86px !important; }
+  html body main { padding: 22px 16px 34px !important; }
+  html body .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #e4e9f1 !important;
+  }
+  html body .bottom-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 2px !important;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom)) !important;
+    border: 0 !important;
+    border-top: 1px solid #e1e6ee !important;
+    border-radius: 0 !important;
+    z-index: 100 !important;
+  }
+  html body .nav-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 54px !important;
+    padding: 6px 2px !important;
+    border-radius: 9px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+  }
+  html body .nav-item span { font-size: 18px !important; }
+  html body .nav-item small { font-size: 10px !important; white-space: nowrap !important; }
+  html body .page-intro h1 { font-size: 28px !important; }
+  html body .p6-summary { grid-template-columns: repeat(2, 1fr) !important; }
+}
