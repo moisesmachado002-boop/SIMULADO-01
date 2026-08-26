@@ -1,8 +1,9 @@
 (() => {
   'use strict';
 
-  const VERSION = '4.1';
+  const VERSION = '4.0';
   const cache = new Map();
+  const metaCache = new Map();
 
   const esc = (value = '') => String(value).replace(/[&<>'"]/g, char => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -13,17 +14,27 @@
     const link = document.createElement('link');
     link.id = 'mentorQuestionFeedbackCss';
     link.rel = 'stylesheet';
-    link.href = './question-feedback.css?v=4.1';
+    link.href = './question-feedback.css?v=4.0';
     document.head.appendChild(link);
+  }
+
+  async function waitForDb(timeoutMs = 2500) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const db = window.mentorCloud?.client;
+      if (db) return db;
+      await new Promise(resolve => setTimeout(resolve, 40));
+    }
+    return null;
   }
 
   async function fetchQuestion(questionId) {
     if (!questionId) return null;
     if (cache.has(questionId)) return cache.get(questionId);
-    const db = window.mentorCloud?.client;
+    const db = await waitForDb();
     if (!db) return null;
     const { data, error } = await db.from('questions')
-      .select('id,correct_answer,explanation,option_explanations,explanation_status,answer_key_note,alternatives')
+      .select('id,source_question_number,exam_name,subject_label,topic_label,correct_answer,explanation,option_explanations,explanation_status,answer_key_note,alternatives')
       .eq('id', questionId)
       .maybeSingle();
     if (error) {
@@ -34,11 +45,48 @@
     return data || null;
   }
 
-  function inferLetters(question) {
+  function visibleMeta() {
+    return {
+      sourceQuestionNumber: String(document.querySelector('#bankQuestionMeta')?.textContent || '').replace(/^QUESTÃO\s+/i, '').trim(),
+      subject: String(document.querySelector('#bankQuestionSubject')?.textContent || '').trim(),
+      topic: String(document.querySelector('#bankQuestionTopic')?.textContent || '').trim(),
+      exam: String(document.querySelector('#bankQuestionSource')?.textContent || '').trim()
+    };
+  }
+
+  async function fetchVisibleQuestion(meta = visibleMeta()) {
+    if (!meta.sourceQuestionNumber) return null;
+    const key = [meta.exam, meta.subject, meta.topic, meta.sourceQuestionNumber].join('|');
+    if (metaCache.has(key)) return metaCache.get(key);
+    const db = await waitForDb();
+    if (!db) return null;
+
+    let query = db.from('questions')
+      .select('id,source_question_number,exam_name,subject_label,topic_label,correct_answer,explanation,option_explanations,explanation_status,answer_key_note,alternatives')
+      .eq('source_question_number', meta.sourceQuestionNumber);
+    if (meta.subject && meta.subject !== 'Matéria') query = query.eq('subject_label', meta.subject);
+    if (meta.topic && meta.topic !== 'Assunto') query = query.eq('topic_label', meta.topic);
+    if (meta.exam && meta.exam !== 'Seu módulo') query = query.eq('exam_name', meta.exam);
+
+    const { data, error } = await query.order('created_at', { ascending: true }).limit(1);
+    if (error) {
+      console.warn('Não foi possível localizar a questão visível para correção:', error);
+      return null;
+    }
+    const question = data?.[0] || null;
+    if (question) {
+      cache.set(question.id, question);
+      metaCache.set(key, question);
+    }
+    return question;
+  }
+
+  function inferLetters(question, selectedOverride = '') {
     const correctNode = document.querySelector('#bankAnswers [data-option-wrapper].correct');
     const wrongNode = document.querySelector('#bankAnswers [data-option-wrapper].wrong');
+    const selectedNode = document.querySelector('#bankAnswers [data-option-wrapper].selected');
     const right = String(question?.correct_answer || correctNode?.dataset.optionWrapper || '').toUpperCase();
-    const selected = String(wrongNode?.dataset.optionWrapper || right).toUpperCase();
+    const selected = String(selectedOverride || wrongNode?.dataset.optionWrapper || selectedNode?.dataset.optionWrapper || right).toUpperCase();
     return { right, selected };
   }
 
@@ -52,7 +100,7 @@
       return { text: String(question.explanation), specific: false };
     }
     return {
-      text: 'A justificativa específica desta alternativa ainda não foi cadastrada. A plataforma mantém o gabarito do material e não inventa uma explicação para preencher a lacuna.',
+      text: 'A justificativa específica desta alternativa ainda não foi cadastrada. O gabarito permanece o do material original; a plataforma não inventa uma explicação para preencher a lacuna.',
       specific: false
     };
   }
@@ -64,14 +112,14 @@
     if (paragraph?.tagName === 'P') paragraph.classList.add('p4-legacy-hidden');
   }
 
-  function render(question) {
+  function render(question, selectedOverride = '') {
     const feedback = document.querySelector('#bankFeedback');
     if (!feedback || feedback.classList.contains('hidden') || !question) return false;
 
     feedback.querySelector('.mentor-feedback-p4')?.remove();
     hideLegacyGeneral(feedback);
 
-    const { right, selected } = inferLetters(question);
+    const { right, selected } = inferLetters(question, selectedOverride);
     if (!right) return false;
 
     const correctInfo = explanationFor(question, right, right);
@@ -108,8 +156,9 @@
       const key = String(letter).toUpperCase();
       const info = explanationFor(question, key, right);
       const state = key === right ? ' correta' : (key === selected && wrong ? ' marcada-errada' : '');
+      const marker = key === right ? '<small>GABARITO</small>' : (key === selected ? '<small>SUA RESPOSTA</small>' : '');
       return `<article class="p4-option-analysis${state}">
-        <div><strong>${esc(key)}</strong><span>${esc(text)}</span></div>
+        <div><strong>${esc(key)}</strong><span>${esc(text)}</span>${marker}</div>
         <p>${esc(info.text)}</p>
       </article>`;
     }).join('');
@@ -125,6 +174,25 @@
     return true;
   }
 
+  async function renderVisibleAfterReveal(selected, meta) {
+    const question = await fetchVisibleQuestion(meta);
+    if (!question) return false;
+    for (let i = 0; i < 24; i += 1) {
+      const feedback = document.querySelector('#bankFeedback');
+      if (feedback && !feedback.classList.contains('hidden')) return render(question, selected);
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    return false;
+  }
+
+  document.addEventListener('click', event => {
+    if (!event.target.closest('#bankConfirmBtn')) return;
+    const selected = document.querySelector('#bankAnswers [data-option-wrapper].selected')?.dataset.optionWrapper;
+    if (!selected) return;
+    const meta = visibleMeta();
+    setTimeout(() => renderVisibleAfterReveal(selected, meta).catch(console.error), 0);
+  }, true);
+
   window.addEventListener('mentor:attempt-saved', async event => {
     const questionId = event.detail?.questionId;
     if (!questionId) return;
@@ -137,6 +205,7 @@
   window.MentorQuestionFeedback = Object.freeze({
     version: VERSION,
     fetchQuestion,
+    fetchVisibleQuestion,
     render,
     explanationFor
   });
