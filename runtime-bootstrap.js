@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '8.2';
+  const VERSION = '9.0';
   let visualGuardInstalled = false;
   let guardBusy = false;
 
@@ -56,7 +56,7 @@
   function keepVisualLockLast() {
     removeLegacyVisualTheme();
     const refresh = document.getElementById('mentorLayoutRefresh');
-    const lock = addCss('mentorLayoutLock', './layout-lock.css?v=8.2');
+    const lock = addCss('mentorLayoutLock', './layout-lock.css?v=9.0');
     const alreadyOrdered = lock === document.head.lastElementChild && (!refresh || refresh.nextElementSibling === lock);
     if (alreadyOrdered) return;
     if (refresh) document.head.appendChild(refresh);
@@ -83,7 +83,7 @@
   }
 
   async function boot() {
-    addCss('mentorAuthCss', './auth.css?v=8.2');
+    addCss('mentorAuthCss', './auth.css?v=9.0');
     if (!window.supabase?.createClient) await loadScript('mentorSupabaseSdk', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
     if (!window.mentorCloud) await loadScript('mentorCloudSync', './cloud-sync.js?v=5.0');
     if (!window.MentorQgMode) await loadScript('mentorQgModeScript', './qg-mode.js?v=5.0');
@@ -93,6 +93,10 @@
 
     addCss('mentorEngineCss', './mentor-engine.css?v=7.0');
     if (!window.MentorEngine) await loadScript('mentorEngineScript', './mentor-engine.js?v=7.0');
+    await loadScript('mentorP8Bridge', './mentor-p8-bridge.js?v=9.0');
+
+    addCss('mentorExternalCss', './qconcursos-links.css?v=9.0');
+    if (!window.MentorExternal) await loadScript('mentorExternalScript', './qconcursos-links.js?v=9.0');
 
     addCss('mentorLayoutRefresh', './layout-refresh.css?v=8.0');
     keepVisualLockLast();
