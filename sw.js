@@ -1,8 +1,9 @@
-const CACHE = 'mentor-ia-v2-4-p6-schedule';
+const CACHE = 'mentor-ia-v2-5-layout-refresh';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './layout-refresh.css',
   './q-mode.css',
   './q-presets.css',
   './auth.css',
