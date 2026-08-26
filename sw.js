@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v2-0-p2-3';
+const CACHE = 'mentor-ia-v2-1-p4-1';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './edital-core.css',
   './question-filters.css',
   './question-difficulty.css',
+  './question-feedback.css',
   './app.js',
   './q-mode.js',
   './q-presets.js',
@@ -20,6 +21,7 @@ const ASSETS = [
   './question-state.js',
   './question-filters.js',
   './question-difficulty.js',
+  './question-feedback.js',
   './manifest.json',
   './icon.svg'
 ];
