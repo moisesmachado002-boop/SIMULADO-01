@@ -15,7 +15,7 @@
 - O projeto avança somente por etapas inteiras: **P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8**.
 - Não usar numeração operacional `.1`, `.2`, `.3` no status do projeto.
 - Pode haver alterações técnicas internas em vários arquivos ou tabelas durante uma P, mas a etapa só termina quando o conjunto inteiro estiver implementado, validado e publicado.
-- Ao concluir uma P, atualizar este mapa e apontar apenas a próxima P.
+- Ao concluir uma P, atualizar este mapa.
 
 ## REGRA DE CONFIRMAÇÃO DO USUÁRIO
 - Um primeiro `C` pede a apresentação da próxima etapa e do que será feito.
@@ -30,11 +30,11 @@
 - P5 — Modo QG ✅ concluída
 - P6 — Cronograma e Revisões ✅ concluída
 - P7 — Mentora Inteligente ✅ concluída
-- P8 — Qconcursos + Internet ⏳ próxima etapa
+- P8 — Qconcursos + Internet ✅ concluída
 
-**Última etapa concluída:** P7 — Mentora Inteligente.
+**Última etapa concluída:** P8 — Qconcursos + Internet.
 
-**Próxima etapa:** P8 — Qconcursos + Internet.
+**Próxima etapa:** nenhuma. **P1–P8 concluídas; parar o desenvolvimento por etapas e aguardar orientação do usuário.**
 
 ## P3 — decisão permanente sobre o banco de questões
 - Não tentar abastecer todas as matérias antecipadamente.
@@ -127,7 +127,7 @@ A P7 está fechada com o seguinte contrato funcional:
 4. cada análise apresenta nível de evidência (`low|medium|high`) e texto explícito quando a amostra ainda é pequena;
 5. erro com confiança alta é tratado como possível conceito mal consolidado; erro lento como possível problema de fluência/tempo; erro muito rápido é apenas sinal de possível pressa, sem rotular automaticamente como distração;
 6. a Mentora identifica tendência quando existem janelas suficientes de respostas recentes e anteriores; sem amostra suficiente usa a tendência já armazenada no domínio;
-7. avanço só é liberado quando há pelo menos 5 respostas, 80% de acerto, ausência de tendência de queda e nenhuma revisão vencida no tópico;
+7. após a P8, avanço exige pelo menos **8 questões de evidência**, 80% de acerto, ausência de tendência de queda e nenhuma revisão vencida no tópico;
 8. análises pedidas explicitamente são persistidas em `mentor_insights` com `evidence_json`, sem alterar questões ou gabaritos;
 9. o backend da análise é a Edge Function `mentor-analyze`, com `verify_jwt=true`, usando o JWT do usuário e as políticas RLS existentes;
 10. se o backend estiver temporariamente indisponível, existe contingência local conservadora; nesse caso a interface avisa que a memória da Mentora não foi atualizada;
@@ -137,43 +137,75 @@ A P7 está fechada com o seguinte contrato funcional:
 14. o antigo bloco de respostas fixas fica oculto na interface da P7; o painel passa a mostrar evidência, motivos, tópicos prioritários, próxima ação e memória das análises;
 15. a IA/analítica nunca altera silenciosamente o gabarito, explicações P4 ou a fonte de verdade do edital.
 
-### Estado validado da P7 no fechamento
-- Edge Function `mentor-analyze`: **ACTIVE**, versão 1, `verify_jwt=true`.
+### Estado validado da P7/P8
+- Edge Function `mentor-analyze`: **ACTIVE**, versão 2, `verify_jwt=true`.
 - `mentor_insights`: **RLS habilitado** e índices por usuário/data e usuário/tipo/data.
-- snapshot de evidência no fechamento: **9 tentativas**, **1 tópico medido**, **9 revisões pendentes** e **15 itens pendentes/em andamento no horizonte de 7 dias**.
-- `mentor_insights` estava com **0 registros antes do primeiro uso explícito da nova P7**; a memória começa a ser preenchida quando o usuário pede uma análise.
-- como a evidência atual está concentrada em um único tópico, a P7 deve sinalizar incerteza em vez de extrapolar para todo o edital.
+- a versão 2 soma questões individuais do banco próprio e volume/acertos das baterias externas para domínio e prioridade.
+- padrões por confiança/tempo continuam usando apenas respostas individuais; baterias externas não são usadas para inventar diagnóstico por alternativa.
+
+## P8 — Qconcursos + Internet
+A P8 está fechada com o seguinte contrato funcional:
+1. existe **uma única Central de Questões**; o antigo Modo Q separado foi removido do carregamento e seus arquivos `q-mode.js/css` e `q-presets.js/css` foram excluídos;
+2. a Central possui painel **Qconcursos + Internet** vinculado diretamente aos tópicos oficiais do edital;
+3. o usuário pode abrir o Qconcursos, montar filtros oficiais e salvar/reutilizar a URL por tópico em `external_source_links`;
+4. a integração não pede senha do Qconcursos, não automatiza login e não faz scraping em massa; usa navegação e filtros oficiais da própria plataforma;
+5. resultados de baterias do Qconcursos são registrados por `record-external-practice`, que exige JWT e valida matéria+tópico do edital antes de aceitar o resultado;
+6. cada bateria guarda origem, total, acertos, confiança, tempo, observação e data em `external_practice_batches`;
+7. o resultado externo atualiza `topic_mastery` de forma ponderada pelo número de questões e dispara recalculo do cronograma/leituras da Mentora;
+8. cada bateria gera uma entrada de evidência em `mentor_insights`, preservando o histórico da Mentora e a origem externa;
+9. `mentor-analyze` versão 2 combina desempenho do banco próprio com baterias externas, mas mantém separados os padrões que exigem resposta individual;
+10. a Mentora possui atalho **Abrir fontes do foco** e as tarefas de questões da P6 recebem atalho **FONTES** para o mesmo tópico;
+11. a P8 oferece busca web por questão real e busca focada em prova/material oficial, sempre montadas a partir do assunto oficial selecionado;
+12. fontes encontradas podem ser salvas em `external_source_links` com URL, domínio, tipo, nível de confiança, status e metadados de origem;
+13. domínio oficial conhecido (`gov.br`, FCC, Cebraspe, IBFC e Instituto AOCP) pode ser marcado como oficial; outras fontes permanecem candidatas/públicas e não viram automaticamente questão do banco;
+14. nenhuma fonte web é importada automaticamente como questão; para entrar no treino continua obrigatório: aderência ao edital, deduplicação, gabarito confiável e correção completa P4;
+15. prioridade permanente de abastecimento continua **PDFs privados → banco próprio → Qconcursos → internet**;
+16. a P8 não cria currículo paralelo: matéria e assunto sempre vêm de `subjects/topics` ativos do edital;
+17. o cache PWA final não contém mais os módulos Q legados e inclui os módulos da P8.
+
+### Estado validado da P8 no fechamento
+- `external_practice_batches`: **RLS habilitado**, política própria, índices por usuário/data e usuário/tópico/data; **0 registros de teste** no fechamento.
+- `external_source_links`: **RLS habilitado**, política própria, unicidade usuário+URL e índices por tópico/tipo; **0 registros de teste** no fechamento.
+- Edge Function `record-external-practice`: **ACTIVE**, versão 2, `verify_jwt=true`.
+- Edge Function `mentor-analyze`: **ACTIVE**, versão 2, `verify_jwt=true`.
+- os stagings temporários da importação P3 abortada (`import_payload_chunks` e `p3_private_import_staging`) foram removidos.
+- a função P4 `mentor_option_explanations_complete` teve `search_path` fixado em `pg_catalog`.
+- o advisor de segurança ficou sem alertas de RLS/search_path do projeto; resta apenas a configuração global do Supabase **Leaked Password Protection Disabled**, que não foi alterada pela P8.
+- nenhum conteúdo licenciado foi publicado no GitHub e nenhuma questão externa foi criada como dado de teste.
 
 ## Arquivos e responsabilidades
 - `MAPA-DO-PROJETO.md`: status, arquitetura e decisões operacionais.
-- `index.html`: estrutura HTML base e carregamento dos módulos legados + `runtime-bootstrap.js`.
+- `index.html`: estrutura HTML base; não carrega mais o antigo Modo Q separado.
 - `app.js`: motor legado/local; evitar novas regras de negócio.
 - `styles.css`: estilos globais.
 - `layout-refresh.css` / `layout-lock.css`: identidade visual unificada e proteção contra CSS legado injetado depois.
-- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas P5/P6/P7.
+- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas P5/P6/P7/P8.
 - `cloud-sync.js`: autenticação Supabase e sincronização; carrega a Central privada.
 - `bank-mode.js`: orquestrador da Central de Questões; manter wiring fino.
 - `bank-mode.css`: estilos base da Central.
-- `qg-theme.css`: arquivo legado; não deve prevalecer sobre o layout unificado.
+- `qg-theme.css`: arquivo legado visual da Central; é neutralizado pelo layout unificado e não deve prevalecer.
 - `qg-mode.js` / `qg-mode.css`: P5, painel operacional, caderno de erros e entradas de treino.
 - `review-engine.js`: P6, intervalos adaptativos e sincronização `user_question_state` ↔ `reviews`.
 - `schedule-engine.js`: P6, capacidade diária, dívida, ciclo flexível, projeção de 7 dias e progresso persistente.
 - `study-profile.js`: P6, missão de hoje, configuração de tempo/dias, overrides e projeção semanal.
 - `mentor-engine.js` / `mentor-engine.css`: P7, consumo da análise segura, nível de evidência, memória e aplicação de prioridade ao plano.
-- Edge Function `mentor-analyze`: P7, motor analítico autenticado baseado nas evidências do usuário.
+- `mentor-p8-bridge.js`: ponte P8 entre a análise da Mentora, memória e atalhos externos.
+- `qconcursos-links.js` / `qconcursos-links.css`: P8, filtros Qconcursos, registro de baterias, fontes externas, buscas e atalhos por tópico.
+- Edge Function `mentor-analyze`: P7/P8, motor analítico autenticado baseado nas evidências internas e externas.
+- Edge Function `record-external-practice`: P8, validação e registro autenticado de baterias externas + atualização de domínio/memória.
 - `edital-core.js` / `edital-core.css`: currículo/taxonomia oficial.
 - `question-state.js`: estados `new|answered|correct|wrong|review|mastered`.
 - `question-filters.js` / `question-filters.css`: filtros e rotação; automático = novas → revisões vencidas.
 - `question-difficulty.js` / `question-difficulty.css`: dificuldade `easy|medium|hard`, origem e revelação pós-resposta.
 - `question-feedback.js` / `question-feedback.css`: P4, correção estruturada completa e análise por alternativa.
-- `q-mode.js` / `q-mode.css`: modo legado/manual do Qconcursos; será tratado na P8.
-- `q-presets.js` / `q-presets.css`: atalhos Qconcursos; será tratado na P8.
-- `sw.js`: cache PWA.
+- `sw.js`: cache PWA final.
 - `manifest.json` / `icon.svg`: PWA.
 
 ## Supabase — estrutura relevante
 - `questions`: questão canônica privada, gabarito e explicações P4.
-- `question_attempts`: histórico imutável de respostas.
+- `question_attempts`: histórico imutável de respostas individuais do banco próprio.
+- `external_practice_batches`: P8, resultados agregados de baterias externas por tópico.
+- `external_source_links`: P8, filtros Qconcursos e fontes web/oficiais salvas com rastreabilidade.
 - `user_question_state`: resumo por usuário+questão; fonte do Caderno QG e da próxima revisão adaptativa P6.
 - `reviews`: fila persistente de revisões por questão/tópico, com estágio, intervalo e motivo.
 - `study_preferences`: limite diário, dias de estudo, buffer e proporção inicial de revisões.
@@ -181,8 +213,8 @@ A P7 está fechada com o seguinte contrato funcional:
 - `study_plan_items`: missão diária/projeção, duração, prioridade, origem, deslocamento e progresso.
 - `study_sessions`: sessões de estudo registráveis.
 - `subjects`, `topics`, `topic_components` e aliases: currículo oficial.
-- `topic_mastery`: domínio agregado por tópico e próxima revisão.
-- `mentor_insights`: memória persistente das análises P7 e suas evidências.
+- `topic_mastery`: domínio agregado por tópico e próxima revisão, incluindo evidência externa registrada.
+- `mentor_insights`: memória persistente das análises P7/P8 e suas evidências.
 - `source_documents`: origem/licença e contagem do acervo.
 
 ## Matriz “quero mudar X → onde mexer”
@@ -196,21 +228,21 @@ A P7 está fechada com o seguinte contrato funcional:
 - Painel/tempo/dias/atalhos do dia → `study-profile.js`.
 - Importar questão sob demanda → `questions`, `source_documents`, taxonomia P1 e fonte privada; a questão só entra no treino com correção P4 completa.
 - Edital/taxonomia → `edital-core.js` + tabelas P1.
-- Mentora/IA → `mentor-engine.js` + `mentor-engine.css` + Edge Function `mentor-analyze` + `mentor_insights`.
-- Qconcursos → futuro `qconcursos-links.js` na P8.
+- Mentora/IA → `mentor-engine.js` + `mentor-p8-bridge.js` + Edge Function `mentor-analyze` + `mentor_insights`.
+- Qconcursos/fontes externas → `qconcursos-links.js`/CSS + `external_source_links` + `external_practice_batches` + Edge Function `record-external-practice`.
 - Cache/PWA → `sw.js` quando assets frontend mudarem.
 
 ## Regras permanentes
-1. Concluir uma P inteira antes de avançar para a próxima.
-2. Preferir módulos separados a ampliar monólitos.
-3. Nunca inventar gabarito, fonte ou metadado.
-4. Nunca publicar material licenciado ou segredo.
-5. Questão nova destinada ao treino deve entrar com correção completa por alternativa.
-6. No automático, questão antiga só volta se a revisão estiver vencida; filtros manuais podem chamá-la antes.
-7. Erro histórico permanece no Caderno QG mesmo após recuperação.
-8. O cronograma nunca ultrapassa o limite duro configurado para o dia.
-9. Revisões adiadas acumulam prioridade e retornam à fila sem avalanche.
-10. A Mentora deve declarar baixa evidência quando a amostra for insuficiente e nunca transformar hipótese em certeza.
-11. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
-12. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
-13. Se P1–P8 terminarem, parar e aguardar orientação.
+1. Preferir módulos separados a ampliar monólitos.
+2. Nunca inventar gabarito, fonte ou metadado.
+3. Nunca publicar material licenciado ou segredo.
+4. Questão nova destinada ao treino deve entrar com correção completa por alternativa.
+5. No automático, questão antiga só volta se a revisão estiver vencida; filtros manuais podem chamá-la antes.
+6. Erro histórico permanece no Caderno QG mesmo após recuperação.
+7. O cronograma nunca ultrapassa o limite duro configurado para o dia.
+8. Revisões adiadas acumulam prioridade e retornam à fila sem avalanche.
+9. A Mentora deve declarar baixa evidência quando a amostra for insuficiente e nunca transformar hipótese em certeza.
+10. Resultado agregado de fonte externa melhora domínio/prioridade, mas não autoriza inventar padrão de erro individual.
+11. Fonte web salva não entra automaticamente no banco de questões.
+12. Antes de qualquer mudança futura relevante: validar Supabase, arquivos e GitHub Pages.
+13. **P1–P8 estão concluídas. Parar e aguardar nova orientação do usuário.**
