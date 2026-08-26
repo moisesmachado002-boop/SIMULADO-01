@@ -1,4 +1,4 @@
-const CACHE = 'mentor-ia-v9-3-assessment';
+const CACHE = 'mentor-ia-v9-3-1-qconcursos-military';
 const SUPABASE_SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4';
 const LOCAL_ASSETS = [
   './','./index.html','./styles.css','./layout-refresh.css','./layout-lock.css','./auth.css',
