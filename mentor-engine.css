@@ -1,5 +1,5 @@
 /* P7 — Mentora Inteligente */
-.p7-legacy-actions{display:none!important}
+.p7-legacy-actions,[data-view="mentora"]>.chat-card{display:none!important}
 .p7-shell{margin:16px 0 0}
 .p7-commandbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .p7-commandbar button{border:1px solid var(--line,#e4e9f1);background:#fff;color:#5f6f85;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer}
