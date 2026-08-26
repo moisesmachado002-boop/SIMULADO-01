@@ -1,0 +1,56 @@
+name: Validate Mentor IA
+
+on:
+  push:
+    branches: ["fix/stability-9-1", "main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in ./*.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+      - name: Check local service-worker assets
+        shell: python
+        run: |
+          import pathlib, re, sys
+          text = pathlib.Path('sw.js').read_text(encoding='utf-8')
+          block = re.search(r'const LOCAL_ASSETS = \[(.*?)\];', text, re.S)
+          if not block:
+              raise SystemExit('LOCAL_ASSETS not found in sw.js')
+          refs = re.findall(r"['\"](\./[^'\"]+)['\"]", block.group(1))
+          missing = []
+          for ref in refs:
+              path = ref[2:]
+              if path in ('', './'):
+                  continue
+              if not pathlib.Path(path).exists():
+                  missing.append(ref)
+          if missing:
+              raise SystemExit('Missing cached assets: ' + ', '.join(missing))
+          print(f'Validated {len(refs)} local cache entries')
+      - name: Check HTML entrypoints
+        shell: python
+        run: |
+          import pathlib
+          html = pathlib.Path('index.html').read_text(encoding='utf-8')
+          required = ['app.js', 'question-feedback.js?v=9.1', 'runtime-bootstrap.js?v=9.1', 'manifest.json?v=9.1']
+          missing = [item for item in required if item not in html]
+          if missing:
+              raise SystemExit('Missing index references: ' + ', '.join(missing))
+          print('index.html references validated')
