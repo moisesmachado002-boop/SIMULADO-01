@@ -86,6 +86,7 @@
 
     addCss('mentorExternalCss','./qconcursos-links.css?v=9.0');
     if (!window.MentorExternal) await loadScript('mentorExternalScript','./qconcursos-links.js?v=9.0');
+    await loadScript('mentorStability','./stability-9.1.js?v=9.1');
 
     addCss('mentorLayoutRefresh','./layout-refresh.css?v=8.0');
     normalizeLegacyUI();
