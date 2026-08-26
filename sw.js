@@ -5,8 +5,8 @@ const LOCAL_ASSETS = [
   './bank-mode.css','./qg-mode.css','./edital-core.css','./question-filters.css','./question-difficulty.css',
   './question-feedback.css','./mentor-engine.css','./qconcursos-links.css','./app.js','./cloud-sync.js',
   './runtime-bootstrap.js','./bank-mode.js','./qg-mode.js','./review-engine.js','./schedule-engine.js',
-  './study-profile.js','./mentor-engine.js','./mentor-p8-bridge.js','./qconcursos-links.js','./edital-core.js',
-  './question-state.js','./question-filters.js','./question-difficulty.js','./question-feedback.js',
+  './study-profile.js','./mentor-engine.js','./mentor-p8-bridge.js','./qconcursos-links.js','./stability-9.1.js',
+  './edital-core.js','./question-state.js','./question-filters.js','./question-difficulty.js','./question-feedback.js',
   './manifest.json','./icon.svg'
 ];
 
