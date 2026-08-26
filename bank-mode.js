@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const V = '1.7';
+  const V = '1.9';
   const URL = 'https://uysrtgyfnwyocdlaeyum.supabase.co';
   const KEY = 'sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
   const ALIAS = { 'Língua Portuguesa': 'Português' };
@@ -20,33 +20,57 @@
   let answered = false;
   let sessionCorrect = 0;
   let sessionAnswered = 0;
+  let currentFilter = 'auto';
 
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
   const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
-  function loadAssets() {
-    if (!$('#mentorQgTheme')) {
-      const l = document.createElement('link');
-      l.id = 'mentorQgTheme';
-      l.rel = 'stylesheet';
-      l.href = './qg-theme.css?v=1.7';
-      document.head.appendChild(l);
-    }
+  function addCss(id, href) {
+    if ($(id)) return;
+    const l = document.createElement('link');
+    l.id = id.replace('#','');
+    l.rel = 'stylesheet';
+    l.href = href;
+    document.head.appendChild(l);
+  }
+
+  function loadScript(id, src) {
+    return new Promise((resolve, reject) => {
+      const existing = $(id);
+      if (existing) {
+        if (existing.dataset.loaded === '1') return resolve();
+        existing.addEventListener('load', resolve, { once:true });
+        existing.addEventListener('error', reject, { once:true });
+        return;
+      }
+      const s = document.createElement('script');
+      s.id = id.replace('#','');
+      s.src = src;
+      s.onload = () => { s.dataset.loaded = '1'; resolve(); };
+      s.onerror = reject;
+      document.body.appendChild(s);
+    });
+  }
+
+  async function loadAssets() {
+    addCss('#mentorQgTheme', './qg-theme.css?v=1.9');
+    addCss('#mentorQuestionFiltersCss', './question-filters.css?v=2.2');
     if (!$('#mentorEditalCore')) {
       const s = document.createElement('script');
       s.id = 'mentorEditalCore';
-      s.src = './edital-core.js?v=1.7';
-      s.defer = true;
+      s.src = './edital-core.js?v=1.8';
       document.body.appendChild(s);
     }
+    await loadScript('#mentorQuestionState', './question-state.js?v=2.1');
+    await loadScript('#mentorQuestionFilters', './question-filters.js?v=2.2');
   }
 
   function setVersion() {
-    document.title = 'Mentor IA v1.7 — Edital PMBA 2026';
-    $$('.version-badge').forEach(e => e.textContent = 'v1.7');
+    document.title = 'Mentor IA v1.9 — Estados e Filtros';
+    $$('.version-badge').forEach(e => e.textContent = 'v1.9');
     const eyebrow = $('[data-view="inicio"] .hero-card .eyebrow');
-    if (eyebrow) eyebrow.textContent = 'PMBA 2026 • EDITAL CORE • V1.7';
+    if (eyebrow) eyebrow.textContent = 'PMBA 2026 • P2 ESTADOS + FILTROS • V1.9';
   }
 
   function injectUI() {
@@ -62,7 +86,7 @@
         <div>
           <span class="qg-kicker">CENTRAL DE QUESTÕES • EDITAL PMBA SOLDADO 2026</span>
           <h1>Modo QG + Mentora</h1>
-          <p>O edital define o assunto. Seus PDFs e, depois, a internet fornecem questões reais para esse assunto.</p>
+          <p>Questões inéditas têm prioridade. Questões antigas voltam quando entram em revisão ou quando você escolhe um filtro específico.</p>
         </div>
         <span class="qg-version">V${V}</span>
       </div>
@@ -78,6 +102,11 @@
         <div class="bank-filter-grid">
           <label>Matéria<select id="bankSubject"><option value="">Todas do edital</option></select></label>
           <label>Assunto<select id="bankTopic"><option value="">Todos do edital</option></select></label>
+        </div>
+        <div class="question-state-filter">
+          <span class="question-state-filter-label">Estado da questão</span>
+          <div id="bankStateFilters" class="question-state-filter-list"></div>
+          <div id="bankStateSummary" class="question-state-summary">Automático: inéditas primeiro; depois revisões vencidas.</div>
         </div>
         <button class="qg-btn qg-btn-primary" id="bankStartBtn">INICIAR QUESTÕES REAIS</button>
         <p id="bankStatus" class="bank-status">Entre na sua conta para carregar o edital e seu banco privado.</p>
@@ -123,6 +152,13 @@
     $('#bankTopic')?.addEventListener('change', updateCounts);
 
     section.addEventListener('click', event => {
+      const stateFilter = event.target.closest('[data-question-filter]');
+      if (stateFilter) {
+        currentFilter = stateFilter.dataset.questionFilter || 'auto';
+        renderStateFilters();
+        updateCounts();
+        return;
+      }
       const conf = event.target.closest('[data-bank-confidence]');
       if (conf && !answered) {
         confidence = conf.dataset.bankConfidence;
@@ -161,6 +197,7 @@
       syllabusSubjects = [];
       syllabusTopics = [];
       bank = [];
+      states = new Map();
       status('Entre na sua conta para acessar a grade PMBA 2026 e seu banco privado.', 'warn');
       updateCounts();
       return;
@@ -182,13 +219,14 @@
     states = new Map();
     const ids = bank.map(x => x.id);
     if (ids.length) {
-      const r = await db.from('user_question_state').select('question_id,seen_count,correct_count,wrong_count,last_seen_at,next_review_at,status').in('question_id', ids);
+      const r = await db.from('user_question_state').select('question_id,seen_count,correct_count,wrong_count,last_seen_at,next_review_at,status,last_selected_answer,last_is_correct,last_response_time_seconds,last_confidence,last_attempt_at').in('question_id', ids);
       if (r.error) throw r.error;
       (r.data || []).forEach(x => states.set(x.question_id, x));
     }
 
     renderSubjectOptions();
     renderTopicOptions();
+    renderStateFilters();
     updateCounts();
     const covered = new Set(bank.map(q => q.topic_id).filter(Boolean)).size;
     status(`Edital carregado: ${syllabusSubjects.length} matérias, ${syllabusTopics.length} tópicos. ${covered} tópico(s) já têm questões.`, 'ok');
@@ -216,10 +254,16 @@
     if (items.some(t => t.id === old)) e.value = old;
   }
 
-  function filteredBank() {
+  function baseFilteredBank() {
     const subjectId = $('#bankSubject')?.value || '';
     const topicId = $('#bankTopic')?.value || '';
     return bank.filter(q => (!subjectId || q.subject_id === subjectId) && (!topicId || q.topic_id === topicId));
+  }
+
+  function visibleFilteredBank() {
+    const base = baseFilteredBank();
+    const filters = window.MentorQuestionFilters;
+    return filters ? filters.filtered(base, states, currentFilter) : base;
   }
 
   function selectedTopic() {
@@ -227,30 +271,48 @@
     return syllabusTopics.find(t => t.id === id) || null;
   }
 
+  function renderStateFilters() {
+    const host = $('#bankStateFilters');
+    if (!host) return;
+    const filters = window.MentorQuestionFilters;
+    if (!filters) return;
+    const base = baseFilteredBank();
+    const counts = filters.counts(base, states);
+    const order = [filters.FILTERS.AUTO, filters.FILTERS.NEW, filters.FILTERS.WRONG, filters.FILTERS.CORRECT, filters.FILTERS.REVIEW, filters.FILTERS.MASTERED, filters.FILTERS.ALL];
+    host.innerHTML = order.map(key => `<button type="button" class="question-state-filter-btn ${currentFilter === key ? 'active' : ''}" data-question-filter="${key}">${esc(filters.LABELS[key])}<span>${counts[key] ?? 0}</span></button>`).join('');
+    const summary = $('#bankStateSummary');
+    if (summary) {
+      summary.textContent = currentFilter === filters.FILTERS.AUTO
+        ? 'Automático: inéditas primeiro; depois revisões vencidas; depois questões em aprendizado. Dominadas ficam fora da rotação automática.'
+        : `${filters.LABELS[currentFilter]}: ${counts[currentFilter] ?? 0} questão(ões) neste recorte.`;
+    }
+  }
+
   function updateCounts() {
-    const items = filteredBank();
-    const fresh = items.filter(q => !states.has(q.id) || !(states.get(q.id)?.seen_count)).length;
-    if ($('#bankTotal')) $('#bankTotal').textContent = items.length;
-    if ($('#bankNew')) $('#bankNew').textContent = fresh;
+    const base = baseFilteredBank();
+    const filters = window.MentorQuestionFilters;
+    const counts = filters ? filters.counts(base, states) : { new: base.filter(q => !states.get(q.id)?.seen_count).length };
+    const visible = visibleFilteredBank();
+    if ($('#bankTotal')) $('#bankTotal').textContent = currentFilter === 'auto' ? base.length : visible.length;
+    if ($('#bankNew')) $('#bankNew').textContent = counts.new ?? 0;
     if ($('#bankSession')) $('#bankSession').textContent = `${sessionCorrect}/${sessionAnswered}`;
+    renderStateFilters();
 
     const topic = selectedTopic();
-    if (topic && items.length === 0) status(`Este item está no edital (${topic.syllabus_code || ''}), mas ainda não tem questões no banco. Ele fica na fila de abastecimento por PDF/internet.`, 'warn');
+    if (topic && base.length === 0) {
+      status(`Este item está no edital (${topic.syllabus_code || ''}), mas ainda não tem questões no banco. Ele fica na fila de abastecimento por PDF/internet.`, 'warn');
+    } else if (base.length && currentFilter !== 'auto' && visible.length === 0) {
+      status('Não há questões neste estado para o filtro atual.', 'warn');
+    }
   }
 
   function chooseQuestion() {
-    const items = filteredBank();
+    const items = baseFilteredBank();
     if (!items.length) return null;
-    const now = Date.now();
-    const unseen = items.filter(q => !states.has(q.id) || !states.get(q.id)?.seen_count);
-    const due = items.filter(q => {
-      const s = states.get(q.id);
-      return s?.next_review_at && new Date(s.next_review_at).getTime() <= now;
-    });
-    const pool = unseen.length ? unseen : due.length ? due : [...items].sort((a,b) => (states.get(a.id)?.seen_count||0) - (states.get(b.id)?.seen_count||0));
-    const minSeen = Math.min(...pool.map(q => states.get(q.id)?.seen_count || 0));
-    const least = pool.filter(q => (states.get(q.id)?.seen_count || 0) === minSeen);
-    return least[Math.floor(Math.random() * least.length)] || pool[0];
+    const filters = window.MentorQuestionFilters;
+    if (filters) return filters.choose(items, states, currentFilter);
+    const unseen = items.filter(q => !states.get(q.id)?.seen_count);
+    return unseen[0] || items[0] || null;
   }
 
   async function begin() {
@@ -265,7 +327,8 @@
     current = chooseQuestion();
     if (!current) {
       const t = selectedTopic();
-      status(t ? `Sem questões ainda para ${t.syllabus_code || ''} — ${t.title}.` : 'Nenhuma questão encontrada nesse filtro.', 'warn');
+      const filterLabel = window.MentorQuestionFilters?.LABELS?.[currentFilter];
+      status(t ? `Sem questões elegíveis para ${t.syllabus_code || ''} — ${t.title}${filterLabel ? ` no filtro ${filterLabel}` : ''}.` : 'Nenhuma questão elegível neste filtro.', 'warn');
       return;
     }
     $('#bankOperational')?.classList.remove('hidden');
@@ -273,11 +336,22 @@
   }
 
   function questionBadge(q) {
-    const s = states.get(q.id);
-    if (!s || !s.seen_count) return ['NOVA','badge-novo'];
-    if (s.status === 'mastered') return ['DOMINADA','badge-acerto'];
-    if (s.status === 'review' || s.wrong_count > 0) return ['REVISÃO','badge-erro'];
-    return ['APRENDENDO','badge-learning'];
+    const state = states.get(q.id);
+    const descriptor = window.MentorQuestionState?.describe?.(state);
+    if (descriptor) return [descriptor.label, descriptor.className];
+    if (!state || !state.seen_count) return ['NOVA','badge-novo'];
+    if (state.status === 'mastered') return ['DOMINADA','badge-acerto'];
+    if (state.status === 'review') return ['REVISÃO','badge-erro'];
+    if (state.last_is_correct === true) return ['ACERTADA','badge-acerto'];
+    if (state.last_is_correct === false) return ['ERRADA','badge-erro'];
+    return ['RESPONDIDA','badge-learning'];
+  }
+
+  function renderCurrentBadge() {
+    if (!current) return;
+    const [label, cls] = questionBadge(current);
+    const badge = $('#bankQuestionStatus');
+    if (badge) { badge.textContent = label; badge.className = `qg-status-badge ${cls}`; }
   }
 
   function showQuestion(q) {
@@ -292,9 +366,7 @@
     $('#bankConfirmBtn')?.classList.add('hidden');
     $('#bankNextBtn')?.classList.add('hidden');
 
-    const [label, cls] = questionBadge(q);
-    const badge = $('#bankQuestionStatus');
-    if (badge) { badge.textContent = label; badge.className = `qg-status-badge ${cls}`; }
+    renderCurrentBadge();
     $('#bankQuestionSource').textContent = q.exam_name || 'Seu módulo';
     $('#bankQuestionMeta').textContent = `QUESTÃO ${q.source_question_number || '—'}`;
     $('#bankQuestionSubject').textContent = q.subject_label || syllabusSubjects.find(s => s.id === q.subject_id)?.name || 'Matéria';
@@ -386,10 +458,11 @@
     f.className = `qg-comment-box ${correct ? 'good' : 'bad'}`;
     f.innerHTML = `<div class="qg-feedback-result">${correct ? '✅ ALVO CONFIRMADO — ACERTO' : `❌ RESPOSTA INCORRETA — GABARITO ${esc(right)}`}</div><div class="qg-analysis-title">💡 EXPLICAÇÃO + LEITURA DA MENTORA</div><p>${esc(current.explanation || 'Explicação em preparação.')}</p><div class="qg-mentor-signal">${esc(mentorSignal(correct, secs))}</div><small>Tempo: ${secs}s • Confiança: ${confidence === 'high' ? 'alta' : confidence === 'low' ? 'baixa' : 'média'}${eliminated.size ? ` • ${eliminated.size} alternativa(s) eliminada(s)` : ''}</small>`;
     $('#bankProgress').textContent = `${sessionCorrect}/${sessionAnswered} acertos nesta operação`;
-    updateCounts();
 
     try {
       await saveAttempt(selected, correct, secs);
+      renderCurrentBadge();
+      updateCounts();
       mirrorToLegacyState(correct, secs);
       window.dispatchEvent(new CustomEvent('mentor:attempt-saved', { detail:{ questionId:current.id, topicId:current.topic_id, correct } }));
     } catch (e) {
@@ -410,6 +483,7 @@
     if (!user) throw new Error('Sessão encerrada.');
 
     const now = new Date().toISOString();
+    const confNumber = confidenceNumber();
     const attempt = {
       user_id: user.id,
       question_id: current.id,
@@ -420,7 +494,7 @@
       selected_answer: selected,
       correct_answer_snapshot: current.correct_answer,
       response_time_seconds: secs,
-      confidence: confidenceNumber(),
+      confidence: confNumber,
       source_kind: current.source_kind || 'personal_module'
     };
     const { error: attemptError } = await db.from('question_attempts').insert(attempt);
@@ -440,6 +514,11 @@
       last_seen_at:now,
       next_review_at:nextReview,
       status:correct ? (nextCorrect >= 2 ? 'mastered' : 'learning') : 'review',
+      last_selected_answer:selected,
+      last_is_correct:correct,
+      last_response_time_seconds:secs,
+      last_confidence:confNumber,
+      last_attempt_at:now,
       updated_at:now
     };
     const { error: stateError } = await db.from('user_question_state').upsert(row, { onConflict:'user_id,question_id' });
@@ -468,7 +547,6 @@
       const { error: masteryError } = await db.from('topic_mastery').upsert(masteryRow, { onConflict:'user_id,topic_id' });
       if (masteryError) throw masteryError;
     }
-    updateCounts();
   }
 
   function mirrorToLegacyState(correct, secs) {
@@ -506,7 +584,7 @@
   function nextQuestion() {
     const q = chooseQuestion();
     if (!q) {
-      status('Você concluiu as questões disponíveis neste filtro. O item continua no edital e pode entrar em revisão ou ser abastecido com novas questões.', 'ok');
+      status(currentFilter === 'auto' ? 'Não há mais questões automáticas elegíveis neste filtro. Use um filtro específico para revisar acertadas, dominadas ou todas.' : 'Você concluiu as questões disponíveis neste estado.', 'ok');
       return;
     }
     showQuestion(q);
@@ -520,16 +598,17 @@
     if (s) s.value = subjectId || '';
     renderTopicOptions();
     if (t) t.value = topicId || '';
+    currentFilter = 'auto';
     updateCounts();
     await begin();
   }
 
   async function boot() {
-    injectUI();
-    loadAssets();
-    setVersion();
-    window.mentorBank = { openTopic, reload:loadData };
     try {
+      await loadAssets();
+      injectUI();
+      setVersion();
+      window.mentorBank = { openTopic, reload:loadData };
       db = await getClient();
       await loadData();
       db.auth.onAuthStateChange(event => {
