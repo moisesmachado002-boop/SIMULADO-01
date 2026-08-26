@@ -121,6 +121,16 @@ body{
   }
 }
 
+/* home: primeiro a ação do dia, depois indicadores e leitura */
+[data-view="inicio"].active{display:flex!important;flex-direction:column}
+[data-view="inicio"]>.hero-card{order:0}
+[data-view="inicio"]>#mentorP6Panel{order:1}
+[data-view="inicio"]>.stats-grid{order:2}
+[data-view="inicio"]>#bankHomeCard{order:3}
+[data-view="inicio"]>.mentor-card{order:4}
+[data-view="inicio"]>.section-heading{order:5}
+[data-view="inicio"]>#miniMap{order:6}
+
 /* hierarchy */
 .hero-card{
   padding:24px 26px!important;
