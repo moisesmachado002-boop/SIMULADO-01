@@ -2,21 +2,25 @@
 
 > Documento operacional obrigatório. Antes de qualquer alteração, consultar este mapa e o **STATUS DO PROJETO**. Se uma mudança exigir arquivo não previsto aqui, atualizar este mapa primeiro.
 
-## Fonte de verdade
+## Fonte de verdade e segurança
 - Currículo: **Edital Verticalizado PMBA Soldado 2026**.
 - Supabase Mentor IA: projeto `uysrtgyfnwyocdlaeyum`.
 - GitHub público: `moisesmachado002-boop/SIMULADO-01`.
 - PDFs licenciados e banco privado de questões nunca devem ser publicados no GitHub.
+- Nunca expor service role, chaves privadas ou tokens.
 - Não alterar o projeto/repositório Financeiro.
+- Nunca inventar gabarito: em PDF, vale o gabarito do próprio material.
 
 ## STATUS DO PROJETO
 - P1 — Edital e Taxonomia ✅ concluída
 - P2 — Estrutura das Questões ✅ concluída
   - P2.1 — estados individuais ✅ concluída
-  - P2.2 — filtros e integração visual dos estados ✅ concluída
-  - P2.3 — dificuldade e origem da dificuldade ✅ concluída
-- P3 — Importação dos PDFs 🔄 próxima etapa
-  - P3.1 — Português ⏳ pendente
+  - P2.2 — filtros e integração visual ✅ concluída
+  - P2.3 — dificuldade e origem ✅ concluída
+- P3 — Importação dos PDFs 🔄 em andamento
+  - P3.1 — Português 🔄 em andamento
+    - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅ concluída
+    - P3.1b — próximo lote de Português ⏳ pendente
   - P3.2 — História ⏳ pendente
   - P3.3 — Geografia ⏳ pendente
   - P3.4 — Matemática ⏳ pendente
@@ -33,86 +37,76 @@
 - P7 — Mentora Inteligente ⏳ pendente
 - P8 — Qconcursos + Internet ⏳ pendente
 
-**Última subparte concluída:** P2.3 — dificuldade easy/medium/hard + origem source/estimated/calibrated.
+**Última subparte concluída:** P3.1a — primeiro lote auditável de Português.
 
-**Próxima subparte:** P3.1 — importar e classificar Português a partir do acervo licenciado, usando o gabarito do próprio PDF.
+**Próxima subparte:** P3.1b — continuar Português, sem avançar para História antes de fechar P3.1.
 
-**Último deploy confirmado antes do fechamento da P2.3:** GitHub Pages run 52 — success.
+**Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
-**Deploy da P2.3:** confirmar o run gerado pelo commit final deste mapa antes de declarar a versão concluída.
+**Último deploy confirmado antes da P3:** GitHub Pages run 58 — `completed/success` (P2.3).
 
-## Regras centrais de arquitetura
-1. Uma parte/subparte segura por execução.
-2. Funcionalidade nova deve preferir arquivo próprio.
-3. `app.js`, `bank-mode.js` e `edital-core.js` não devem virar depósitos de novas regras.
-4. Alterar arquivos orquestradores apenas para integração fina de módulos.
-5. Atualizar este mapa ao terminar cada subparte.
-6. Nunca inventar gabarito.
-7. Nunca publicar segredo, service role, token ou PDF licenciado.
-8. GitHub Pages precisa terminar em `completed/success` antes de declarar uma etapa concluída.
+## Resultado P3.1a
+- Recorte: seção **Interpretação e Tipologia Textual**.
+- Questões examinadas neste lote: 2.
+- Válidas: 2.
+- Importadas: 2.
+- Duplicadas encontradas antes da inserção: 0.
+- Descartadas: 0.
+- Com gabarito do PDF: 2.
+- Sem gabarito confiável: 0.
+- Alternativas completas: 2/2, com 5 alternativas cada.
+- Vinculadas ao edital: 2/2.
+- Questão INT-1 → LP2 `Tipologia textual e gêneros textuais`, gabarito B, dificuldade `easy/estimated`.
+- Questão INT-2 → LP1 `Compreensão e interpretação de textos`, gabarito C, dificuldade `medium/estimated`.
+- Banco após o lote: 20 questões totais, todas privadas; documento-fonte com 20 questões registradas.
+- O PDF não foi enviado nem copiado para o GitHub.
 
-## Arquivos atuais
+## Arquivos atuais e responsabilidades
 
 ### `MAPA-DO-PROJETO.md`
-Mapa operacional, responsabilidades, dependências e status persistente. Consultar sempre antes de modificar o projeto.
+Status persistente, arquitetura, dependências e matriz de alteração. Atualizar ao final de cada subparte.
 
 ### `index.html`
-Estrutura HTML base e carregamento estático de assets.
-- P2.3: carrega `question-difficulty.css` e `question-difficulty.js`.
-- Pode ser alterado para inclusão explícita de módulo, mas não para guardar regra de negócio.
-- Metadados/cópias antigas continuam pendentes para uma etapa própria de limpeza.
+Estrutura HTML base e carregamento estático de assets. Não guardar regras de negócio aqui.
 
 ### `app.js`
-Motor legado/local de dashboard, diagnóstico e estado antigo.
-- Evitar novas funcionalidades.
-- Só alterar em etapa específica de migração/limpeza.
+Motor legado/local de dashboard e diagnóstico. **Evitar novas funcionalidades**; alterar apenas em etapa específica de migração/limpeza.
 
 ### `styles.css`
-Estilos globais/base. Não usar como depósito de estilos de módulos novos.
+Estilos globais/base. Módulos novos devem preferir CSS próprio.
 
 ### `cloud-sync.js`
-Autenticação Supabase, perfil na nuvem, sincronização do estado legado e carregamento do banco privado.
-- Mantém query/versionamento interno antigo; limpar em etapa própria.
-- Não usar para regras de questões, dificuldade ou revisão.
+Autenticação Supabase, perfil e sincronização do estado legado. Não usar para regras de questão/revisão.
 
 ### `auth.css`
-Estilos de autenticação e conta.
+Estilos de autenticação.
 
 ### `bank-mode.js`
-Orquestrador da Central de Questões.
-- Carrega edital, questões e `user_question_state`.
-- Integra `question-state.js` e `question-filters.js`.
-- Renderiza questão, confirma gabarito e salva tentativa/estado.
-- P2.2: versão 1.9, filtros Automático/Novas/Erradas/Acertadas/Revisão/Dominadas/Todas.
-- Não concentrar nele novas regras grandes.
+Orquestrador da Central de Questões: carrega currículo, questões e estado; integra módulos; renderiza e salva tentativas. Alterar somente para wiring fino.
 
 ### `bank-mode.css`
 Estilos base da Central de Questões.
 
 ### `qg-theme.css`
-Tema visual/mecânica QG: alternativas, eliminação, acerto/erro, botões, timer e badges compartilhados.
+Tema QG compartilhado: alternativas, eliminação, acerto/erro, botões, timer e badges.
 
 ### `edital-core.js`
-P1 — núcleo do edital e taxonomia. Controla as 12 matérias, 99 tópicos oficiais, subitens, página de origem e visão do edital.
-- Não alterar para filtros, dificuldade ou importação de conteúdo.
+P1 — núcleo do edital/taxonomia: 12 matérias, 99 tópicos oficiais e subitens. Não ampliar currículo a partir de PDFs/internet.
 
 ### `edital-core.css`
-Estilos exclusivos da aba Edital.
+Estilos da aba Edital.
 
 ### `q-mode.js` / `q-mode.css`
-Modo legado/manual relacionado ao Qconcursos. Reservar mudanças maiores para P8.
+Modo legado/manual do Qconcursos. Reservar mudanças maiores para P8.
 
 ### `q-presets.js` / `q-presets.css`
-Atalhos atuais do Qconcursos. Reservar para P8/migração para `qconcursos-links.js`.
+Atalhos atuais do Qconcursos. Reservar para P8/migração futura.
 
 ### `sw.js`
-Service Worker/PWA.
-- P2.2: incluiu módulos de estado/filtros.
-- P2.3: cache `mentor-ia-v2-0-p2-3` inclui módulo e CSS de dificuldade.
-- Atualizar somente quando assets mudarem.
+Service Worker/PWA e cache dos assets. Alterar apenas quando assets frontend mudarem.
 
 ### `manifest.json` / `icon.svg`
-Manifesto e ícone da PWA.
+Manifesto e ícone PWA.
 
 ### `README.md`
 Documentação pública geral; não substitui este mapa.
@@ -120,144 +114,77 @@ Documentação pública geral; não substitui este mapa.
 ## Módulos concluídos
 
 ### `question-state.js` — P2.1 ✅
-Motor puro de estado individual.
-Interpreta:
-- `new` → NOVA
-- `answered` → RESPONDIDA
-- `correct` → ACERTADA
-- `wrong` → ERRADA
-- `review` → REVISÃO
-- `mastered` → DOMINADA
+Classifica `new`, `answered`, `correct`, `wrong`, `review`, `mastered`, considerando `next_review_at`.
 
-Também considera `next_review_at` e expõe API em `window.MentorQuestionState`.
+### `question-filters.js` + `question-filters.css` — P2.2 ✅
+Filtros Automático/Novas/Erradas/Acertadas/Revisão/Dominadas/Todas. Automático prioriza inéditas, depois revisões, depois aprendizado; dominadas ficam fora da rotação normal.
 
-### `question-filters.js` — P2.2 ✅
-Motor isolado dos filtros e da seleção automática.
-Modo Automático:
-1. inéditas;
-2. revisões vencidas/em revisão;
-3. questões em aprendizado com menos contatos;
-4. dominadas ficam fora da rotação automática.
-
-Filtros explícitos: Novas, Erradas, Acertadas, Revisão, Dominadas e Todas.
-
-### `question-filters.css` — P2.2 ✅
-Estilos exclusivos dos filtros de estado.
-
-### `question-difficulty.js` — P2.3 ✅
-Motor de dificuldade.
-- níveis: `easy`, `medium`, `hard`;
-- origem: `source`, `estimated`, `calibrated`;
-- normalização compatível com valores antigos;
-- estimador determinístico disponível para futuras importações;
-- API em `window.MentorQuestionDifficulty`.
-
-REGRA DE UX: o módulo **não exibe dificuldade durante a resolução**. Ele escuta `mentor:attempt-saved`, busca o nível da questão e insere o card somente depois da confirmação/salvamento do gabarito.
-
-### `question-difficulty.css` — P2.3 ✅
-Estilos exclusivos do card pós-resposta: FÁCIL / MÉDIA / DIFÍCIL + origem da classificação.
+### `question-difficulty.js` + `question-difficulty.css` — P2.3 ✅
+Dificuldade `easy|medium|hard` e origem `source|estimated|calibrated`. O nível só aparece após confirmação do gabarito.
 
 ## Módulos planejados
-
-### `question-feedback.js` — P4
-Correção detalhada: correta + por que a alternativa escolhida está errada + análise opcional de todas as alternativas.
-
-### `review-engine.js` — P6
-Revisões adaptativas e vencimentos.
-
-### `study-profile.js` — P6
-Disponibilidade diária/semanal e teto de tempo.
-
-### `schedule-engine.js` — P6
-Distribuição de aulas/revisões dentro da capacidade diária.
-
-### `mentor-engine.js` — P7
-Motor de prioridade/explicabilidade da Mentora e futura integração segura com IA real.
-
-### `qconcursos-links.js` — P8
-Mapeamento tópico oficial → links/filtros do Qconcursos.
+- `question-feedback.js` — P4: correta, motivo da correta, motivo específico da alternativa errada e análise de todas.
+- `review-engine.js` — P6: revisões adaptativas.
+- `study-profile.js` — P6: disponibilidade e teto diário.
+- `schedule-engine.js` — P6: distribuição de aulas/revisões.
+- `mentor-engine.js` — P7: prioridades e explicabilidade da Mentora; IA real somente por backend seguro.
+- `qconcursos-links.js` — P8: tópico oficial → filtros/links Qconcursos.
 
 ## Supabase — estrutura relevante
 
 ### `questions`
-Questão canônica privada/pública.
-Após P2.3, dificuldade usa:
-- `difficulty` text: `easy | medium | hard`;
-- `difficulty_origin` text: `source | estimated | calibrated`;
-- `difficulty_updated_at` timestamptz.
+Questão canônica privada/pública. Guarda fonte, prova, banca, ano, matéria/tópico, número/página, enunciado, alternativas, gabarito, explicação e dificuldade.
+- P3: conteúdo licenciado fica aqui, privado.
+- `difficulty`: `easy|medium|hard`.
+- `difficulty_origin`: `source|estimated|calibrated`.
 
-Constraints impedem valores inválidos e exigem que dificuldade e origem existam juntas.
-Índices existem para `difficulty` e `difficulty_origin`.
+### `source_documents`
+Registro do material de origem, licença, status e contagem importada. O módulo de questões gerais está registrado como `personal_module`, licença `private` e permanece `processing` enquanto P3.1/P3 estiver em andamento.
 
 ### `question_attempts`
-Histórico imutável de respostas: alternativa marcada, acerto/erro, tempo, confiança, gabarito snapshot, data, matéria/tópico.
+Histórico imutável de cada resposta.
 
 ### `user_question_state`
-Resumo por usuário+questão:
-- `seen_count`
-- `correct_count`
-- `wrong_count`
-- `last_seen_at`
-- `next_review_at`
-- `status`
-- `last_selected_answer`
-- `last_is_correct`
-- `last_response_time_seconds`
-- `last_confidence`
-- `last_attempt_at`
+Resumo por usuário+questão: `seen_count`, `correct_count`, `wrong_count`, última resposta, tempo, confiança, `next_review_at` e status.
 
 ### `subjects`, `topics`, `topic_components`, aliases
-P1. Currículo oficial. Fontes externas não podem expandir esse currículo.
+Currículo oficial da P1. Fontes externas não podem expandi-lo.
 
 ### `topic_mastery`
 Domínio agregado por tópico.
 
-## Validações concluídas
-
-### P2.1
-- 18 questões.
-- 8 estados individuais.
-- 8 tentativas.
-- 0 estados órfãos.
-- 0 estados duplicados.
-- 0 contadores inconsistentes.
-- 0 respondidas sem `last_attempt_at`.
-
-### P2.2
-- Integridade do Supabase preservada.
-- Filtros e seleção automática isolados em arquivos próprios.
-- GitHub Pages run 52: build e deploy `success`.
-
-### P2.3
-- Migração converteu o campo numérico legado de dificuldade para texto controlado.
-- Constraint antiga 1–5 foi substituída por `easy/medium/hard`.
-- `difficulty_origin` aceita somente `source/estimated/calibrated`.
-- 0 pares inconsistentes entre dificuldade e origem.
-- 18 questões atuais classificadas como **estimadas**, nunca como oficiais: 10 `easy`, 8 `medium`, 0 `hard` neste lote atual.
-- A origem `estimated` fica visível no card pós-resposta como estimativa da plataforma.
-
 ## Matriz “quero mudar X → onde mexer”
-- Estado/badge → `question-state.js` + integração mínima `bank-mode.js` + `user_question_state`.
-- Filtros/rotação → `question-filters.js` + `question-filters.css` + integração mínima `bank-mode.js`.
-- Dificuldade → `question-difficulty.js` + `question-difficulty.css` + schema `questions`; wiring estático em `index.html` e cache em `sw.js`.
-- Correção/explicação → futuro `question-feedback.js`.
-- Visual QG compartilhado → `qg-theme.css`.
+- Estado/badge → `question-state.js` + integração mínima em `bank-mode.js` + `user_question_state`.
+- Filtros/rotação → `question-filters.js`/CSS + integração mínima em `bank-mode.js`.
+- Dificuldade → `question-difficulty.js`/CSS + `questions`.
+- Importação P3 → `questions`, `source_documents`, taxonomia existente e fonte licenciada; **não publicar questões/PDF no GitHub**.
+- Correção → futuro `question-feedback.js`.
 - Edital/taxonomia → `edital-core.js` + tabelas da P1.
-- Importação P3 → banco Supabase + fontes licenciadas; não publicar questões/PDFs no GitHub.
 - Cronograma → `study-profile.js`, `schedule-engine.js`, `review-engine.js`.
-- Mentora/IA → `mentor-engine.js` + backend/Edge Function com JWT; nunca chave secreta no frontend.
-- Qconcursos → `qconcursos-links.js` / migração futura de presets.
-- PWA/cache → `sw.js`.
+- Mentora/IA → `mentor-engine.js` + backend/Edge Function com JWT.
+- Qconcursos → `qconcursos-links.js`.
+- Cache/PWA → `sw.js` apenas quando assets mudarem.
 
-## Próxima execução — P3.1 Português
-Antes de importar:
-1. ler este mapa;
-2. confirmar que o deploy P2.3 está `completed/success`;
-3. localizar o módulo licenciado de questões gerais;
-4. trabalhar apenas Português;
-5. extrair enunciado + alternativas + gabarito do próprio PDF;
-6. mapear cada questão ao tópico oficial LP1–LP11 e subitem quando aplicável;
-7. detectar duplicidades contra o banco atual;
-8. atribuir dificuldade `estimated` quando a fonte não informar;
-9. não importar questão quebrada/sem gabarito confiável;
-10. ao final registrar encontradas, válidas, importadas, duplicadas e descartadas.
+## Protocolo de importação P3
+Para cada lote:
+1. localizar trecho e gabarito no PDF licenciado;
+2. trabalhar somente a matéria/subparte atual;
+3. extrair enunciado e alternativas completas;
+4. confirmar gabarito no próprio material;
+5. mapear a tópico oficial e subitem quando aplicável;
+6. consultar o banco por duplicidade antes de inserir;
+7. usar dificuldade `estimated` quando a fonte não informar;
+8. descartar questão quebrada, ilegível ou sem gabarito confiável;
+9. manter conteúdo privado no Supabase;
+10. atualizar contagem do documento-fonte, validar integridade e registrar o lote neste mapa.
+
+## Regras de execução
+1. Uma parte/subparte segura por execução.
+2. Atualizar este mapa antes de tocar arquivo não previsto.
+3. Preferir módulo separado a ampliar arquivos monolíticos.
+4. Um commit claro por subparte sempre que possível.
+5. Nunca inventar gabarito.
+6. Nunca publicar material licenciado ou segredo.
+7. Conferir Supabase, GitHub, mapa/status e Pages antes de marcar concluído.
+8. Se Pages não estiver `completed/success`, não declarar a etapa concluída.
+9. Se P1–P8 terminarem, parar e aguardar orientação.
