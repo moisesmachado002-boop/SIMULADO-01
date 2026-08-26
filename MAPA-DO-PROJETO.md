@@ -27,8 +27,9 @@
     - P3.1e — Sintaxe, questão 1 ✅
     - P3.1f — Sintaxe, questão 2 ✅
     - P3.1g — lote seguro Sintaxe/Pontuação (6 questões) ✅
-    - P3.1h — lote mínimo de 30 questões: Ortografia/Grafia + Concordância ✅
-    - P3.1i — próximo lote de Português com no mínimo 30 questões válidas ⏳
+    - P3.1h — lote mínimo de 30: Ortografia/Grafia + Concordância ✅
+    - P3.1i — lote mínimo de 30: Classes/Regência com auditoria de contexto ✅
+    - P3.1j — próximo lote de Português com no mínimo 30 questões válidas ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -45,16 +46,23 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1h — importação de 30 questões em um único lote, sendo 20 da seção Ortografia/Grafia e 10 da seção Concordância Verbal e Nominal.
+**Última subparte concluída:** P3.1i — lote lógico de 30 questões válidas de Português, composto por 21 questões aproveitáveis da seção `CLASSE DE PALAVRAS` e 9 questões de `REGÊNCIA`.
 
-**Próxima subparte:** P3.1i — continuar Português com outro lote de no mínimo 30 questões válidas, sem reduzir a qualidade para completar quantidade.
+**Próxima subparte:** P3.1j — continuar Português em lotes de no mínimo 30 válidas, esgotando gradualmente todas as questões aproveitáveis do acervo antes de encerrar P3.1 e avançar para História.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
+## Direção operacional da P3
+- Importar **todas as questões válidas do acervo aos poucos**, por matéria, antes de seguir para a matéria seguinte.
+- Enquanto houver estoque válido de Português, permanecer em P3.1; depois seguir P3.2 História, P3.3 Geografia etc.
+- Encerrar a P3 somente após percorrer todas as matérias/fonte disponíveis previstas no plano; só então avançar para P4.
+- Não usar quantidade como justificativa para inserir questão ruim, fora do edital, duplicada ou sem gabarito confiável.
+
 ## Regra de tamanho dos lotes P3
-- A partir da P3.1h, cada novo lote de importação deve ter **no mínimo 30 questões válidas**.
+- A partir da P3.1h, cada novo lote de importação deve ter **no mínimo 30 questões válidas**, quando houver estoque suficiente.
 - A quantidade nunca autoriza importar questão quebrada, ilegível, duplicada, sem gabarito confiável ou fora do edital.
-- Se a matéria/subparte não tiver 30 questões válidas restantes, não completar artificialmente: registrar a quantidade real disponível e informar a limitação antes de encerrar a matéria.
+- Se a matéria/subparte não tiver 30 questões válidas restantes, registrar a quantidade real disponível e a limitação ao fechar a matéria, sem completar artificialmente.
+- Um lote lógico pode ser enviado ao banco em blocos técnicos menores por segurança do conector, mas só é concluído após a validação conjunta atingir o tamanho planejado.
 
 ## Resultados acumulados da P3.1
 ### P3.1a
@@ -85,10 +93,20 @@
 - Lote solicitado: **30 questões**; inseridas: **30**; puladas/duplicadas: **0**.
 - ORT-1 a ORT-20: 20 questões da seção `ORTOGRAFIA E GRAFIA`.
 - CON-1 a CON-10: 10 questões da seção `CONCORDÂNCIA VERBAL E NOMINAL`.
-- Mapeamento primário: LP3 `Ortografia oficial`, LP4 `Acentuação gráfica`, LP7 `Sintaxe da oração e do período` e LP9 `Concordância nominal e verbal`, conforme o conteúdo efetivamente cobrado.
+- Mapeamento primário: LP3, LP4, LP7 e LP9, conforme conteúdo efetivamente cobrado.
 - Validação: 30/30 gabaritos A–E válidos; 30/30 com alternativas A–E; 30/30 privadas; 30/30 `difficulty_origin=estimated`; 30/30 vinculadas a matéria e tópico oficiais.
-- Gabaritos confirmados no gabarito geral do próprio PDF antes do insert.
-- Total real vinculado ao módulo após P3.1h: **60 questões**; `source_documents.question_count=60`; importação de Português continua em `processing`.
+- Total após P3.1h: **60 questões**.
+
+### P3.1i
+- Lote lógico final: **30 questões válidas**.
+- Composição: **21** da seção `CLASSE DE PALAVRAS` + **9** da seção `REGÊNCIA`.
+- Classes importadas: CLS-2, 4, 5, 6, 8, 9, 10, 11, 15, 16, 17, 18, 20, 22, 23, 24, 25, 26, 27, 28 e 30.
+- Regência importada: REG-1, 2, 3, 5, 6, 8, 9, 10 e 12.
+- Questões da seção Classes não usadas neste lote: 1, 3, 7, 12, 13, 14, 19, 21 e 29. Motivos: conteúdo fora do recorte oficial ou dependência de texto-base/sublinhado/negrito que não ficou recuperável com segurança na extração atual. Podem ser reavaliadas somente se o contexto visual/textual completo for recuperado.
+- Durante a primeira tentativa técnica, CLS-3 e CLS-14 chegaram a ser inseridas, foram identificadas na auditoria como dependentes de contexto e removidas antes do fechamento; foram substituídas por questões autossuficientes de Regência.
+- Mapeamento primário distribuído entre LP1, LP5, LP7, LP10 e LP11 conforme o conteúdo efetivamente cobrado.
+- Validação final: **30/30** gabaritos A–E válidos; **30/30** com alternativas A–E; **30/30** privadas; **30/30** `difficulty_origin=estimated`; **30/30** vinculadas a matéria+tópico oficiais; **30 IDs externos únicos**.
+- `source_documents.question_count` reconciliado para **90**; `import_status=processing` porque Português ainda não foi esgotado.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
@@ -143,12 +161,13 @@
 4. extrair enunciado e alternativas completas;
 5. confirmar gabarito no próprio material;
 6. mapear para tópico oficial/subitem aplicável;
-7. consultar duplicidade por `source_external_id` e enunciado antes de inserir;
+7. consultar duplicidade por `source_external_id` e conteúdo antes de inserir;
 8. usar `estimated` se a fonte não informar dificuldade;
 9. descartar/adiar questão quebrada, dependente de imagem ou com destaque essencial perdido;
 10. manter conteúdo `private` no Supabase;
 11. atualizar `source_documents.question_count` com o total real vinculado;
-12. validar integridade e registrar o lote neste mapa.
+12. validar integridade e registrar o lote neste mapa;
+13. continuar até esgotar o estoque válido da matéria antes de avançar para a próxima.
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
