@@ -101,6 +101,14 @@
     document.body.appendChild(script);
   }
 
+  function loadRuntimeBootstrap() {
+    if (window.MentorRuntimeBootstrap || document.querySelector('#mentorRuntimeBootstrapScript')) return;
+    const script = document.createElement('script');
+    script.id = 'mentorRuntimeBootstrapScript';
+    script.src = './runtime-bootstrap.js?v=5.0';
+    document.body.appendChild(script);
+  }
+
   window.addEventListener('mentor:attempt-saved', async event => {
     const questionId = event.detail?.questionId;
     if (!questionId) return;
@@ -109,6 +117,7 @@
   });
 
   loadFeedbackModule();
+  loadRuntimeBootstrap();
 
   window.MentorQuestionDifficulty = Object.freeze({
     version: VERSION,
