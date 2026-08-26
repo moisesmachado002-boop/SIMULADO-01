@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '2.1';
+  const VERSION = '5.0';
 
   const STATES = Object.freeze({
     NEW: 'new',
@@ -29,10 +29,11 @@
 
   function key(state, now = Date.now()) {
     if (!state || Number(state.seen_count || 0) === 0) return STATES.NEW;
-    if (state.status === 'mastered') return STATES.MASTERED;
-    if (state.status === 'review' || isDue(state, now)) return STATES.REVIEW;
-    if (state.last_is_correct === true) return STATES.CORRECT;
+    if (isDue(state, now)) return STATES.REVIEW;
     if (state.last_is_correct === false) return STATES.WRONG;
+    if (state.status === 'mastered') return STATES.MASTERED;
+    if (state.status === 'review') return STATES.REVIEW;
+    if (state.last_is_correct === true) return STATES.CORRECT;
     return STATES.ANSWERED;
   }
 
