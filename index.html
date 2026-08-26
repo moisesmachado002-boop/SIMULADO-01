@@ -1,17 +1,23 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-mentor-runtime="loading">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f5f7fb" />
+  <meta name="theme-color" content="#0b1020" />
   <meta name="description" content="Mentor IA para estudos da PMBA 2026 com questões reais, cronograma e revisões adaptativas." />
   <title>Mentor IA — PMBA 2026</title>
-  <link rel="manifest" href="manifest.json?v=9.0" />
+  <link rel="manifest" href="manifest.json?v=9.1" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="question-difficulty.css?v=2.3" />
-  <link rel="stylesheet" href="question-feedback.css?v=4.0" />
+  <link rel="stylesheet" href="question-feedback.css?v=9.1" />
   <link id="mentorLayoutRefresh" rel="stylesheet" href="layout-refresh.css?v=8.0" />
+  <style>
+    html[data-mentor-runtime="loading"] .bottom-nav,
+    html[data-mentor-runtime="loading"] .legacy-mission-placeholder,
+    html[data-mentor-runtime="loading"] [data-view="mentora"] .chat-card,
+    html[data-mentor-runtime="loading"] [data-view="mentora"] .quick-actions { visibility:hidden; }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -43,10 +49,7 @@
         <section class="home-section continue-section">
           <div class="section-heading compact"><div><span class="eyebrow">CONTINUAR ESTUDANDO</span><h2>Próximo passo</h2></div></div>
           <div class="hero-card compact-hero">
-            <div>
-              <h2>Questões e revisões do seu plano</h2>
-              <p id="heroText">Abra sua sessão de questões e continue de onde parou.</p>
-            </div>
+            <div><h2>Questões e revisões do seu plano</h2><p id="heroText">Abra sua sessão de questões e continue de onde parou.</p></div>
             <button class="primary" id="heroAction" data-go="acervo">Abrir questões</button>
           </div>
         </section>
@@ -83,14 +86,7 @@
 
       <section class="view" data-view="mentora">
         <div class="page-intro"><span class="eyebrow">MENTORA</span><h1>Orientação de estudo</h1><p>Use seu histórico para decidir o próximo foco.</p></div>
-        <article class="mentor-card">
-          <div class="mentor-avatar">IA</div>
-          <div class="mentor-copy">
-            <h2 id="mentorHeadline">Primeiro eu preciso de evidências reais.</h2>
-            <p id="mentorAdvice">Resolva questões e registre seu desempenho para receber orientações melhores.</p>
-            <div class="quick-actions"><button class="chip" data-mentor="today">O que estudo hoje?</button><button class="chip" data-mentor="weakness">Onde estou pior?</button><button class="chip" data-mentor="pattern">Que padrão você vê?</button><button class="chip" data-mentor="advance">Posso avançar?</button></div>
-          </div>
-        </article>
+        <article class="mentor-card"><div class="mentor-avatar">IA</div><div class="mentor-copy"><h2 id="mentorHeadline">Primeiro eu preciso de evidências reais.</h2><p id="mentorAdvice">Resolva questões e registre seu desempenho para receber orientações melhores.</p><div class="quick-actions"><button class="chip" data-mentor="today">O que estudo hoje?</button><button class="chip" data-mentor="weakness">Onde estou pior?</button><button class="chip" data-mentor="pattern">Que padrão você vê?</button><button class="chip" data-mentor="advance">Posso avançar?</button></div></div></article>
         <div class="chat-card"><div id="chatMessages" class="chat-messages"></div><div class="prompt-grid"><button data-mentor="today">Monte meu estudo de hoje</button><button data-mentor="weakness">Analise minhas fraquezas</button><button data-mentor="pattern">Analise meus padrões de erro</button><button data-mentor="advance">Posso mudar de assunto?</button><button data-mentor="review">O que devo revisar?</button></div></div>
       </section>
 
@@ -121,8 +117,8 @@
           const controller = navigator.serviceWorker.controller;
           if (!controller || !controller.scriptURL.includes('/SIMULADO-01/sw.js')) {
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-              if (!sessionStorage.getItem('mentor-sw-reloaded-v9')) {
-                sessionStorage.setItem('mentor-sw-reloaded-v9', '1');
+              if (!sessionStorage.getItem('mentor-sw-reloaded-v9-1')) {
+                sessionStorage.setItem('mentor-sw-reloaded-v9-1', '1');
                 location.reload();
               }
             }, { once: true });
@@ -132,8 +128,8 @@
     }
   </script>
   <script src="app.js"></script>
-  <script src="question-feedback.js?v=4.0"></script>
+  <script src="question-feedback.js?v=9.1"></script>
   <script src="question-difficulty.js?v=2.3"></script>
-  <script src="runtime-bootstrap.js?v=9.0"></script>
+  <script src="runtime-bootstrap.js?v=9.1"></script>
 </body>
 </html>
