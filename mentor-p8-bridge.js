@@ -28,6 +28,17 @@
     });
     window.MentorEngine = wrapped;
 
+    window.addEventListener('mentor:external-practice-saved', () => {
+      setTimeout(async () => {
+        try {
+          emit(await originalAnalyze('today', false));
+          await wrapped.reloadHistory?.();
+        } catch (error) {
+          console.warn('P8: Mentora não atualizada após bateria externa', error);
+        }
+      }, 180);
+    });
+
     try { emit(await originalAnalyze('today', false)); }
     catch (error) { console.warn('P8: análise inicial não capturada', error); }
   }
