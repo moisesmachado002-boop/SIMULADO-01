@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '9.1.1';
+  const VERSION = '9.2';
   const SUPABASE_SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4';
   let visualGuardInstalled = false;
   let guardBusy = false;
@@ -89,6 +89,7 @@
     addCss('mentorQPresetsCss','./q-presets-p8.css?v=9.1.1');
     await loadScript('mentorQPresetsScript','./q-presets-p8.js?v=9.1.1');
     await loadScript('mentorStability','./stability-9.1.js?v=9.1');
+    await loadScript('mentorMissionCoach','./mission-coach.js?v=9.2');
 
     addCss('mentorLayoutRefresh','./layout-refresh.css?v=8.0');
     normalizeLegacyUI();
