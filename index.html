@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1020" />
-  <meta name="description" content="Mentora de estudos adaptativa com questões reais do Qconcursos e filtros prontos por assunto." />
-  <title>Mentor IA v1.3.2 — Qconcursos + mentoria adaptativa</title>
-  <link rel="manifest" href="manifest.json?v=1.3.2" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <meta name="description" content="Mentor IA para estudos da PMBA 2026 com questões reais, cronograma e revisões adaptativas." />
+  <title>Mentor IA — PMBA 2026</title>
+  <link rel="manifest" href="manifest.json?v=8.0" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="q-mode.css" />
   <link rel="stylesheet" href="q-presets.css" />
   <link rel="stylesheet" href="question-difficulty.css?v=2.3" />
   <link rel="stylesheet" href="question-feedback.css?v=4.0" />
+  <link id="mentorLayoutRefresh" rel="stylesheet" href="layout-refresh.css?v=8.0" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,59 +21,53 @@
       <div class="brand">
         <div class="brand-mark">M</div>
         <div>
-          <div class="brand-line"><strong>Mentor IA</strong><span class="version-badge">v1.3.2</span></div>
-          <span>Questões reais + mentoria adaptativa</span>
+          <div class="brand-line"><strong>Mentor IA</strong><span class="version-badge">PMBA</span></div>
+          <span>Plano de estudos • PMBA 2026</span>
         </div>
       </div>
       <button class="icon-button" id="resetBtn" aria-label="Reiniciar dados locais" title="Reiniciar dados locais">↻</button>
     </header>
 
     <main>
-      <section class="view active" data-view="inicio">
-        <div class="hero-card">
-          <div>
-            <span class="eyebrow">MENTORA ADAPTATIVA • V1.3.2</span>
-            <h1>Questões reais no Q. Eu interpreto o seu desempenho.</h1>
-            <p id="heroText">Abra o Qconcursos já com filtros prontos, resolva uma bateria e registre o resultado para eu construir seu mapa de conhecimento.</p>
-          </div>
-          <button class="primary" id="heroAction" data-action="start-diagnostic">Começar com questões reais</button>
-        </div>
+      <section class="view active home-view" data-view="inicio">
+        <header class="page-intro home-intro">
+          <span class="eyebrow">PAINEL DO ALUNO</span>
+          <h1>Seu estudo de hoje</h1>
+          <p>Veja o que precisa ser feito agora e acompanhe a semana sem excesso de informação.</p>
+        </header>
 
-        <div class="stats-grid">
-          <article class="stat-card"><span>Domínio geral</span><strong id="overallMastery">—</strong><small>com recência</small></article>
-          <article class="stat-card"><span>Questões</span><strong id="totalAnswered">0</strong><small>evidências registradas</small></article>
-          <article class="stat-card"><span>Acertos</span><strong id="accuracy">—</strong><small>taxa acumulada</small></article>
-          <article class="stat-card"><span>Prioridade</span><strong class="small-strong" id="prioritySubject">Aguardando dados</strong><small>menor domínio</small></article>
-        </div>
-
-        <article class="mentor-card">
-          <div class="mentor-avatar">IA</div>
-          <div class="mentor-copy">
-            <span class="eyebrow">ORIENTAÇÃO DA MENTORA</span>
-            <h2 id="mentorHeadline">Primeiro eu preciso de evidências reais.</h2>
-            <p id="mentorAdvice">Use questões do Qconcursos e registre as baterias. Eu considero acertos, volume, confiança, tempo, assunto e recência.</p>
-            <div class="quick-actions">
-              <button class="chip" data-mentor="today">O que estudo hoje?</button>
-              <button class="chip" data-mentor="weakness">Onde estou pior?</button>
-              <button class="chip" data-mentor="pattern">Que padrão você vê?</button>
-              <button class="chip" data-mentor="advance">Posso avançar?</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="mission-card">
-          <div class="mission-head"><div><span class="eyebrow">MISSÃO DO DIA</span><h2 id="missionTitle">Aguardando evidências</h2><p id="missionSubtitle">Depois da primeira bateria do Q, eu monto uma sequência objetiva para hoje.</p></div><span id="missionProgress" class="mission-progress">0/0</span></div>
+        <article class="mission-card legacy-mission-placeholder">
+          <div class="mission-head"><div><span class="eyebrow">MISSÃO DO DIA</span><h2 id="missionTitle">Aguardando plano</h2><p id="missionSubtitle">Seu cronograma adaptativo será carregado aqui.</p></div><span id="missionProgress" class="mission-progress">0/0</span></div>
           <div id="dailyPlan" class="plan-list"></div>
           <button class="secondary hidden" id="regeneratePlanBtn" data-action="regenerate-plan">Recalcular missão</button>
         </article>
 
-        <div class="section-heading"><div><span class="eyebrow">MAPA RÁPIDO</span><h2>Seu conhecimento por matéria</h2></div><button class="text-button" data-go="mapa">Ver detalhes</button></div>
-        <div id="miniMap" class="subject-list"></div>
+        <section class="home-section continue-section">
+          <div class="section-heading compact"><div><span class="eyebrow">CONTINUAR ESTUDANDO</span><h2>Próximo passo</h2></div></div>
+          <div class="hero-card compact-hero">
+            <div>
+              <h2>Questões e revisões do seu plano</h2>
+              <p id="heroText">Abra sua sessão de questões e continue de onde parou.</p>
+            </div>
+            <button class="primary" id="heroAction" data-action="start-diagnostic">Abrir questões</button>
+          </div>
+        </section>
+
+        <section class="home-section progress-section">
+          <div class="section-heading compact"><div><span class="eyebrow">SEU PROGRESSO</span><h2>Resumo</h2></div><button class="text-button" data-go="mapa">Ver detalhes</button></div>
+          <div class="stats-grid">
+            <article class="stat-card"><span>Domínio geral</span><strong id="overallMastery">—</strong><small>nível atual</small></article>
+            <article class="stat-card"><span>Questões</span><strong id="totalAnswered">0</strong><small>respondidas</small></article>
+            <article class="stat-card"><span>Acertos</span><strong id="accuracy">—</strong><small>taxa acumulada</small></article>
+            <article class="stat-card"><span>Prioridade</span><strong class="small-strong" id="prioritySubject">Aguardando dados</strong><small>foco atual</small></article>
+          </div>
+          <div id="miniMap" class="subject-list compact-map"></div>
+        </section>
       </section>
 
       <section class="view" data-view="diagnostico">
-        <div class="section-heading standalone"><div><span class="eyebrow">DIAGNÓSTICO LEGADO</span><h1>Questões de demonstração desativadas como caminho principal.</h1><p>A V1.3.2 prioriza questões reais do Qconcursos. Esta estrutura permanece apenas para preservar compatibilidade com dados anteriores.</p></div></div>
-        <div id="diagnosticEmpty" class="empty-card"><div class="empty-icon">Q</div><h2>Use o Modo Q</h2><p>Ao tocar no botão abaixo, você será levado ao novo modo de questões reais.</p><button class="primary" data-action="start-diagnostic">Ir para questões reais</button></div>
+        <div class="page-intro"><span class="eyebrow">QUESTÕES</span><h1>Treino por questões</h1><p>O banco privado e o Modo QG aparecem aqui.</p></div>
+        <div id="diagnosticEmpty" class="empty-card"><div class="empty-icon">Q</div><h2>Banco de questões</h2><p>Use a Central de Questões para iniciar uma sessão real.</p><button class="primary" data-action="start-diagnostic">Abrir questões</button></div>
         <div id="quizCard" class="quiz-card hidden">
           <div class="quiz-topline"><span id="questionMeta">Questão</span><span id="questionTimer">00:00</span></div>
           <div class="progress-track"><div id="quizProgress" class="progress-fill"></div></div>
@@ -84,30 +79,37 @@
       </section>
 
       <section class="view" data-view="mapa">
-        <div class="section-heading standalone"><div><span class="eyebrow">MAPA DE CONHECIMENTO</span><h1>Domínio + confiabilidade + recência.</h1><p>O mapa passa a ser alimentado principalmente pelas baterias reais registradas a partir do Qconcursos.</p></div></div>
+        <div class="page-intro"><span class="eyebrow">DESEMPENHO</span><h1>Seu domínio por matéria</h1><p>Domínio, confiabilidade e recência das suas evidências.</p></div>
         <div id="knowledgeMap" class="knowledge-grid"></div>
       </section>
 
       <section class="view" data-view="mentora">
-        <div class="section-heading standalone"><div><span class="eyebrow">MENTORA</span><h1>O objetivo é orientar, não fabricar questões.</h1><p>A mentora usa seu histórico para sugerir o próximo foco. As questões ficam no Qconcursos.</p></div></div>
+        <div class="page-intro"><span class="eyebrow">MENTORA</span><h1>Orientação de estudo</h1><p>Use seu histórico para decidir o próximo foco.</p></div>
+        <article class="mentor-card">
+          <div class="mentor-avatar">IA</div>
+          <div class="mentor-copy">
+            <h2 id="mentorHeadline">Primeiro eu preciso de evidências reais.</h2>
+            <p id="mentorAdvice">Resolva questões e registre seu desempenho para receber orientações melhores.</p>
+            <div class="quick-actions"><button class="chip" data-mentor="today">O que estudo hoje?</button><button class="chip" data-mentor="weakness">Onde estou pior?</button><button class="chip" data-mentor="pattern">Que padrão você vê?</button><button class="chip" data-mentor="advance">Posso avançar?</button></div>
+          </div>
+        </article>
         <div class="chat-card"><div id="chatMessages" class="chat-messages"></div><div class="prompt-grid"><button data-mentor="today">Monte meu estudo de hoje</button><button data-mentor="weakness">Analise minhas fraquezas</button><button data-mentor="pattern">Analise meus padrões de erro</button><button data-mentor="advance">Posso mudar de assunto?</button><button data-mentor="review">O que devo revisar?</button></div></div>
-        <article class="roadmap-card"><span class="eyebrow">PRÓXIMAS CAMADAS</span><h2>Depois da V1.3.2</h2><div class="roadmap-list"><div><strong>01</strong><span>Supabase: conta, sincronização e histórico permanente.</span></div><div><strong>02</strong><span>IA real lendo seu perfil de conhecimento e histórico.</span></div><div><strong>03</strong><span>Mais filtros prontos por banca, edital e assunto.</span></div><div><strong>04</strong><span>Importação mais automática de resultados, sem pedir sua senha do Q.</span></div></div></article>
       </section>
 
       <section class="view" data-view="historico">
-        <div class="section-heading standalone"><div><span class="eyebrow">HISTÓRICO & PERFIL</span><h1>A mentora precisa de memória.</h1><p>Nesta versão os registros ainda ficam neste navegador. A próxima grande etapa é sincronizar no Supabase.</p></div></div>
+        <div class="page-intro"><span class="eyebrow">HISTÓRICO</span><h1>Perfil e tentativas</h1><p>Configurações e registros das suas sessões.</p></div>
         <div class="history-grid">
-          <article class="profile-card"><span class="eyebrow">SEU OBJETIVO</span><h2>Configuração da mentoria</h2><label>Concurso / objetivo<input id="profileExam" type="text" maxlength="60" placeholder="Ex.: Meu concurso" /></label><div class="field-grid"><label>Meta de acertos (%)<input id="profileTarget" type="number" min="50" max="100" step="1" /></label><label>Tempo diário (min)<input id="profileMinutes" type="number" min="20" max="480" step="10" /></label></div><button class="primary" id="saveProfileBtn">Salvar objetivo</button></article>
-          <article class="profile-card"><span class="eyebrow">LEITURA DA MENTORA</span><h2>Padrões recentes</h2><div id="patternSummary" class="pattern-list"></div></article>
+          <article class="profile-card"><span class="eyebrow">SEU OBJETIVO</span><h2>Configuração</h2><label>Concurso / objetivo<input id="profileExam" type="text" maxlength="60" placeholder="Ex.: PMBA Soldado 2026" /></label><div class="field-grid"><label>Meta de acertos (%)<input id="profileTarget" type="number" min="50" max="100" step="1" /></label><label>Tempo diário (min)<input id="profileMinutes" type="number" min="20" max="480" step="10" /></label></div><button class="primary" id="saveProfileBtn">Salvar objetivo</button></article>
+          <article class="profile-card"><span class="eyebrow">PADRÕES</span><h2>Leitura recente</h2><div id="patternSummary" class="pattern-list"></div></article>
         </div>
         <div class="section-heading"><div><span class="eyebrow">TENTATIVAS</span><h2>Últimos registros</h2></div><span id="historyCount" class="muted-count">0 registros</span></div><div id="historyList" class="history-list"></div>
       </section>
     </main>
 
     <nav class="bottom-nav" aria-label="Navegação principal">
-      <button class="nav-item active" data-go="inicio"><span>⌂</span><small>Início</small></button>
-      <button class="nav-item" data-go="diagnostico"><span>◉</span><small>Diagnóstico</small></button>
-      <button class="nav-item" data-go="mapa"><span>▥</span><small>Domínio</small></button>
+      <button class="nav-item active" data-go="inicio"><span>⌂</span><small>Hoje</small></button>
+      <button class="nav-item" data-go="diagnostico"><span>◉</span><small>Questões</small></button>
+      <button class="nav-item" data-go="mapa"><span>▥</span><small>Desempenho</small></button>
       <button class="nav-item" data-go="mentora"><span>✦</span><small>Mentora</small></button>
       <button class="nav-item" data-go="historico"><span>↺</span><small>Histórico</small></button>
     </nav>
@@ -121,15 +123,13 @@
           const controller = navigator.serviceWorker.controller;
           if (!controller || !controller.scriptURL.includes('/SIMULADO-01/sw.js')) {
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-              if (!sessionStorage.getItem('mentor-sw-reloaded')) {
-                sessionStorage.setItem('mentor-sw-reloaded', '1');
+              if (!sessionStorage.getItem('mentor-sw-reloaded-v8')) {
+                sessionStorage.setItem('mentor-sw-reloaded-v8', '1');
                 location.reload();
               }
             }, { once: true });
           }
-        } catch (error) {
-          console.warn('Mentor IA offline não pôde ser ativado:', error);
-        }
+        } catch (error) { console.warn('Mentor IA offline não pôde ser ativado:', error); }
       });
     }
   </script>
@@ -138,6 +138,6 @@
   <script src="question-feedback.js?v=4.0"></script>
   <script src="q-presets.js"></script>
   <script src="question-difficulty.js?v=2.3"></script>
-  <script src="runtime-bootstrap.js?v=6.0"></script>
+  <script src="runtime-bootstrap.js?v=8.0"></script>
 </body>
 </html>
