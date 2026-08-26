@@ -13,7 +13,7 @@
 - P1 — Edital e Taxonomia ✅ concluída
 - P2 — Estrutura das Questões 🔄 em andamento
   - P2.1 — modelo e motor de estados individuais ✅ concluída
-  - P2.2 — integração visual + filtros de estados ⏳ pendente
+  - P2.2 — integração visual + filtros de estados ✅ concluída
   - P2.3 — dificuldade e origem da dificuldade ⏳ pendente
 - P3 — Importação dos PDFs ⏳ pendente
 - P4 — Correção Completa ⏳ pendente
@@ -22,19 +22,19 @@
 - P7 — Mentora Inteligente ⏳ pendente
 - P8 — Qconcursos + Internet ⏳ pendente
 
-**Última subparte concluída:** P2.1 — modelo e motor de estados individuais das questões
+**Última subparte concluída:** P2.2 — integração visual e filtros de estados das questões
 
-**Próxima subparte:** P2.2 — integrar estados visualmente e criar filtros Novas / Erradas / Acertadas / Revisão / Dominadas / Todas
+**Próxima subparte:** P2.3 — dificuldade easy/medium/hard + difficulty_origin source/estimated/calibrated, revelada somente após confirmar o gabarito
 
-**Último commit funcional da P2.1:** `c049ad5d139022d6495095d4f9b38138a5ca763f`
+**Último commit funcional da P2.2:** `38d32f1cc14f9ec264c4c27d5e669f0cf9491c60`
 
-**Último deploy confirmado:** aguardando confirmação do deploy que contém P2.1
+**Último deploy confirmado:** GitHub Pages run 52 — build success + deploy success
 
 **Problemas pendentes conhecidos:**
-- `question-state.js` já existe, mas sua integração visual com a Central de Questões fica deliberadamente para P2.2 para respeitar a regra de uma subparte segura por execução.
 - `app.js` ainda contém lógica legada e deve ser evitado em novas funcionalidades.
-- `cloud-sync.js` mantém versão interna antiga e carrega `bank-mode.js?v=1.5`; limpar somente em etapa própria, não durante P2.1/P2.2 sem necessidade documentada.
+- `cloud-sync.js` mantém versão interna antiga e carrega `bank-mode.js?v=1.5`; a query antiga não impede carregar o arquivo atual, mas a limpeza deve ocorrer em etapa própria.
 - `index.html` possui metadados/cópias antigas; não alterar fora de uma etapa de limpeza específica.
+- A dificuldade ainda não está no modelo definitivo; isso fica exclusivamente para P2.3.
 
 ## Arquivos atuais e responsabilidades
 
@@ -64,12 +64,13 @@ Autenticação Supabase, perfil em nuvem, sincronização do estado legado e car
 Estilos de autenticação e conta.
 
 ### `bank-mode.js`
-Orquestrador atual do banco privado e sessão de questões: carrega edital/questões/estado, seleciona questão, renderiza, confirma gabarito, salva tentativa e `user_question_state`.
+Orquestrador da Central de Questões: carrega edital/questões/estado, chama os módulos de estado/filtro, renderiza questão, confirma gabarito, salva tentativa e `user_question_state`.
+- P2.2: passou a carregar `question-state.js`, `question-filters.js` e `question-filters.css`.
 - Alterar somente para integração fina com módulos de questão até que seja totalmente modularizado.
 - Não concentrar novas regras grandes aqui.
 
 ### `bank-mode.css`
-Estilos da Central de Questões e componentes associados.
+Estilos base da Central de Questões e componentes associados.
 
 ### `qg-theme.css`
 Tema e mecânica visual herdada do QG dos Praças: alternativas, acerto/erro, botões, badges, timer.
@@ -99,6 +100,7 @@ Estilos dos presets Qconcursos.
 
 ### `sw.js`
 Service Worker/PWA e lista de assets em cache.
+- P2.2: cache `mentor-ia-v1-9-p2-2` inclui `question-state.js`, `question-filters.js` e `question-filters.css`.
 - Alterar quando novo módulo frontend precisar funcionar corretamente na PWA ou quando a versão do cache mudar.
 - Sempre testar GitHub Pages após alteração.
 
@@ -124,11 +126,29 @@ Motor puro de classificação de estado individual. Interpreta:
 
 Também detecta revisão vencida por `next_review_at` e expõe API em `window.MentorQuestionState`.
 - Fonte de dados: `user_question_state` e histórico em `question_attempts`.
-- Integração visual será feita em P2.2, não nesta subparte.
+- Integrado visualmente na Central de Questões na P2.2.
 
-### `question-filters.js` — P2.2
-Filtros Novas / Erradas / Acertadas / Revisão / Dominadas / Todas e regras de elegibilidade da seleção.
-- Integração esperada: `bank-mode.js`, CSS próprio, `sw.js`.
+### `question-filters.js` — P2.2 ✅
+Motor isolado de filtros e seleção por estado.
+Filtros expostos:
+- Automático
+- Novas
+- Erradas
+- Acertadas
+- Revisão
+- Dominadas
+- Todas
+
+Regra do modo Automático:
+1. questões inéditas;
+2. revisões vencidas/em revisão;
+3. questões ainda em aprendizado;
+4. questões dominadas ficam fora da rotação automática.
+
+Filtros explícitos podem trazer questões antigas conforme escolha do usuário.
+
+### `question-filters.css` — P2.2 ✅
+Estilos exclusivos dos botões e resumo dos filtros de estado. Não usa `styles.css` como depósito de regra visual nova.
 
 ### `question-difficulty.js` — P2.3
 Dificuldade easy/medium/hard, origem source/estimated/calibrated e revelação somente pós-gabarito.
@@ -162,7 +182,7 @@ Histórico imutável de cada resposta: alternativa marcada, acerto/erro, tempo, 
 
 ### `user_question_state`
 Estado resumido por usuário+questão.
-Campos centrais após P2.1:
+Campos centrais após P2.1/P2.2:
 - `seen_count`
 - `correct_count`
 - `wrong_count`
@@ -187,7 +207,7 @@ Domínio agregado por tópico.
 
 ## Matriz “quero mudar X → onde mexer”
 - Estado individual/badge da questão → `question-state.js`; integração mínima em `bank-mode.js`; schema `user_question_state`.
-- Filtros de questão → `question-filters.js`; integração mínima em `bank-mode.js`.
+- Filtros de questão → `question-filters.js` + `question-filters.css`; integração mínima em `bank-mode.js`.
 - Dificuldade → `question-difficulty.js`; schema `questions`; integração pós-resposta.
 - Correção/explicações → `question-feedback.js`.
 - Visual QG → `qg-theme.css`/CSS específico; não mexer no edital.
@@ -206,6 +226,18 @@ Após migração/backfill:
 - Contadores inconsistentes: 0
 - Estados duplicados por usuário+questão: 0
 - Questões respondidas sem `last_attempt_at`: 0
+
+## Validação P2.2
+- Supabase permaneceu íntegro: 18 questões, 8 estados, 8 tentativas.
+- Estados órfãos: 0.
+- Estados duplicados: 0.
+- Contadores inconsistentes: 0.
+- Respondidas sem `last_attempt_at`: 0.
+- `question-filters.js` separado do orquestrador.
+- `question-filters.css` separado dos estilos globais.
+- `bank-mode.js` versão 1.9 integrado aos módulos de P2.1/P2.2.
+- `sw.js` atualizado para cache P2.2.
+- GitHub Pages run 52: build `success` e deploy `success`.
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
