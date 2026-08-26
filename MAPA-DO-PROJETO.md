@@ -21,7 +21,8 @@
   - P3.1 — Português 🔄 em andamento
     - P3.1a — Interpretação/Tipologia, lote 1 (questões 1–2) ✅
     - P3.1b — Sintaxe, lote seguro (questão 16) ✅
-    - P3.1c — próximo lote de Português ⏳
+    - P3.1c — auditoria/reconciliação do lote existente de Crase ✅
+    - P3.1d — próximo lote seguro de Português ⏳
   - P3.2 — História ⏳
   - P3.3 — Geografia ⏳
   - P3.4 — Matemática ⏳
@@ -38,9 +39,9 @@
 - P7 — Mentora Inteligente ⏳
 - P8 — Qconcursos + Internet ⏳
 
-**Última subparte concluída:** P3.1b — lote seguro de Português, questão INT-16.
+**Última subparte concluída:** P3.1c — auditoria/reconciliação do lote de Crase já presente no Supabase.
 
-**Próxima subparte:** P3.1c — continuar Português, sem avançar para História antes de fechar P3.1.
+**Próxima subparte:** P3.1d — continuar Português com um novo lote cuja questão e gabarito possam ser confirmados diretamente no PDF; não avançar para História antes de fechar P3.1.
 
 **Fonte usada em P3.1:** `modulo questões gerais fcc (quad).pdf`, privado/licenciado.
 
@@ -52,18 +53,19 @@
 
 ### P3.1b
 - Recorte seguro: questão 16 da seção de Português localizada no módulo.
-- Encontradas/examinadas neste lote: 1.
-- Válidas/importadas: 1.
-- Duplicadas antes da inserção: 0.
-- Descartadas: 0.
-- Com gabarito do PDF: 1; sem gabarito confiável: 0.
-- Alternativas completas: 5/5.
-- Vinculada ao edital: INT-16 → LP7 `Sintaxe da oração e do período`.
-- Gabarito preservado do PDF: E.
-- Dificuldade: `medium/estimated`; a fonte não informa nível oficial.
-- `source_page` ficou nulo porque o recorte recuperado não permitiu confirmar com segurança o número da página; não foi inventado.
-- Banco após o lote: 21 questões totais, todas privadas; documento-fonte com 21 questões registradas.
-- O PDF não foi enviado nem copiado para o GitHub.
+- Encontradas/examinadas neste lote: 1; válidas/importadas: 1; duplicadas: 0; descartadas: 0.
+- Com gabarito do PDF: 1; sem gabarito confiável: 0; alternativas completas: 5/5.
+- INT-16 → LP7 `Sintaxe da oração e do período`, gabarito E, `medium/estimated`.
+- `source_page` nulo porque não foi possível confirmar a página com segurança.
+
+### P3.1c
+- Subparte de auditoria, sem nova importação, necessária porque o banco já continha um lote de Crase não documentado no mapa.
+- 18 registros `P3-*` localizados em Língua Portuguesa, todos vinculados a `Uso do sinal indicativo de crase` e ao documento `Módulo Questões Gerais FCC (QUAD)`.
+- Todos os 18 estão `private`, com `difficulty_origin=estimated` e gabarito preenchido.
+- Numeração presente: P3-1 a P3-6, P3-8 e P3-10 a P3-20; P3-7 e P3-9 não existem no banco e não foram inventadas/recriadas nesta auditoria.
+- Verificação global por enunciado normalizado: 0 grupos duplicados.
+- Nenhum conteúdo licenciado foi enviado ao GitHub.
+- O lote não foi reimportado nem teve gabaritos alterados nesta subparte; a auditoria apenas reconciliou o estado real do banco com o mapa.
 
 ## Arquivos atuais e responsabilidades
 - `MAPA-DO-PROJETO.md`: status persistente, arquitetura e matriz de alteração.
