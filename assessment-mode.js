@@ -3,6 +3,7 @@
 
   const VERSION = '9.3';
   const EXAM = 'Autoavaliação Mentora PMBA 2026';
+  const EXPECTED_TOTAL = 24;
   let db = null;
   let user = null;
   let lastProgress = null;
@@ -48,12 +49,12 @@
     card.className = 'assessment-card';
     card.innerHTML = `
       <div class="assessment-top">
-        <div><span class="qg-kicker">AUTOAVALIAÇÃO INICIAL • PMBA 2026</span><h2>Diagnóstico médio–difícil</h2><p id="assessmentDescription">22 questões inéditas, distribuídas entre 11 matérias. A ordem alterna disciplinas para evitar um diagnóstico enviesado.</p></div>
+        <div><span class="qg-kicker">AUTOAVALIAÇÃO INICIAL • PMBA 2026</span><h2>Diagnóstico médio–difícil</h2><p id="assessmentDescription">24 questões inéditas, distribuídas entre 12 matérias. A ordem alterna disciplinas para evitar um diagnóstico enviesado.</p></div>
         <span class="assessment-badge">V${VERSION}</span>
       </div>
       <div class="assessment-progress">
         <div class="assessment-progress-line"><span id="assessmentBar" style="width:0%"></span></div>
-        <div class="assessment-stats"><span><strong id="assessmentDone">0/22</strong> respondidas</span><span><strong id="assessmentAccuracy">—</strong> acertos</span><span><strong id="assessmentRemaining">22</strong> restantes</span></div>
+        <div class="assessment-stats"><span><strong id="assessmentDone">0/24</strong> respondidas</span><span><strong id="assessmentAccuracy">—</strong> acertos</span><span><strong id="assessmentRemaining">24</strong> restantes</span></div>
       </div>
       <div id="assessmentWeak" class="assessment-weak" hidden></div>
       <button type="button" id="assessmentStart" class="assessment-action">COMEÇAR AUTOAVALIAÇÃO</button>
@@ -74,14 +75,14 @@
       button.dataset.questionFilter = 'diagnostic';
       host.prepend(button);
     }
-    const remaining = Number(lastProgress?.remaining ?? 22);
+    const remaining = Number(lastProgress?.remaining ?? EXPECTED_TOTAL);
     button.innerHTML = `AUTOAVALIAÇÃO<span>${remaining}</span>`;
   }
 
   async function loadProgress() {
     const ctx = await context(2500);
     if (!ctx.db || !ctx.user) {
-      renderProgress({total:22,answered:0,correct:0,remaining:22,subjects:[]});
+      renderProgress({total:EXPECTED_TOTAL,answered:0,correct:0,remaining:EXPECTED_TOTAL,subjects:[]});
       return null;
     }
     const q = await ctx.db.from('questions').select('id,subject_id,subject_label,difficulty').eq('exam_name',EXAM).order('source_question_number');
@@ -106,7 +107,8 @@
     const subjects = [...groups.values()];
     const answered = subjects.reduce((sum,g)=>sum+g.answered,0);
     const correct = subjects.reduce((sum,g)=>sum+g.correct,0);
-    const progress = {total:questions.length||22,answered,correct,remaining:Math.max(0,(questions.length||22)-answered),subjects};
+    const total = questions.length || EXPECTED_TOTAL;
+    const progress = {total,answered,correct,remaining:Math.max(0,total-answered),subjects};
     lastProgress = progress;
     renderProgress(progress);
     ensureFilterButton();
@@ -116,7 +118,7 @@
 
   function renderProgress(progress) {
     lastProgress = progress;
-    const total = Math.max(1,Number(progress.total||22));
+    const total = Math.max(1,Number(progress.total||EXPECTED_TOTAL));
     const answered = Number(progress.answered||0);
     const correct = Number(progress.correct||0);
     const pct = Math.round(answered/total*100);
