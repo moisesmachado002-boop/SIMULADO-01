@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '2.2';
+  const VERSION = '5.0';
   const FILTERS = Object.freeze({
     AUTO: 'auto',
     NEW: 'new',
@@ -25,10 +25,11 @@
   function stateKey(state, now = Date.now()) {
     if (window.MentorQuestionState?.key) return window.MentorQuestionState.key(state, now);
     if (!state || Number(state.seen_count || 0) === 0) return 'new';
+    if (isDue(state, now)) return 'review';
+    if (state.last_is_correct === false) return 'wrong';
     if (state.status === 'mastered') return 'mastered';
     if (state.status === 'review') return 'review';
     if (state.last_is_correct === true) return 'correct';
-    if (state.last_is_correct === false) return 'wrong';
     return 'answered';
   }
 
@@ -43,9 +44,9 @@
     const key = stateKey(state, now);
     if (filter === FILTERS.AUTO || filter === FILTERS.ALL) return true;
     if (filter === FILTERS.NEW) return key === 'new';
-    if (filter === FILTERS.WRONG) return key === 'wrong' || (key === 'review' && state?.last_is_correct === false);
+    if (filter === FILTERS.WRONG) return key === 'wrong' || (state?.last_is_correct === false && Number(state?.seen_count || 0) > 0);
     if (filter === FILTERS.CORRECT) return key === 'correct';
-    if (filter === FILTERS.REVIEW) return key === 'review' || isDue(state, now);
+    if (filter === FILTERS.REVIEW) return state?.status === 'review' || key === 'review' || isDue(state, now);
     if (filter === FILTERS.MASTERED) return key === 'mastered';
     return true;
   }
@@ -72,15 +73,11 @@
     const fresh = questions.filter(q => stateKey(states.get(q.id), now) === 'new');
     if (fresh.length) return leastSeen(fresh, states);
 
-    const dueReview = questions.filter(q => {
-      const state = states.get(q.id);
-      return stateKey(state, now) === 'review' || isDue(state, now);
-    });
+    const dueReview = questions.filter(q => isDue(states.get(q.id), now));
     if (dueReview.length) return leastSeen(dueReview, states);
 
-    const learning = questions.filter(q => stateKey(states.get(q.id), now) !== 'mastered');
-    if (learning.length) return leastSeen(learning, states);
-
+    // P5 / Modo QG: não reciclar questão antiga antes da hora.
+    // Se não há nova nem revisão vencida, a operação automática termina.
     return null;
   }
 
@@ -101,6 +98,7 @@
     FILTERS,
     LABELS,
     stateKey,
+    isDue,
     matches,
     filtered,
     choose,
