@@ -29,12 +29,12 @@
 - P4 — Correção Completa ✅ concluída
 - P5 — Modo QG ✅ concluída
 - P6 — Cronograma e Revisões ✅ concluída
-- P7 — Mentora Inteligente ⏳ próxima etapa
-- P8 — Qconcursos + Internet ⏳
+- P7 — Mentora Inteligente ✅ concluída
+- P8 — Qconcursos + Internet ⏳ próxima etapa
 
-**Última etapa concluída:** P6 — Cronograma e Revisões.
+**Última etapa concluída:** P7 — Mentora Inteligente.
 
-**Próxima etapa:** P7 — Mentora Inteligente.
+**Próxima etapa:** P8 — Qconcursos + Internet.
 
 ## P3 — decisão permanente sobre o banco de questões
 - Não tentar abastecer todas as matérias antecipadamente.
@@ -119,20 +119,48 @@ A P6 está fechada com o seguinte contrato funcional:
 - itens de plano com duração inválida: **0**.
 - histórico anterior foi normalizado para a regra P6: erros médios atuais em 12h, erro de baixa confiança em 24h, primeiro acerto em 24h e acerto forte em 30h.
 
+## P7 — Mentora Inteligente
+A P7 está fechada com o seguinte contrato funcional:
+1. a Mentora analisa apenas evidências reais do usuário: tentativas, acertos/erros, confiança, tempo, domínio, revisões e cronograma;
+2. o currículo permanece limitado aos 99 tópicos oficiais da PMBA; a Mentora não cria matérias ou tópicos fora do edital;
+3. existem cinco leituras operacionais: **Hoje**, **Fraquezas**, **Padrões**, **Posso avançar?** e **Revisões**;
+4. cada análise apresenta nível de evidência (`low|medium|high`) e texto explícito quando a amostra ainda é pequena;
+5. erro com confiança alta é tratado como possível conceito mal consolidado; erro lento como possível problema de fluência/tempo; erro muito rápido é apenas sinal de possível pressa, sem rotular automaticamente como distração;
+6. a Mentora identifica tendência quando existem janelas suficientes de respostas recentes e anteriores; sem amostra suficiente usa a tendência já armazenada no domínio;
+7. avanço só é liberado quando há pelo menos 5 respostas, 80% de acerto, ausência de tendência de queda e nenhuma revisão vencida no tópico;
+8. análises pedidas explicitamente são persistidas em `mentor_insights` com `evidence_json`, sem alterar questões ou gabaritos;
+9. o backend da análise é a Edge Function `mentor-analyze`, com `verify_jwt=true`, usando o JWT do usuário e as políticas RLS existentes;
+10. se o backend estiver temporariamente indisponível, existe contingência local conservadora; nesse caso a interface avisa que a memória da Mentora não foi atualizada;
+11. responder uma questão dispara nova leitura não persistente para atualizar a orientação sem gerar spam de insights;
+12. a Mentora pode aplicar o tópico prioritário ao cronograma da P6 apenas substituindo o foco de uma tarefa de **questões** já existente dentro dos próximos 7 dias;
+13. aplicar prioridade não cria minutos extras, não remove revisão obrigatória e não aumenta o limite diário; se não houver tarefa de questões substituível, a Mentora não altera o plano;
+14. o antigo bloco de respostas fixas fica oculto na interface da P7; o painel passa a mostrar evidência, motivos, tópicos prioritários, próxima ação e memória das análises;
+15. a IA/analítica nunca altera silenciosamente o gabarito, explicações P4 ou a fonte de verdade do edital.
+
+### Estado validado da P7 no fechamento
+- Edge Function `mentor-analyze`: **ACTIVE**, versão 1, `verify_jwt=true`.
+- `mentor_insights`: **RLS habilitado** e índices por usuário/data e usuário/tipo/data.
+- snapshot de evidência no fechamento: **9 tentativas**, **1 tópico medido**, **9 revisões pendentes** e **15 itens pendentes/em andamento no horizonte de 7 dias**.
+- `mentor_insights` estava com **0 registros antes do primeiro uso explícito da nova P7**; a memória começa a ser preenchida quando o usuário pede uma análise.
+- como a evidência atual está concentrada em um único tópico, a P7 deve sinalizar incerteza em vez de extrapolar para todo o edital.
+
 ## Arquivos e responsabilidades
 - `MAPA-DO-PROJETO.md`: status, arquitetura e decisões operacionais.
 - `index.html`: estrutura HTML base e carregamento dos módulos legados + `runtime-bootstrap.js`.
 - `app.js`: motor legado/local; evitar novas regras de negócio.
 - `styles.css`: estilos globais.
-- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas P5/P6.
+- `layout-refresh.css` / `layout-lock.css`: identidade visual unificada e proteção contra CSS legado injetado depois.
+- `runtime-bootstrap.js`: inicialização modular segura do Supabase/cloud e das camadas P5/P6/P7.
 - `cloud-sync.js`: autenticação Supabase e sincronização; carrega a Central privada.
 - `bank-mode.js`: orquestrador da Central de Questões; manter wiring fino.
 - `bank-mode.css`: estilos base da Central.
-- `qg-theme.css`: tema QG compartilhado.
+- `qg-theme.css`: arquivo legado; não deve prevalecer sobre o layout unificado.
 - `qg-mode.js` / `qg-mode.css`: P5, painel operacional, caderno de erros e entradas de treino.
 - `review-engine.js`: P6, intervalos adaptativos e sincronização `user_question_state` ↔ `reviews`.
 - `schedule-engine.js`: P6, capacidade diária, dívida, ciclo flexível, projeção de 7 dias e progresso persistente.
 - `study-profile.js`: P6, missão de hoje, configuração de tempo/dias, overrides e projeção semanal.
+- `mentor-engine.js` / `mentor-engine.css`: P7, consumo da análise segura, nível de evidência, memória e aplicação de prioridade ao plano.
+- Edge Function `mentor-analyze`: P7, motor analítico autenticado baseado nas evidências do usuário.
 - `edital-core.js` / `edital-core.css`: currículo/taxonomia oficial.
 - `question-state.js`: estados `new|answered|correct|wrong|review|mastered`.
 - `question-filters.js` / `question-filters.css`: filtros e rotação; automático = novas → revisões vencidas.
@@ -154,6 +182,7 @@ A P6 está fechada com o seguinte contrato funcional:
 - `study_sessions`: sessões de estudo registráveis.
 - `subjects`, `topics`, `topic_components` e aliases: currículo oficial.
 - `topic_mastery`: domínio agregado por tópico e próxima revisão.
+- `mentor_insights`: memória persistente das análises P7 e suas evidências.
 - `source_documents`: origem/licença e contagem do acervo.
 
 ## Matriz “quero mudar X → onde mexer”
@@ -167,7 +196,7 @@ A P6 está fechada com o seguinte contrato funcional:
 - Painel/tempo/dias/atalhos do dia → `study-profile.js`.
 - Importar questão sob demanda → `questions`, `source_documents`, taxonomia P1 e fonte privada; a questão só entra no treino com correção P4 completa.
 - Edital/taxonomia → `edital-core.js` + tabelas P1.
-- Mentora/IA → futuro `mentor-engine.js` + backend seguro na P7.
+- Mentora/IA → `mentor-engine.js` + `mentor-engine.css` + Edge Function `mentor-analyze` + `mentor_insights`.
 - Qconcursos → futuro `qconcursos-links.js` na P8.
 - Cache/PWA → `sw.js` quando assets frontend mudarem.
 
@@ -181,6 +210,7 @@ A P6 está fechada com o seguinte contrato funcional:
 7. Erro histórico permanece no Caderno QG mesmo após recuperação.
 8. O cronograma nunca ultrapassa o limite duro configurado para o dia.
 9. Revisões adiadas acumulam prioridade e retornam à fila sem avalanche.
-10. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
-11. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
-12. Se P1–P8 terminarem, parar e aguardar orientação.
+10. A Mentora deve declarar baixa evidência quando a amostra for insuficiente e nunca transformar hipótese em certeza.
+11. Antes de marcar uma P concluída: validar Supabase, arquivos, mapa e GitHub Pages.
+12. Só considerar deploy concluído com `status=completed` e `conclusion=success`.
+13. Se P1–P8 terminarem, parar e aguardar orientação.
