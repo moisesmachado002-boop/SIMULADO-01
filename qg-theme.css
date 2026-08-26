@@ -1,0 +1,39 @@
+/* Mentor IA v1.6 — identidade inspirada no QG DOS PRAÇAS */
+:root{
+  --bg:#111411!important;
+  --card:#222622!important;
+  --card-2:#1b261b!important;
+  --text:#eaeded!important;
+  --muted:#9aa39a!important;
+  --accent:#f39c12!important;
+  --good:#27ae60!important;
+  --bad:#c0392b!important;
+}
+html{background:#111411}
+body{background:#111411!important;color:#eaeded!important;font-family:'Courier New',Courier,monospace!important}
+.app-shell{max-width:980px!important}
+.topbar{background:#1b261b!important;border-bottom:3px solid #f39c12!important;border-radius:0!important;box-shadow:none!important}
+.brand-mark{border-radius:2px!important;background:#445c44!important;color:#f39c12!important;border:1px solid #f39c12!important}
+.brand-line strong{color:#f39c12!important;letter-spacing:.04em}
+.version-badge{border-radius:2px!important;background:#111411!important;border:1px solid #445c44!important;color:#d4ac0d!important}
+.icon-button,.account-button{border-radius:2px!important;background:#111411!important;border:1px solid #445c44!important;color:#eaeded!important}
+.cloud-status{border-radius:2px!important;background:#111411!important;border:1px solid #445c44!important}
+.hero-card,.mentor-card,.mission-card,.stat-card,.knowledge-card,.chat-card,.roadmap-card,.profile-card,.history-item,.empty-card,.quiz-card{background:#222622!important;border:1px solid #445c44!important;border-radius:2px!important;box-shadow:none!important}
+.hero-card{border-top:4px solid #f39c12!important}
+.eyebrow{color:#d4ac0d!important;letter-spacing:.08em}
+h1,h2,h3,strong{font-family:'Courier New',Courier,monospace}
+.hero-card h1,.section-heading h1,.section-heading h2{color:#eaeded!important}
+.hero-card p,.mentor-card p,.mission-card p,.section-heading p{color:#a8b1a8!important}
+.primary,.secondary,.text-button,.chip,.prompt-grid button{border-radius:0!important;font-family:'Courier New',Courier,monospace!important;text-transform:uppercase!important;font-weight:700!important}
+.primary{background:#f39c12!important;color:#111!important;border:1px solid #d4ac0d!important}
+.secondary,.chip,.prompt-grid button{background:#2d3e2d!important;color:#eaeded!important;border:1px solid #445c44!important}
+.text-button{color:#f39c12!important}
+.stats-grid{gap:10px!important}.stat-card{text-align:center!important}.stat-card span,.stat-card small{color:#9ea99e!important}.stat-card strong{color:#eaeded!important}
+.bottom-nav{background:#1b261b!important;border-top:3px solid #f39c12!important;box-shadow:none!important}
+.nav-item{border-radius:0!important;color:#9aa39a!important;font-family:'Courier New',Courier,monospace!important}.nav-item.active{background:#445c44!important;color:#fff!important}.nav-item.active span{color:#f39c12!important}
+.tag,.topic-pill,.status,.mission-progress,.muted-count{border-radius:2px!important}.tag,.topic-pill{background:#111411!important;border:1px solid #445c44!important;color:#cbd4cb!important}.status.good{background:#1f6539!important}.status.low{background:#7a2d25!important}.status.mid{background:#66550e!important}
+.bar,.progress-track{background:#333!important;border-radius:0!important}.bar span,.progress-fill{background:#27ae60!important;border-radius:0!important}
+input,select,textarea{border-radius:0!important;background:#111411!important;color:#fff!important;border:1px solid #445c44!important;font-family:'Courier New',Courier,monospace!important}input:focus,select:focus,textarea:focus{border-color:#f39c12!important;outline:none!important}
+.auth-card,.account-card{border-radius:2px!important;background:#222622!important;border:1px solid #445c44!important;border-top:5px solid #f39c12!important;box-shadow:0 0 24px rgba(0,0,0,.5)!important;font-family:'Courier New',Courier,monospace!important}.auth-logo{border-radius:2px!important;background:#445c44!important;color:#f39c12!important}.auth-card label{color:#d4ac0d!important;text-transform:uppercase!important}.auth-message[data-type="ok"]{color:#58d68d!important}.auth-message[data-type="error"]{color:#ec7063!important}
+.history-result{border-radius:2px!important}.history-result.good{background:#1f6539!important}.history-result.bad{background:#7a2d25!important}
+@media(max-width:700px){.app-shell{padding:0!important}main{padding-left:12px!important;padding-right:12px!important}.topbar{border-radius:0!important}}
