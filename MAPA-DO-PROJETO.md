@@ -12,6 +12,9 @@
 ## STATUS DO PROJETO
 - P1 — Edital e Taxonomia ✅ concluída
 - P2 — Estrutura das Questões 🔄 em andamento
+  - P2.1 — modelo e motor de estados individuais ✅ concluída
+  - P2.2 — integração visual + filtros de estados ⏳ pendente
+  - P2.3 — dificuldade e origem da dificuldade ⏳ pendente
 - P3 — Importação dos PDFs ⏳ pendente
 - P4 — Correção Completa ⏳ pendente
 - P5 — Modo QG ⏳ pendente
@@ -19,20 +22,24 @@
 - P7 — Mentora Inteligente ⏳ pendente
 - P8 — Qconcursos + Internet ⏳ pendente
 
-**Última subparte concluída:** P1 — Edital e Taxonomia (v1.8)
+**Última subparte concluída:** P2.1 — modelo e motor de estados individuais das questões
 
-**Próxima subparte:** P2.1 — estados individuais das questões
+**Próxima subparte:** P2.2 — integrar estados visualmente e criar filtros Novas / Erradas / Acertadas / Revisão / Dominadas / Todas
 
-**Último commit de versão conhecido antes da P2:** `a7fd7a62d2f1cb0e7c7662bf8862aa6c0f6832ed`
+**Último commit funcional da P2.1:** `c049ad5d139022d6495095d4f9b38138a5ca763f`
 
-**Último deploy confirmado antes da P2:** GitHub Pages run 45, success
+**Último deploy confirmado:** aguardando confirmação do deploy que contém P2.1
 
 **Problemas pendentes conhecidos:**
+- `question-state.js` já existe, mas sua integração visual com a Central de Questões fica deliberadamente para P2.2 para respeitar a regra de uma subparte segura por execução.
 - `app.js` ainda contém lógica legada e deve ser evitado em novas funcionalidades.
-- `cloud-sync.js` mantém versão interna antiga e carrega `bank-mode.js?v=1.5`; limpar somente em etapa própria, não durante P2.1.
+- `cloud-sync.js` mantém versão interna antiga e carrega `bank-mode.js?v=1.5`; limpar somente em etapa própria, não durante P2.1/P2.2 sem necessidade documentada.
 - `index.html` possui metadados/cópias antigas; não alterar fora de uma etapa de limpeza específica.
 
 ## Arquivos atuais e responsabilidades
+
+### `MAPA-DO-PROJETO.md`
+Mapa operacional, status persistente, responsabilidades e matriz de alteração. Deve ser consultado antes de qualquer mudança e atualizado ao final de cada subparte.
 
 ### `index.html`
 Estrutura HTML base, views antigas, navegação inicial e carregamento dos assets principais.
@@ -104,12 +111,20 @@ Manifesto PWA.
 ### `README.md`
 Documentação pública geral do repositório; não é o mapa operacional.
 
-## Módulos planejados
+## Módulos da arquitetura
 
-### `question-state.js` — P2.1
-Responsável por interpretar estado individual da questão e fornecer rótulo visual consistente: nova, respondida, acertada, errada, revisão, dominada.
-- Fonte de dados: `user_question_state` e `question_attempts` no Supabase.
-- Integração permitida na P2.1: `bank-mode.js` e `sw.js`.
+### `question-state.js` — P2.1 ✅
+Motor puro de classificação de estado individual. Interpreta:
+- `new` → NOVA
+- `answered` → RESPONDIDA
+- `correct` → ACERTADA
+- `wrong` → ERRADA
+- `review` → REVISÃO
+- `mastered` → DOMINADA
+
+Também detecta revisão vencida por `next_review_at` e expõe API em `window.MentorQuestionState`.
+- Fonte de dados: `user_question_state` e histórico em `question_attempts`.
+- Integração visual será feita em P2.2, não nesta subparte.
 
 ### `question-filters.js` — P2.2
 Filtros Novas / Erradas / Acertadas / Revisão / Dominadas / Todas e regras de elegibilidade da seleção.
@@ -146,7 +161,23 @@ Questão canônica e conteúdo: fonte, prova, banca, ano, matéria/tópico, enun
 Histórico imutável de cada resposta: alternativa marcada, acerto/erro, tempo, confiança, gabarito snapshot, data e tópico.
 
 ### `user_question_state`
-Estado resumido por usuário+questão: quantidades, última visualização/resposta, próxima revisão e status.
+Estado resumido por usuário+questão.
+Campos centrais após P2.1:
+- `seen_count`
+- `correct_count`
+- `wrong_count`
+- `last_seen_at`
+- `next_review_at`
+- `status`
+- `last_selected_answer`
+- `last_is_correct`
+- `last_response_time_seconds`
+- `last_confidence`
+- `last_attempt_at`
+
+Índices de P2.1:
+- `(user_id, status)`
+- `(user_id, next_review_at)` quando há revisão marcada.
 
 ### `subjects`, `topics`, `topic_components`, aliases
 P1. Currículo oficial e taxonomia. Não expandir por fontes externas.
@@ -165,6 +196,16 @@ Domínio agregado por tópico.
 - IA/Mentora → `mentor-engine.js` + Edge Function segura; nunca chave privada no frontend.
 - Qconcursos → `qconcursos-links.js`/migração futura de `q-presets.js`.
 - Cache/PWA → `sw.js` somente após saber quais assets mudaram.
+
+## Validação P2.1
+Após migração/backfill:
+- Questões no banco: 18
+- Linhas de estado: 8
+- Tentativas: 8
+- Estados órfãos: 0
+- Contadores inconsistentes: 0
+- Estados duplicados por usuário+questão: 0
+- Questões respondidas sem `last_attempt_at`: 0
 
 ## Regras de execução
 1. Uma parte/subparte segura por execução.
