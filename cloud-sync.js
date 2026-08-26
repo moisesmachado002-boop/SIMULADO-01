@@ -3,7 +3,8 @@
 
   const SUPABASE_URL = 'https://uysrtgyfnwyocdlaeyum.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
-  const CLOUD_VERSION = '1.4';
+  const CLOUD_VERSION = '1.4.1';
+  const APP_PUBLIC_URL = 'https://moisesmachado002-boop.github.io/SIMULADO-01/';
 
   if (!window.supabase?.createClient) {
     console.error('Supabase SDK não carregou.');
@@ -178,7 +179,10 @@
         const { data, error } = await db.auth.signUp({
           email,
           password,
-          options: { data: { display_name: name || email.split('@')[0] } }
+          options: {
+            emailRedirectTo: APP_PUBLIC_URL,
+            data: { display_name: name || email.split('@')[0] }
+          }
         });
         if (error) throw error;
         if (!data.session) {
@@ -307,12 +311,12 @@
   async function bootCloud() {
     injectCloudUI();
 
-    document.title = 'Mentor IA v1.4 — questões reais + nuvem';
-    document.querySelectorAll('.version-badge').forEach(el => el.textContent = 'v1.4');
+    document.title = 'Mentor IA v1.4.1 — questões reais + nuvem';
+    document.querySelectorAll('.version-badge').forEach(el => el.textContent = 'v1.4.1');
     const heroEyebrow = document.querySelector('[data-view="inicio"] .hero-card .eyebrow');
-    if (heroEyebrow) heroEyebrow.textContent = 'MENTORA ADAPTATIVA • V1.4';
+    if (heroEyebrow) heroEyebrow.textContent = 'MENTORA ADAPTATIVA • V1.4.1';
     const qEyebrow = document.querySelector('[data-view="qconcursos"] .section-heading .eyebrow');
-    if (qEyebrow) qEyebrow.textContent = 'QUESTÕES REAIS • V1.4';
+    if (qEyebrow) qEyebrow.textContent = 'QUESTÕES REAIS • V1.4.1';
 
     const historyIntro = document.querySelector('[data-view="historico"] .section-heading.standalone p');
     if (historyIntro) historyIntro.textContent = 'Entre na sua conta para manter seus registros sincronizados no Supabase. O modo local continua disponível como contingência.';
