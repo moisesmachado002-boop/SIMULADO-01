@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  const VERSION='2.0.0';
+  const VERSION='2.1.0';
   const TARGET=10;
   const SUPABASE_URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
   const SUPABASE_KEY='sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
   const TZ='America/Bahia';
 
-  let db=null,user=null,busy=false,patchTimer=null,applying=false,lastQcTopic=null;
+  let db=null,user=null,busy=false,patchTimer=null,applying=false,lastQcTopic=null,activeFilter='all';
   let topics=[],subjects=[];
   let metrics=new Map(),bankAvailable=new Map();
 
@@ -73,7 +73,7 @@
         metrics.set(t.id,{topic_id:t.id,subject_id:t.subject_id,evidence,accuracy,confidence,internalDistinct:latest.length,rawInternal:raw.length,external,correct,studyDays:days.size,dueReviews,measured,consolidated,trend:stored?.trend||'stable'});
       });
       patch();
-    }catch(error){console.warn('Evidence depth v2:',error);}finally{busy=false;}
+    }catch(error){console.warn('Evidence depth v2.1:',error);}finally{busy=false;}
   }
 
   function classification(m){if(!m.evidence)return'unseen';if(!m.measured)return'diagnostic';if(m.accuracy<60)return'weak';if(m.accuracy<80)return'mid';return'strong';}
@@ -83,6 +83,20 @@
     const rows=[...metrics.values()];const evidence=rows.reduce((s,m)=>s+m.evidence,0),correct=rows.reduce((s,m)=>s+m.correct,0),measured=rows.filter(m=>m.measured).length,distinct=rows.reduce((s,m)=>s+m.internalDistinct,0),external=rows.reduce((s,m)=>s+m.external,0);
     setText($('#metricQuestions'),fmt(evidence));setText($('#metricAccuracy'),evidence?`${pct(correct,evidence)}%`:'—');setText($('#metricMeasured'),`${measured}/${topics.length}`);
     setText($('#knowAttempts'),fmt(distinct));setText($('#knowExternal'),fmt(external));setText($('#knowTopics'),fmt(measured));
+  }
+
+  function filterMatches(m){
+    if(activeFilter==='unseen')return !m.measured;
+    if(activeFilter==='weak')return m.measured&&m.accuracy<60;
+    if(activeFilter==='strong')return m.measured&&m.accuracy>=80;
+    return true;
+  }
+
+  function applyEvidenceFilter(){
+    let visible=0;
+    document.querySelectorAll('[data-study-topic]').forEach(row=>{const show=filterMatches(mFor(row.getAttribute('data-study-topic')));row.style.display=show?'':'none';if(show)visible+=1;});
+    document.querySelectorAll('.subject-block').forEach(block=>{const any=[...block.querySelectorAll('[data-study-topic]')].some(row=>row.style.display!=='none');block.style.display=any?'':'none';});
+    setText($('#syllabusCount'),`${visible}/${topics.length}`);
   }
 
   function patchSyllabus(){
@@ -96,6 +110,7 @@
       let badge=row.querySelector('.evidence-depth-badge');if(!badge){badge=document.createElement('span');badge.className='evidence-depth-badge count-pill';score?.insertAdjacentElement('beforebegin',badge);}setText(badge,evidenceLabel(m));
     });
     document.querySelectorAll('.subject-block').forEach(block=>{const rows=[...block.querySelectorAll('[data-study-topic]')];if(!rows.length)return;const done=rows.filter(row=>mFor(row.getAttribute('data-study-topic')).measured).length;setText(block.querySelector('.subject-head .count-pill'),`${done}/${rows.length} medidos`);});
+    applyEvidenceFilter();
   }
 
   function patchStudyStatus(){
@@ -137,6 +152,14 @@
     const focus=$('#mentorFocus');if(focus)focus.querySelectorAll('.list-row span').forEach(span=>{const txt=span.textContent||'';if(/domínio/i.test(txt))setText(span,txt.replace(/domínio/gi,'desempenho'));});
   }
 
+  function setupFilters(){
+    document.querySelectorAll('[data-syllabus-filter]').forEach(button=>{
+      const value=button.getAttribute('data-syllabus-filter')||'all';
+      button.removeAttribute('data-syllabus-filter');button.setAttribute('data-evidence-filter',value);
+      button.addEventListener('click',()=>{activeFilter=value;document.querySelectorAll('[data-evidence-filter]').forEach(b=>b.classList.toggle('active',b===button));applyEvidenceFilter();});
+    });
+  }
+
   function patch(){
     clearTimeout(patchTimer);patchTimer=setTimeout(()=>{
       if(applying)return;applying=true;
@@ -145,6 +168,7 @@
   }
 
   function bind(){
+    setupFilters();
     ['studyTopic','qcTopic','bankTopic'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>setTimeout(patch,80)));
     document.addEventListener('click',event=>{if(event.target.closest('#qcRecordBtn,#bankConfirmBtn,#bankNextBtn,#refreshAllBtn'))setTimeout(refresh,900);});
     const observer=new MutationObserver(()=>{if(!applying)patch();});observer.observe(document.body,{childList:true,subtree:true,characterData:true});
