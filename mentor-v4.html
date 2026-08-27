@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Mentor IA V4 — PMBA</title>
+  <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
+</head>
+<body>
+  <div class="loader"><strong>Mentor IA V4</strong><span>Carregando ciclo e inteligência preditiva…</span></div>
+  <script>
+    (async () => {
+      const response = await fetch('./v2.html?base=20260827-v4', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Não foi possível carregar a interface base.');
+      let html = await response.text();
+      html = html.replace('</body>', '<script src="./intelligence-core.js?v=4.0.0"><\/script></body>');
+      document.open();
+      document.write(html);
+      document.close();
+    })().catch(error => {
+      document.body.innerHTML = '<div class="loader"><strong>Falha ao carregar o Mentor IA</strong><span>' + String(error.message || error) + '</span></div>';
+    });
+  </script>
+</body>
+</html>
