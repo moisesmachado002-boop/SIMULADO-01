@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '9.3.1';
+  const VERSION = '9.3.2';
   const SUPABASE_SDK = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4';
   let visualGuardInstalled = false;
   let guardBusy = false;
@@ -78,6 +78,7 @@
     if (!window.MentorQgMode) await loadScript('mentorQgModeScript','./qg-mode.js?v=9.1');
     if (!window.MentorReviewEngine) await loadScript('mentorReviewEngine','./review-engine.js?v=9.1');
     if (!window.MentorScheduleEngine) await loadScript('mentorScheduleEngine','./schedule-engine.js?v=9.1');
+    if (!window.MentorSubjectCap) await loadScript('mentorSubjectCap','./schedule-subject-cap.js?v=1.0.0');
     if (!window.MentorStudyProfile) await loadScript('mentorStudyProfile','./study-profile.js?v=6.0');
 
     addCss('mentorEngineCss','./mentor-engine.css?v=7.0');
