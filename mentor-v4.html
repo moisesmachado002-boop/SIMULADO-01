@@ -6,17 +6,34 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Mentor IA V4 — PMBA</title>
+  <title>Mentor IA V4.2 — PMBA</title>
   <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
 </head>
 <body>
-  <div class="loader"><strong>Mentor IA V4</strong><span>Carregando ciclo e inteligência preditiva…</span></div>
+  <div class="loader"><strong>Mentor IA V4.2</strong><span>Carregando ciclo e inteligência preditiva…</span></div>
   <script>
     (async () => {
-      const response = await fetch('./v2.html?base=20260827-v41', { cache: 'no-store' });
-      if (!response.ok) throw new Error('Não foi possível carregar a interface base.');
-      let html = await response.text();
-      html = html.replace('</body>', '<script src="./intelligence-core-v4.1.js?v=4.1.0"><\/script></body>');
+      const [htmlResponse, jsResponse] = await Promise.all([
+        fetch('./v2.html?base=20260827-v42', { cache: 'no-store' }),
+        fetch('./v2.js?base=20260827-v42', { cache: 'no-store' })
+      ]);
+      if (!htmlResponse.ok || !jsResponse.ok) throw new Error('Não foi possível carregar a interface base.');
+
+      let html = await htmlResponse.text();
+      let appJs = await jsResponse.text();
+
+      const oldEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
+      const newEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;if(window.MentorIntelligence?.run){await window.MentorIntelligence.run({reload:false});await loadData({plan:false});return;}await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
+      if (!appJs.includes(oldEnsurePlan)) throw new Error('A versão base mudou e o planejador V4.2 não pôde assumir o controle com segurança.');
+      appJs = appJs.replace(oldEnsurePlan, newEnsurePlan);
+
+      const appBlob = new Blob([appJs], { type: 'text/javascript' });
+      const appBlobUrl = URL.createObjectURL(appBlob);
+      const oldScript = '<script src="v2.js?v=3.0.0"><\/script>';
+      const newScripts = '<script src="./intelligence-core-v4.2.js?v=4.2.0"><\/script><script src="' + appBlobUrl + '"><\/script>';
+      if (!html.includes(oldScript)) throw new Error('O carregador da interface mudou.');
+      html = html.replace(oldScript, newScripts);
+
       document.open();
       document.write(html);
       document.close();
