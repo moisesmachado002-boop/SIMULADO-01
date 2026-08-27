@@ -87,7 +87,7 @@
           <div class="syllabus-filters">
             <button class="chip active" data-syllabus-filter="all">Todos</button>
             <button class="chip" data-syllabus-filter="unseen">Não medidos</button>
-            <button class="chip" data-syllabus-filter="weak">Baixo domínio</button>
+            <button class="chip" data-syllabus-filter="weak">Baixo desempenho</button>
             <button class="chip" data-syllabus-filter="strong">Bem encaminhados</button>
           </div>
           <div id="syllabusMap" class="syllabus-map"><div class="empty">Carregando edital…</div></div>
@@ -135,7 +135,7 @@
           </div>
           <textarea id="qcNotes" rows="2" maxlength="1200" placeholder="Observação opcional: onde sentiu dificuldade? errava conta? conceito? leitura?"></textarea>
           <button class="primary" id="qcRecordBtn">Registrar e gerar relatório da IA</button>
-          <p class="helper" id="qcMessage">Depois do registro, acertos e erros entram no domínio do tópico.</p>
+          <p class="helper" id="qcMessage">Depois do registro, acertos e erros atualizam seu desempenho e a confiança da amostra do tópico.</p>
         </article>
 
         <article class="card hidden" id="qcReportCard">
@@ -183,7 +183,7 @@
         <div class="page-head">
           <span class="eyebrow">MENTORA IA</span>
           <h1>Ela conhece seu histórico.</h1>
-          <p>Não é um chat solto: as respostas abaixo são calculadas a partir das suas questões, revisões, domínio e plano.</p>
+          <p>Não é um chat solto: as respostas abaixo são calculadas a partir das suas questões, revisões, desempenho, confiança da amostra e plano.</p>
         </div>
 
         <div class="mentor-actions">
@@ -211,7 +211,7 @@
         <section class="card">
           <div class="card-title-row"><div><span class="eyebrow">O QUE A IA SABE</span><h2>Seu rastro de estudo</h2></div><button class="text-btn" id="refreshAllBtn">Atualizar</button></div>
           <div class="knowledge-strip" id="knowledgeStrip">
-            <div><strong id="knowAttempts">—</strong><span>questões internas</span></div>
+            <div><strong id="knowAttempts">—</strong><span>questões internas distintas</span></div>
             <div><strong id="knowExternal">—</strong><span>questões externas</span></div>
             <div><strong id="knowSessions">—</strong><span>sessões de estudo</span></div>
             <div><strong id="knowTopics">—</strong><span>tópicos medidos</span></div>
@@ -266,8 +266,8 @@
     });
     setTimeout(()=>sessionStorage.removeItem('mentor-v2-subject-cap-refresh'),2500);
   </script>
-  <script src="schedule-subject-cap.js?v=1.0.0"></script>
+  <script src="schedule-subject-cap.js?v=2.0.0"></script>
   <script src="v2.js?v=2.0.1"></script>
-  <script src="evidence-depth.js?v=1.0.0"></script>
+  <script src="evidence-depth.js?v=2.0.0"></script>
 </body>
 </html>
