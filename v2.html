@@ -257,6 +257,16 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
-  <script src="v2.js?v=2.0.0"></script>
+  <script>
+    window.addEventListener('mentor:subject-cap-applied', () => {
+      const key='mentor-v2-subject-cap-refresh';
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key,'1');
+      setTimeout(()=>location.reload(),80);
+    });
+    setTimeout(()=>sessionStorage.removeItem('mentor-v2-subject-cap-refresh'),2500);
+  </script>
+  <script src="schedule-subject-cap.js?v=1.0.0"></script>
+  <script src="v2.js?v=2.0.1"></script>
 </body>
 </html>
