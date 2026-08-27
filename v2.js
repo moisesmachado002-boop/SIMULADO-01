@@ -1,32 +1,30 @@
 (() => {
   'use strict';
 
-  const VERSION = '2.0.0';
+  const VERSION = '3.0.0';
   const SUPABASE_URL = 'https://uysrtgyfnwyocdlaeyum.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
-  const QC_BASE = 'https://www.qconcursos.com/questoes-de-concursos/questoes';
   const APP_URL = 'https://moisesmachado002-boop.github.io/SIMULADO-01/v2.html';
+  const QC_BASE = 'https://www.qconcursos.com/questoes-de-concursos/questoes';
+  const TARGET_EVIDENCE = 10;
+  const MAX_SUBJECTS_PER_DAY = 2;
+  const QUESTION_MINUTES = 3;
+  const REVIEW_MINUTES = 4;
+  const HORIZON_DAYS = 7;
+  const TZ = 'America/Bahia';
 
-  const DISCIPLINE_IDS = {
-    'Língua Portuguesa': '1',
-    'Direito Administrativo': '2',
-    'Direito Constitucional': '3',
-    'Matemática': '13'
+  const PAGE_META = {
+    dashboard:['Painel','Seu estudo em um só lugar'],daily:['Metas Diárias','Execute o planejamento de hoje'],week:['Resumo da Semana','Planejamento e execução'],questions:['Questões','Banco próprio e QConcursos'],performance:['Meu Desempenho','Raio-X da aprendizagem'],plan:['Meu Plano','Disciplinas e horários'],syllabus:['Edital do Plano','Assunto por assunto'],mentor:['Mentora IA','Análise adaptativa'],settings:['Configurações','Conta e plataforma']
   };
-  const BOARD_LABELS = { '189':'IBFC', '2':'CEBRASPE', '152':'VUNESP', '63':'FGV' };
-  const TOPIC_PRESETS = {
-    MAT1: [
-      { label:'Conjuntos numéricos (filtro amplo de Matemática)', subjectIds:[] },
-      { label:'Progressão Aritmética (PA)', subjectIds:['18902'] },
-      { label:'Progressão Geométrica (PG)', subjectIds:['18903'] }
-    ],
-    MAT5: [{ label:'Análise combinatória e probabilidade (filtro amplo)', subjectIds:[] }]
-  };
+  const DISCIPLINE_IDS = {'Língua Portuguesa':'1','Direito Administrativo':'2','Direito Constitucional':'3','Raciocínio Lógico':'4','Matemática':'13'};
+  const BOARD_LABELS = {'189':'IBFC','2':'CEBRASPE','152':'VUNESP','63':'FGV'};
+  const TOPIC_PRESETS = {MAT1:['18902','18903'],MAT5:[]};
 
   const state = {
-    db: null, user: null, subjects: [], topics: [], mastery: [], attempts: [], external: [], sessions: [], plan: [], reviews: [], links: [],
-    questions: [], qStates: new Map(), syllabusFilter: 'all', mentor: null,
-    bank: { current:null, selected:null, confidence:3, startedAt:0, timer:null, answered:false, score:0, total:0 }
+    db:null,user:null,profile:null,prefs:null,subjects:[],topics:[],attempts:[],external:[],sessions:[],plan:[],reviews:[],links:[],questions:[],qStates:new Map(),metrics:new Map(),mentor:null,
+    page:'dashboard',questionTab:'bank',syllabusFilter:'all',syllabusSubject:'',
+    bank:{current:null,selected:null,confidence:3,startedAt:0,timer:null,answered:false,score:0,total:0,activeTaskId:null},
+    planBusy:false
   };
 
   const $ = s => document.querySelector(s);
@@ -34,255 +32,206 @@
   const esc = (v='') => String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = n => new Intl.NumberFormat('pt-BR').format(Number(n||0));
   const pct = (a,b) => b ? Math.round(Number(a||0)/Number(b)*100) : 0;
-  const dateKey = d => new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bahia',year:'numeric',month:'2-digit',day:'2-digit'}).format(d||new Date());
-  const shortDate = value => value ? new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'America/Bahia'}).format(new Date(value)) : '—';
+  const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
   const subjectById = id => state.subjects.find(x=>x.id===id);
   const topicById = id => state.topics.find(x=>x.id===id);
-  const masteryByTopic = id => state.mastery.find(x=>x.topic_id===id);
+  const metricFor = id => state.metrics.get(id)||{topic_id:id,evidence:0,accuracy:0,confidence:0,internalDistinct:0,rawInternal:0,external:0,correct:0,measured:false,consolidated:false,studyDays:0,dueReviews:0,trend:'stable'};
+  const dateKey = d => new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d||new Date());
+  const shortDate = value => value ? new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit'}).format(new Date(value)) : '—';
+  const dateTime = value => value ? new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(value)) : '—';
+  const toLocalDate = key => {const [y,m,d]=String(key).split('-').map(Number);return new Date(Date.UTC(y,m-1,d,15,0,0));};
+  const addDays = (d,n) => {const x=new Date(d);x.setUTCDate(x.getUTCDate()+n);return x;};
+  const isoWeekday = d => {const n=d.getUTCDay();return n===0?7:n;};
+  const planMinutes = item => Number(item.duration_minutes||0) || (item.task_type==='review'?REVIEW_MINUTES:Math.max(QUESTION_MINUTES,Number(item.question_target||1)*QUESTION_MINUTES));
+  const isActiveTask = item => ['pending','in_progress'].includes(item.status);
 
-  function toast(text,kind='neutral') {
-    const node=$('#toast'); if(!node)return;
-    node.textContent=text; node.dataset.kind=kind; node.classList.add('show');
-    clearTimeout(window.__v2Toast); window.__v2Toast=setTimeout(()=>node.classList.remove('show'),2800);
+  function toast(text,kind='neutral'){
+    const node=$('#toast');if(!node)return;node.textContent=text;node.dataset.kind=kind;node.classList.add('show');clearTimeout(window.__mentorToast);window.__mentorToast=setTimeout(()=>node.classList.remove('show'),3000);
+  }
+  function setSync(text,ok=false){setText($('#syncBadge'),text);setText($('#sidebarSync'),text);if($('#syncBadge'))$('#syncBadge').style.color=ok?'#136944':'';}
+  function setText(node,text){if(node)node.textContent=String(text??'');}
+  function setHtml(node,html){if(node)node.innerHTML=html;}
+  function showError(error){console.error(error);toast(error?.message||'Não foi possível concluir a ação.','error');}
+  function requireUser(){if(state.user)return true;openAuth('signin');toast('Entre na sua conta para usar seus dados.','error');return false;}
+
+  function navigate(page,options={}){
+    if(!PAGE_META[page])page='dashboard';state.page=page;
+    $$('.page').forEach(n=>n.classList.toggle('active',n.dataset.pageView===page));
+    $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+    const meta=PAGE_META[page];setText($('#topbarPageTitle'),meta[0]);setText($('#topbarPageSubtitle'),meta[1]);
+    history.replaceState(null,'',`#${page}`);document.title=`${meta[0]} — Mentor IA`;
+    $('#appShell')?.classList.remove('menu-open');window.scrollTo({top:0,behavior:options.smooth===false?'auto':'smooth'});
+    if(page==='questions'&&options.tab)setQuestionTab(options.tab);
+    if(page==='plan'&&options.focus==='schedule')setTimeout(()=>$('#schedulePreferences')?.scrollIntoView({behavior:'smooth'}),100);
   }
 
-  function setSync(text,kind='neutral') { const n=$('#syncPill'); if(n){n.textContent=text;n.dataset.state=kind;} }
-  function requireUser() { if(state.user)return true; openAuth('signin'); toast('Entre na sua conta para usar seus dados.','error'); return false; }
-
-  function navigate(view) {
-    $$('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
-    $$('.nav').forEach(n=>n.classList.toggle('active',n.dataset.go===view));
-    window.scrollTo({top:0,behavior:'smooth'});
-    history.replaceState(null,'',`#${view}`);
-  }
-
-  function bindNavigation() {
+  function bindNavigation(){
     document.addEventListener('click',e=>{
-      const go=e.target.closest('[data-go]'); if(go){navigate(go.dataset.go);return;}
-      const mentor=e.target.closest('[data-mentor-intent]'); if(mentor){
-        if(!requireUser())return;
-        const intent=mentor.dataset.mentorIntent;
-        navigate('mentor'); runMentor(intent,true).catch(showError);
-      }
+      const page=e.target.closest('[data-page]');if(page){navigate(page.dataset.page,{tab:page.dataset.questionTab,focus:page.dataset.planFocus});return;}
+      const repl=e.target.closest('[data-action="replan"]');if(repl){replan().catch(showError);return;}
+      const intent=e.target.closest('[data-mentor-intent]');if(intent){navigate(intent.closest('.page-header')?'performance':'mentor');runMentor(intent.dataset.mentorIntent,true).catch(showError);return;}
     });
-    window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(['home','study','external','bank','mentor'].includes(v))navigate(v);});
+    $('#menuButton')?.addEventListener('click',()=>$('#appShell')?.classList.add('menu-open'));
+    $('#sidebarClose')?.addEventListener('click',()=>$('#appShell')?.classList.remove('menu-open'));
+    $('#sidebarBackdrop')?.addEventListener('click',()=>$('#appShell')?.classList.remove('menu-open'));
+    $('#planMenuToggle')?.addEventListener('click',()=>{const b=$('#planMenuToggle'),s=$('#planSubmenu'),open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',String(!open));s.classList.toggle('open',!open);});
+    window.addEventListener('hashchange',()=>navigate(location.hash.slice(1)||'dashboard',{smooth:false}));
   }
 
-  function openAuth(mode='signin') {
-    const modal=$('#authModal'); modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); modal.dataset.mode=mode;
-    $('#authTitle').textContent=mode==='signup'?'Criar conta':'Entrar';
-    $('#authSubmit').textContent=mode==='signup'?'Criar conta':'Entrar';
-    $('#authSwitch').textContent=mode==='signup'?'Já tenho conta':'Criar nova conta';
-    $('#authNameWrap').classList.toggle('hidden',mode!=='signup');
-    $('#authPassword').autocomplete=mode==='signup'?'new-password':'current-password';
-    $('#authMessage').textContent='';
+  function openAuth(mode='signin'){
+    const modal=$('#authModal');modal.classList.add('open');modal.setAttribute('aria-hidden','false');modal.dataset.mode=mode;
+    setText($('#authTitle'),mode==='signup'?'Criar conta':'Entrar');setText($('#authSubmit'),mode==='signup'?'Criar conta':'Entrar');setText($('#authSwitch'),mode==='signup'?'Já tenho conta':'Criar nova conta');
+    $('#authNameWrap')?.classList.toggle('hidden',mode!=='signup');if($('#authPassword'))$('#authPassword').autocomplete=mode==='signup'?'new-password':'current-password';setText($('#authMessage'),'');
   }
-  function closeAuth(){ $('#authModal').classList.remove('open'); $('#authModal').setAttribute('aria-hidden','true'); }
-  function openAccount(){ if(!state.user)return openAuth(); $('#accountName').textContent=state.user.user_metadata?.display_name||state.user.email?.split('@')[0]||'Mentor IA';$('#accountEmail').textContent=state.user.email||'';$('#accountModal').classList.add('open'); }
-
-  async function submitAuth() {
-    const mode=$('#authModal').dataset.mode||'signin', email=$('#authEmail').value.trim(), password=$('#authPassword').value, name=$('#authName').value.trim();
-    const message=$('#authMessage'); message.dataset.kind='';
-    if(!email.includes('@')){message.textContent='Informe um e-mail válido.';message.dataset.kind='error';return;}
-    if(mode==='signup'&&password.length<8){message.textContent='Para criar conta, use uma senha de pelo menos 8 caracteres.';message.dataset.kind='error';return;}
-    if(!password){message.textContent='Informe sua senha.';message.dataset.kind='error';return;}
-    $('#authSubmit').disabled=true; message.textContent=mode==='signup'?'Criando conta…':'Entrando…';
-    try{
-      if(mode==='signup'){
-        const {data,error}=await state.db.auth.signUp({email,password,options:{emailRedirectTo:APP_URL,data:{display_name:name||email.split('@')[0]}}});
-        if(error)throw error;
-        if(!data.session){message.textContent='Conta criada. Confirme o e-mail e depois entre.';message.dataset.kind='ok';return;}
-      }else{
-        const {error}=await state.db.auth.signInWithPassword({email,password}); if(error)throw error;
-      }
-      closeAuth();
-    }catch(error){message.textContent=error?.message||'Não foi possível entrar.';message.dataset.kind='error';}
-    finally{$('#authSubmit').disabled=false;}
+  function closeAuth(){const m=$('#authModal');m?.classList.remove('open');m?.setAttribute('aria-hidden','true');}
+  async function submitAuth(){
+    const mode=$('#authModal').dataset.mode||'signin',email=$('#authEmail').value.trim(),password=$('#authPassword').value,name=$('#authName').value.trim(),msg=$('#authMessage');msg.dataset.kind='';
+    if(!email.includes('@')){msg.textContent='Informe um e-mail válido.';msg.dataset.kind='error';return;}if(!password){msg.textContent='Informe sua senha.';msg.dataset.kind='error';return;}if(mode==='signup'&&password.length<8){msg.textContent='Para criar conta, use pelo menos 8 caracteres.';msg.dataset.kind='error';return;}
+    $('#authSubmit').disabled=true;msg.textContent=mode==='signup'?'Criando conta...':'Entrando...';
+    try{if(mode==='signup'){const {data,error}=await state.db.auth.signUp({email,password,options:{emailRedirectTo:APP_URL,data:{display_name:name||email.split('@')[0]}}});if(error)throw error;if(!data.session){msg.textContent='Conta criada. Confirme o e-mail e depois entre.';msg.dataset.kind='ok';return;}}else{const {error}=await state.db.auth.signInWithPassword({email,password});if(error)throw error;}closeAuth();}
+    catch(error){msg.textContent=error?.message||'Não foi possível entrar.';msg.dataset.kind='error';}finally{$('#authSubmit').disabled=false;}
+  }
+  function bindAuth(){
+    $('#accountButton')?.addEventListener('click',()=>state.user?navigate('settings'):openAuth());$('#authClose')?.addEventListener('click',closeAuth);$('#authSwitch')?.addEventListener('click',()=>openAuth($('#authModal').dataset.mode==='signup'?'signin':'signup'));$('#authSubmit')?.addEventListener('click',submitAuth);$('#authPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth();});
+    $('#settingsSignOut')?.addEventListener('click',async()=>{await state.db.auth.signOut();navigate('dashboard');});
   }
 
-  function bindAuth() {
-    $('#accountBtn').addEventListener('click',openAccount);
-    $('#authClose').addEventListener('click',closeAuth);
-    $('#accountClose').addEventListener('click',()=>$('#accountModal').classList.remove('open'));
-    $('#authSwitch').addEventListener('click',()=>openAuth($('#authModal').dataset.mode==='signup'?'signin':'signup'));
-    $('#authSubmit').addEventListener('click',submitAuth);
-    $('#authPassword').addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth();});
-    $('#signOutBtn').addEventListener('click',async()=>{await state.db.auth.signOut();$('#accountModal').classList.remove('open');});
+  async function loadQuestionStates(){state.qStates=new Map();const ids=state.questions.map(q=>q.id);if(!ids.length)return;for(let i=0;i<ids.length;i+=500){const chunk=ids.slice(i,i+500);const {data,error}=await state.db.from('user_question_state').select('*').eq('user_id',state.user.id).in('question_id',chunk);if(error)throw error;(data||[]).forEach(x=>state.qStates.set(x.question_id,x));}}
+
+  async function loadData({plan=true}={}){
+    if(!state.user)return;setSync('Atualizando...');
+    const today=dateKey(),end=dateKey(addDays(toLocalDate(today),13));
+    const [profileR,prefsR,subjectsR,topicsR,attemptsR,externalR,sessionsR,planR,reviewsR,linksR,questionsR]=await Promise.all([
+      state.db.from('profiles').select('*').eq('id',state.user.id).maybeSingle(),
+      state.db.from('study_preferences').select('*').eq('user_id',state.user.id).maybeSingle(),
+      state.db.from('subjects').select('id,name,position,syllabus_section,active').eq('active',true).order('position'),
+      state.db.from('topics').select('id,subject_id,title,position,syllabus_code,weight,active').eq('active',true).order('position'),
+      state.db.from('question_attempts').select('id,question_id,subject_id,topic_id,is_correct,response_time_seconds,confidence,error_type,answered_at,source_kind').eq('user_id',state.user.id).order('answered_at',{ascending:false}).limit(3000),
+      state.db.from('external_practice_batches').select('*').eq('user_id',state.user.id).order('practiced_at',{ascending:false}).limit(1500),
+      state.db.from('study_sessions').select('*').eq('user_id',state.user.id).order('started_at',{ascending:false}).limit(1000),
+      state.db.from('study_plan_items').select('*').eq('user_id',state.user.id).gte('scheduled_for',today).lte('scheduled_for',end).order('scheduled_for').order('sort_order').limit(500),
+      state.db.from('reviews').select('*').eq('user_id',state.user.id).eq('status','pending').limit(1000),
+      state.db.from('external_source_links').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(500),
+      state.db.from('questions').select('id,exam_name,board,year,subject_id,topic_id,subject_label,topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not('explanation','is',null).order('created_at',{ascending:true}).limit(5000)
+    ]);for(const r of [profileR,prefsR,subjectsR,topicsR,attemptsR,externalR,sessionsR,planR,reviewsR,linksR,questionsR])if(r.error)throw r.error;
+    state.profile=profileR.data||null;state.prefs=prefsR.data||{daily_minutes:60,study_days:[1,2,3,4,5,6],review_ratio:40,buffer_percent:15,timezone:TZ};state.subjects=subjectsR.data||[];state.topics=topicsR.data||[];state.attempts=attemptsR.data||[];state.external=externalR.data||[];state.sessions=sessionsR.data||[];state.plan=planR.data||[];state.reviews=reviewsR.data||[];state.links=linksR.data||[];state.questions=questionsR.data||[];
+    await loadQuestionStates();buildMetrics();renderAll();setSync('Nuvem ✓',true);
+    if(plan)queueMicrotask(()=>ensurePlan().catch(error=>console.warn('Planejamento:',error)));
   }
 
-  async function loadData() {
-    if(!state.user)return;
-    setSync('Atualizando…','neutral');
-    const today=dateKey(new Date());
-    const [subjectsR,topicsR,masteryR,attemptsR,externalR,sessionsR,planR,reviewsR,linksR,questionsR]=await Promise.all([
-      state.db.from('subjects').select('id,name,position,syllabus_section').eq('active',true).order('position'),
-      state.db.from('topics').select('id,subject_id,title,position,syllabus_code,weight').eq('active',true).order('position'),
-      state.db.from('topic_mastery').select('*').eq('user_id',state.user.id),
-      state.db.from('question_attempts').select('id,question_id,subject_id,topic_id,is_correct,response_time_seconds,confidence,error_type,answered_at,source_kind').eq('user_id',state.user.id).order('answered_at',{ascending:false}).limit(1500),
-      state.db.from('external_practice_batches').select('*').eq('user_id',state.user.id).order('practiced_at',{ascending:false}).limit(500),
-      state.db.from('study_sessions').select('*').eq('user_id',state.user.id).order('started_at',{ascending:false}).limit(300),
-      state.db.from('study_plan_items').select('*').eq('user_id',state.user.id).gte('scheduled_for',today).order('scheduled_for').order('sort_order').limit(200),
-      state.db.from('reviews').select('id,topic_id,question_id,due_at,status,review_stage,trigger_reason').eq('user_id',state.user.id).eq('status','pending').limit(500),
-      state.db.from('external_source_links').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(300),
-      state.db.from('questions').select('id,exam_name,board,year,subject_id,topic_id,subject_label,topic_label,source_question_number,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not('explanation','is',null).order('created_at',{ascending:true}).limit(5000)
-    ]);
-    for(const r of [subjectsR,topicsR,masteryR,attemptsR,externalR,sessionsR,planR,reviewsR,linksR,questionsR]) if(r.error)throw r.error;
-    state.subjects=subjectsR.data||[];state.topics=topicsR.data||[];state.mastery=masteryR.data||[];state.attempts=attemptsR.data||[];state.external=externalR.data||[];state.sessions=sessionsR.data||[];state.plan=planR.data||[];state.reviews=reviewsR.data||[];state.links=linksR.data||[];state.questions=questionsR.data||[];
-    await loadQuestionStates();
-    renderAll();
-    setSync('Nuvem ✓','ok');
+  function buildMetrics(){
+    const attemptsByTopic=new Map(),seenByTopic=new Map(),externalByTopic=new Map(),dueByTopic=new Map();
+    state.attempts.forEach(a=>{if(!a.topic_id||!a.question_id)return;if(!attemptsByTopic.has(a.topic_id))attemptsByTopic.set(a.topic_id,{raw:[],latest:[]});const g=attemptsByTopic.get(a.topic_id);g.raw.push(a);if(!seenByTopic.has(a.topic_id))seenByTopic.set(a.topic_id,new Set());const seen=seenByTopic.get(a.topic_id);if(!seen.has(a.question_id)){seen.add(a.question_id);g.latest.push(a);}});
+    state.external.forEach(b=>{if(!b.topic_id)return;if(!externalByTopic.has(b.topic_id))externalByTopic.set(b.topic_id,[]);externalByTopic.get(b.topic_id).push(b);});
+    const now=Date.now();state.reviews.forEach(r=>{if(r.topic_id&&new Date(r.due_at).getTime()<=now)dueByTopic.set(r.topic_id,(dueByTopic.get(r.topic_id)||0)+1);});
+    state.metrics=new Map();
+    state.topics.forEach(t=>{const g=attemptsByTopic.get(t.id)||{raw:[],latest:[]},ext=externalByTopic.get(t.id)||[];const extN=ext.reduce((s,b)=>s+Number(b.total_questions||0),0),extC=ext.reduce((s,b)=>s+Number(b.correct_count||0),0);const intC=g.latest.filter(a=>a.is_correct).length,evidence=g.latest.length+extN,correct=intC+extC,accuracy=evidence?pct(correct,evidence):0;const days=new Set();g.latest.forEach(a=>a.answered_at&&days.add(dateKey(new Date(a.answered_at))));ext.forEach(b=>b.practiced_at&&days.add(dateKey(new Date(b.practiced_at))));const due=dueByTopic.get(t.id)||0;const measured=evidence>=TARGET_EVIDENCE;const consolidated=measured&&accuracy>=80&&days.size>=2&&due===0;state.metrics.set(t.id,{topic_id:t.id,subject_id:t.subject_id,evidence,correct,accuracy,confidence:Math.min(100,Math.round(evidence/TARGET_EVIDENCE*100)),internalDistinct:g.latest.length,rawInternal:g.raw.length,external:extN,studyDays:days.size,dueReviews:due,measured,consolidated,trend:'stable'});});
   }
 
-  async function loadQuestionStates(){
-    state.qStates=new Map(); const ids=state.questions.map(q=>q.id); if(!ids.length)return;
-    const {data,error}=await state.db.from('user_question_state').select('question_id,seen_count,correct_count,wrong_count,last_seen_at,next_review_at,status,last_selected_answer,last_is_correct,last_response_time_seconds,last_confidence,last_attempt_at,review_stage').in('question_id',ids);
-    if(error)throw error;(data||[]).forEach(x=>state.qStates.set(x.question_id,x));
-  }
+  function totalEvidence(){return [...state.metrics.values()].reduce((s,m)=>s+m.evidence,0);}function totalCorrect(){return [...state.metrics.values()].reduce((s,m)=>s+m.correct,0);}function measuredCount(){return [...state.metrics.values()].filter(m=>m.measured).length;}function consolidatedCount(){return [...state.metrics.values()].filter(m=>m.consolidated).length;}
+  function activityDays(){const set=new Set();state.sessions.forEach(x=>x.started_at&&set.add(dateKey(new Date(x.started_at))));state.attempts.forEach(x=>x.answered_at&&set.add(dateKey(new Date(x.answered_at))));state.external.forEach(x=>x.practiced_at&&set.add(dateKey(new Date(x.practiced_at))));return set.size;}
 
-  function populateSelect(selectId,topicSelectId,allowAll=false){
-    const s=$(selectId);if(!s)return;const old=s.value;
-    s.innerHTML=`<option value="">${allowAll?'Todas':'Escolha a matéria'}</option>`+state.subjects.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
-    if(state.subjects.some(x=>x.id===old))s.value=old;
-    const renderTopics=()=>{
-      const t=$(topicSelectId);if(!t)return;const prev=t.value;const rows=state.topics.filter(x=>!s.value||x.subject_id===s.value);
-      t.innerHTML=`<option value="">${allowAll?'Todos':'Escolha o assunto'}</option>`+rows.map(x=>`<option value="${x.id}">${esc(x.syllabus_code||'')} — ${esc(x.title)}</option>`).join('');
-      if(rows.some(x=>x.id===prev))t.value=prev;
-    };
-    if(!s.dataset.bound){s.addEventListener('change',renderTopics);s.dataset.bound='1';}renderTopics();
-  }
+  function populateSelect(subjectSelector,topicSelector,allowAll=true){const s=$(subjectSelector),t=$(topicSelector);if(!s||!t)return;const oldS=s.value,oldT=t.value;s.innerHTML=`<option value="">${allowAll?'Todas':'Escolha'}</option>`+state.subjects.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');if(state.subjects.some(x=>x.id===oldS))s.value=oldS;const render=()=>{const rows=state.topics.filter(x=>!s.value||x.subject_id===s.value);t.innerHTML=`<option value="">${allowAll?'Todos':'Escolha'}</option>`+rows.map(x=>`<option value="${x.id}">${esc(x.syllabus_code||'')} — ${esc(x.title)}</option>`).join('');if(rows.some(x=>x.id===oldT))t.value=oldT;};if(!s.dataset.bound){s.addEventListener('change',render);s.dataset.bound='1';}render();}
 
   function renderAll(){
-    populateSelect('#studySubject','#studyTopic');populateSelect('#qcSubject','#qcTopic');populateSelect('#bankSubject','#bankTopic',true);
-    renderHome();renderStudy();renderQc();renderBankCounts();renderKnowledge();
-    runMentor('today',false).catch(()=>{});
+    populateSelect('#bankSubject','#bankTopic',true);populateSelect('#qcSubject','#qcTopic',false);
+    populateStudyModal();renderIdentity();renderDashboard();renderDaily();renderWeek();renderQuestions();renderPerformance();renderPlan();renderSyllabus();renderSettings();runMentor('today',false).catch(()=>{});
   }
 
-  function renderHome(){
-    const internalCorrect=state.attempts.filter(a=>a.is_correct).length;
-    const extTotal=state.external.reduce((s,b)=>s+Number(b.total_questions||0),0),extCorrect=state.external.reduce((s,b)=>s+Number(b.correct_count||0),0);
-    const total=state.attempts.length+extTotal,correct=internalCorrect+extCorrect;
-    const due=state.reviews.filter(r=>new Date(r.due_at)<=new Date()).length;
-    $('#metricQuestions').textContent=fmt(total);$('#metricAccuracy').textContent=total?`${pct(correct,total)}%`:'—';$('#metricMeasured').textContent=`${state.mastery.filter(m=>Number(m.attempts_count||0)>0).length}/${state.topics.length}`;$('#metricReviews').textContent=fmt(due);
-    const name=state.user?.user_metadata?.display_name||state.user?.email?.split('@')[0];if(name)$('#homeGreeting').textContent=`${name}, aqui está seu estudo.`;
-    const today=dateKey(new Date());const items=state.plan.filter(p=>p.scheduled_for===today&&['pending','in_progress'].includes(p.status));
-    $('#todayPlan').innerHTML=items.length?items.map(p=>{const t=topicById(p.topic_id);const s=t?subjectById(t.subject_id):null;return `<article class="list-row"><div><strong>${esc(s?.name||'Estudo')} • ${esc(t?.title||'Revisão')}</strong><span>${esc(p.task_type==='questions'?`${p.question_target||1} questão(ões)`:`${p.duration_minutes||0} min`)}${p.source_reason?` • ${esc(p.source_reason)}`:''}</span></div><span class="list-score">${p.status==='in_progress'?'EM CURSO':'HOJE'}</span></article>`}).join(''):'<div class="empty">Nenhuma tarefa pendente para hoje.</div>';
-    const weak=[...state.mastery].filter(m=>Number(m.attempts_count||0)>0).sort((a,b)=>Number(a.mastery_score||50)-Number(b.mastery_score||50)).slice(0,4);
-    $('#weakList').innerHTML=weak.length?weak.map(m=>{const t=topicById(m.topic_id);const s=t?subjectById(t.subject_id):null;return `<article class="list-row"><div><strong>${esc(s?.name||'')} • ${esc(t?.title||'')}</strong><span>${m.attempts_count||0} evidências • tendência ${esc(m.trend||'estável')}</span></div><span class="list-score">${Math.round(Number(m.mastery_score||0))}%</span></article>`}).join(''):'<div class="empty">Resolva questões para construir seu raio-X.</div>';
+  function renderIdentity(){const name=state.profile?.display_name||state.user?.user_metadata?.display_name||state.user?.email?.split('@')[0]||'Aluno';setText($('#accountName'),name);setText($('#dashboardHello'),`Olá, ${name} 👋`);setText($('#dailyGreeting'),`Oi, ${name}. Estas são as metas de hoje.`);setText($('#settingsName'),name);setText($('#settingsEmail'),state.user?.email||'—');}
+
+  function renderDashboard(){
+    const evidence=totalEvidence(),correct=totalCorrect(),progress=pct(measuredCount(),state.topics.length);setText($('#dashboardProgressText'),`${progress}%`);if($('#dashboardProgressBar'))$('#dashboardProgressBar').style.width=`${progress}%`;
+    setText($('#statDays'),activityDays());const studyMin=state.sessions.reduce((s,x)=>s+Number(x.duration_minutes||0),0)+state.external.reduce((s,x)=>s+Number(x.duration_minutes||0),0);setText($('#statHours'),`${(studyMin/60).toFixed(studyMin>=600?0:1).replace('.',',')}h`);const timedSec=state.attempts.reduce((s,x)=>s+Number(x.response_time_seconds||0),0)+state.external.reduce((s,x)=>s+Number(x.duration_minutes||0)*60,0);setText($('#statTimed'),`${(timedSec/3600).toFixed(1).replace('.',',')}h`);setText($('#statAccuracy'),evidence?`${pct(correct,evidence)}%`:'—');
+    renderDashboardWeek();
   }
+  function renderDashboardWeek(){const today=dateKey(),days=[];for(let i=0;i<7;i++)days.push(dateKey(addDays(toLocalDate(today),i)));setHtml($('#dashboardWeekStrip'),days.map(day=>{const items=state.plan.filter(p=>p.scheduled_for===day&&p.status!=='skipped');return `<article class="week-mini-day ${day===today?'today':''}"><div class="week-mini-head">${shortDate(`${day}T12:00:00Z`)}</div><div class="week-mini-body">${items.length?items.slice(0,3).map(p=>miniTaskHtml(p)).join(''):'<span class="empty-state">Sem meta</span>'}</div></article>`;}).join(''));}
+  function miniTaskHtml(p){const t=topicById(p.topic_id),s=t?subjectById(t.subject_id):null;return `<div class="mini-task ${esc(p.task_type)}"><strong>${esc(s?.name||'Estudo')}</strong><br>${esc((t?.title||'Atividade').slice(0,45))}</div>`;}
 
-  function topicClass(m){if(!m||!Number(m.attempts_count))return'unseen';const n=Number(m.mastery_score||0);return n<60?'weak':n<80?'mid':'strong';}
-  function renderStudy(){
-    const filter=state.syllabusFilter;let visible=state.topics.filter(t=>{const m=masteryByTopic(t.id),cls=topicClass(m);if(filter==='unseen')return cls==='unseen';if(filter==='weak')return cls==='weak';if(filter==='strong')return cls==='strong';return true;});
-    $('#syllabusCount').textContent=`${visible.length}/${state.topics.length}`;
-    const groups=state.subjects.map(s=>({subject:s,topics:visible.filter(t=>t.subject_id===s.id)})).filter(g=>g.topics.length);
-    $('#syllabusMap').innerHTML=groups.length?groups.map(g=>{
-      const measured=g.topics.filter(t=>topicClass(masteryByTopic(t.id))!=='unseen').length;
-      return `<section class="subject-block"><div class="subject-head"><strong>${esc(g.subject.name)}</strong><span class="count-pill">${measured}/${g.topics.length} medidos</span></div><div class="topic-list">${g.topics.map(t=>{const m=masteryByTopic(t.id),cls=topicClass(m);return `<div class="topic-row" data-study-topic="${t.id}"><span class="topic-dot ${cls==='unseen'?'':cls}"></span><div class="topic-copy"><strong>${esc(t.syllabus_code||'')} • ${esc(t.title)}</strong><span>${m?`${m.attempts_count||0} evidências • ${Math.round(Number(m.mastery_score||0))}% domínio`:'Ainda sem evidência'}</span></div><span class="topic-score">${m?`${Math.round(Number(m.mastery_score||0))}%`:'—'}</span></div>`}).join('')}</div></section>`;
-    }).join(''):'<div class="empty">Nenhum tópico neste filtro.</div>';
-    renderStudyStatus();
+  function todayPlan(){const today=dateKey();return state.plan.filter(p=>p.scheduled_for===today&&p.status!=='skipped').sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));}
+  function renderDaily(){
+    const items=todayPlan(),completed=items.filter(x=>x.status==='completed');const subjects=new Set(items.map(p=>topicById(p.topic_id)?.subject_id).filter(Boolean));const mins=items.reduce((s,p)=>s+planMinutes(p),0),rate=items.length?pct(completed.length,items.length):0;setText($('#dailyDate'),shortDate(new Date()));setText($('#dailySubjects'),subjects.size);setText($('#dailyMinutes'),`${mins} min`);setText($('#dailyCompleted'),`${rate}%`);setText($('#dailyProgressText'),`${rate}%`);if($('#dailyProgressBar'))$('#dailyProgressBar').style.width=`${rate}%`;
+    setHtml($('#dailyTasks'),items.length?items.map(dailyTaskHtml).join(''):'<div class="empty-state panel">Nenhuma meta para hoje. Use “Replanejar agora” no menu Meu Plano.</div>');
   }
+  function dailyTaskHtml(p){const t=topicById(p.topic_id),s=t?subjectById(t.subject_id):null,target=Number(p.question_target||1),done=p.status==='completed',isQC=p.task_type==='questions'&&String(p.source_reason||'').includes('qconcursos');const action=done?'':p.task_type==='review'?`<button class="primary-button" data-task-review="${p.id}">Resolver revisão</button>`:isQC?`<button class="primary-button" data-task-qc="${p.id}">Abrir QConcursos</button>`:`<button class="primary-button" data-task-bank="${p.id}">Abrir Banco</button>`;return `<article class="panel daily-task ${done?'completed-task':''}" data-type="${esc(p.task_type)}"><div class="daily-task-header"><strong>meta do dia ${esc(shortDate(`${p.scheduled_for}T12:00:00Z`))}</strong><span>${done?'CONCLUÍDA':p.status==='in_progress'?'EM CURSO':'PENDENTE'}</span></div><div class="daily-task-body"><div class="task-color"></div><div class="task-content"><h3>${esc(s?.name||'Estudo')}</h3><p>${esc(t?.title||'Atividade do plano')}</p><div class="task-meta"><span>${p.task_type==='review'?'Revisão':`${target} questão(ões)`}</span><span>${planMinutes(p)} min</span><span>${esc(t?.syllabus_code||'')}</span></div></div><div class="task-actions">${action}${!done?`<button class="secondary-button" data-task-complete="${p.id}">Marcar concluída</button>`:''}</div></div></article>`;}
 
-  function renderStudyStatus(){
-    const id=$('#studyTopic').value,t=topicById(id),box=$('#studyTopicStatus'); if(!t){box.innerHTML='<span>Selecione um assunto para ver o diagnóstico.</span>';return;}
-    const m=masteryByTopic(id);const attempts=state.attempts.filter(a=>a.topic_id===id).length,ext=state.external.filter(b=>b.topic_id===id).reduce((s,b)=>s+Number(b.total_questions||0),0),sessions=state.sessions.filter(s=>s.topic_id===id).length;
-    box.innerHTML=`<strong>${esc(t.syllabus_code||'')} • ${esc(t.title)}</strong><br>${m?`Domínio ${Math.round(Number(m.mastery_score||0))}% • ${m.attempts_count||0} evidências • tendência ${esc(m.trend||'estável')}`:'Ainda não medido por questões.'}<br><small>${attempts} questão(ões) internas • ${ext} externas • ${sessions} sessão(ões) de estudo registradas</small>`;
-  }
+  function weekStart(){const now=toLocalDate(dateKey()),day=isoWeekday(now);return addDays(now,1-day);}
+  function renderWeek(){const start=weekStart(),days=[];for(let i=0;i<7;i++)days.push(dateKey(addDays(start,i)));const rows=state.plan.filter(p=>days.includes(p.scheduled_for)&&p.status!=='skipped');const planned=rows.reduce((s,p)=>s+planMinutes(p),0),done=rows.filter(p=>p.status==='completed').reduce((s,p)=>s+planMinutes(p),0),qs=rows.reduce((s,p)=>s+(p.task_type==='review'?1:Number(p.question_target||0)),0);setText($('#weekPlanned'),`${planned} min`);setText($('#weekDone'),`${done} min`);setText($('#weekQuestions'),qs);setText($('#weekRate'),planned?`${pct(done,planned)}%`:'0%');setHtml($('#weekBoard'),days.map(day=>`<article class="week-day ${day===dateKey()?'today':''}"><div class="week-day-head">${new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',timeZone:TZ}).format(new Date(`${day}T12:00:00Z`))}</div><div class="week-day-body">${rows.filter(p=>p.scheduled_for===day).map(weekTaskHtml).join('')||'<div class="empty-state">Sem metas</div>'}</div></article>`).join(''));}
+  function weekTaskHtml(p){const t=topicById(p.topic_id),s=t?subjectById(t.subject_id):null;return `<div class="week-task ${esc(p.task_type)} ${p.status==='completed'?'done':''}"><strong>${esc(s?.name||'Estudo')}</strong><span>${esc((t?.title||'Atividade').slice(0,65))}</span><span>${p.task_type==='review'?'1 revisão':`${p.question_target||0} questões`} • ${planMinutes(p)} min</span></div>`;}
 
-  async function recordStudy(){
-    if(!requireUser())return;const topicId=$('#studyTopic').value,t=topicById(topicId),minutes=Number($('#studyMinutes').value);if(!t)return toast('Escolha um assunto do edital.','error');if(!Number.isFinite(minutes)||minutes<1||minutes>480)return toast('Informe de 1 a 480 minutos.','error');
-    const ended=new Date(),started=new Date(ended.getTime()-minutes*60000);$('#recordStudyBtn').disabled=true;
-    try{const {error}=await state.db.from('study_sessions').insert({user_id:state.user.id,subject_id:t.subject_id,topic_id:t.id,started_at:started.toISOString(),ended_at:ended.toISOString(),duration_minutes:Math.round(minutes),questions_answered:0,correct_answers:0});if(error)throw error;toast('Estudo registrado no seu histórico.','ok');await loadData();}
-    catch(e){showError(e);}finally{$('#recordStudyBtn').disabled=false;}
-  }
-
-  function currentQcTopic(){return topicById($('#qcTopic').value);}
-  function latestSavedQc(topicId){return state.links.find(l=>l.topic_id===topicId&&l.source_kind==='qconcursos_filter')||null;}
-  function qcPresetsFor(t){return t?TOPIC_PRESETS[t.syllabus_code]||[]:[];}
-  function buildQcUrl(){
-    const t=currentQcTopic();if(!t)return null;const saved=latestSavedQc(t.id);const board=$('#qcBoard').value;
-    if(saved&&!board)return {url:saved.url,kind:'saved',label:'Filtro exato já salvo para este assunto'};
-    const subject=subjectById(t.subject_id),disciplineId=DISCIPLINE_IDS[subject?.name];
-    const url=new URL(QC_BASE);if(disciplineId)url.searchParams.append('discipline_ids[]',disciplineId);if(board)url.searchParams.append('examining_board_ids[]',board);
-    const presets=qcPresetsFor(t),presetIndex=Number($('#qcPreset').value||0),preset=presets[presetIndex];if(preset?.subjectIds?.length)preset.subjectIds.forEach(id=>url.searchParams.append('subject_ids[]',id));
-    if(saved&&board){try{const savedUrl=new URL(saved.url);savedUrl.searchParams.set('examining_board_ids[]',board);return {url:savedUrl.toString(),kind:'saved+board',label:'Filtro salvo + banca selecionada'};}catch{}}
-    return {url:url.toString(),kind:(disciplineId||preset?.subjectIds?.length)?'generated':'broad',label:preset?.subjectIds?.length?'Filtro automático por assunto':disciplineId?'Filtro automático por disciplina':'Filtro amplo do QConcursos — confirme o assunto no QC'};
-  }
-
-  function renderQc(){
-    const t=currentQcTopic(),subject=t?subjectById(t.subject_id):null,presets=qcPresetsFor(t);const wrap=$('#qcPresetWrap'),select=$('#qcPreset');
-    wrap.classList.toggle('hidden',!presets.length);if(presets.length){const old=select.value;select.innerHTML=presets.map((p,i)=>`<option value="${i}">${esc(p.label)}</option>`).join('');if(select.querySelector(`option[value="${old}"]`))select.value=old;}
-    const built=buildQcUrl();$('#qcSelectedLabel').textContent=t?`${t.syllabus_code||''} • ${t.title.slice(0,42)}${t.title.length>42?'…':''}`:'Nenhum tópico';
-    $('#qcPreview').innerHTML=built?`<div><strong>${esc(built.label)}</strong><span>${esc(subject?.name||'')} → ${esc(t.title)}${$('#qcBoard').value?` • ${esc(BOARD_LABELS[$('#qcBoard').value]||'Banca')}`:''}</span></div><span class="count-pill">${built.kind==='broad'?'REVISAR NO QC':'PRONTO'}</span>`:'<div><strong>Escolha um assunto.</strong><span>Vou procurar primeiro um filtro exato já salvo para ele.</span></div>';
-    $('#externalCount').textContent=state.external.length;
-    $('#externalHistory').innerHTML=state.external.length?state.external.slice(0,12).map(b=>{const t2=topicById(b.topic_id),s2=t2?subjectById(t2.subject_id):null;return `<article class="list-row"><div><strong>${esc(s2?.name||'')} • ${esc(t2?.title||'')}</strong><span>${shortDate(b.practiced_at)} • ${b.source_kind==='qconcursos'?'QConcursos':esc(b.source_kind||'Externa')}</span></div><span class="list-score">${b.correct_count}/${b.total_questions} • ${pct(b.correct_count,b.total_questions)}%</span></article>`}).join(''):'<div class="empty">Nenhuma bateria registrada ainda.</div>';
-  }
-
-  async function saveQcFilter(){
-    if(!requireUser())return;const t=currentQcTopic(),built=buildQcUrl();if(!t||!built)return toast('Escolha um assunto.','error');const subject=subjectById(t.subject_id),u=new URL(built.url);
-    const row={user_id:state.user.id,topic_id:t.id,source_kind:'qconcursos_filter',title:`Filtro QC • ${subject?.name||''} • ${t.title}`,url:u.toString(),domain:u.hostname,trust_level:'subscription',status:'saved',metadata_json:{source:'mentor_v2',version:VERSION,syllabus_code:t.syllabus_code||'',auto_generated:true}};
-    try{const {data,error}=await state.db.from('external_source_links').upsert(row,{onConflict:'user_id,url'}).select('*').single();if(error)throw error;state.links=[data,...state.links.filter(x=>x.id!==data.id&&x.url!==data.url)];toast('Filtro salvo para este tópico.','ok');renderQc();}catch(e){showError(e);}
-  }
-
-  async function recordExternal(){
-    if(!requireUser())return;const t=currentQcTopic(),built=buildQcUrl();if(!t)return toast('Escolha o assunto que você praticou.','error');const total=Number($('#qcTotal').value),correct=Number($('#qcCorrect').value),confidence=Number($('#qcConfidence').value),duration=$('#qcDuration').value===''?null:Number($('#qcDuration').value),notes=$('#qcNotes').value.trim();if(!Number.isInteger(total)||total<1||!Number.isInteger(correct)||correct<0||correct>total)return toast('Confira a quantidade de questões e acertos.','error');
-    $('#qcRecordBtn').disabled=true;$('#qcMessage').textContent='Registrando e recalculando sua leitura…';
-    try{
-      const {data:{session}}=await state.db.auth.getSession();if(!session)throw new Error('Sessão expirada. Entre novamente.');
-      const res=await fetch(`${SUPABASE_URL}/functions/v1/record-external-practice`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({source_kind:'qconcursos',subject_id:t.subject_id,topic_id:t.id,source_url:built?.url||null,total_questions:total,correct_count:correct,confidence,duration_minutes:duration,notes})});
-      const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||'Não foi possível registrar.');
-      toast(`Bateria registrada: ${correct}/${total} (${pct(correct,total)}%).`,'ok');await loadData();const report=await runMentor('weakness',false);renderQcReport(report);$('#qcMessage').textContent='Resultado salvo. A Mentora já recalculou o domínio.';
-    }catch(e){$('#qcMessage').textContent=e?.message||'Falha ao registrar.';showError(e);}finally{$('#qcRecordBtn').disabled=false;}
-  }
-
-  function renderQcReport(report){if(!report)return;$('#qcReportCard').classList.remove('hidden');$('#qcReportHeadline').textContent=report.headline||'Resultado analisado';$('#qcReportEvidence').textContent=evidenceText(report.evidence_level);$('#qcReportSummary').textContent=report.summary||'';$('#qcReportNext').textContent=report.next_action||'';$('#qcReportCard').scrollIntoView({behavior:'smooth',block:'center'});}
-
-  function bankFiltered(){const s=$('#bankSubject').value,t=$('#bankTopic').value;return state.questions.filter(q=>(!s||q.subject_id===s)&&(!t||q.topic_id===t));}
-  function renderBankCounts(){const rows=bankFiltered();const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));$('#bankAvailable').textContent=rows.length;$('#bankNewCount').textContent=unseen.length;$('#bankSessionScore').textContent=`${state.bank.score}/${state.bank.total}`;}
-  function chooseBankQuestion(){const rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));const pool=unseen.length?unseen:rows;if(!pool.length)return null;return pool[Math.floor(Math.random()*pool.length)];}
+  function setQuestionTab(tab){state.questionTab=tab==='external'?'external':'bank';$$('[data-question-tab]').forEach(n=>n.classList.toggle('active',n.dataset.questionTab===state.questionTab));$$('[data-question-panel]').forEach(n=>n.classList.toggle('active',n.dataset.questionPanel===state.questionTab));}
+  function renderQuestions(){renderBankCounts();renderQc();renderExternalHistory();}
+  function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}
+  function renderBankCounts(){const rows=bankFiltered(),unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));setText($('#bankAvailable'),rows.length);setText($('#bankNew'),unseen.length);setText($('#bankSessionScore'),`${state.bank.score}/${state.bank.total}`);const tid=$('#bankTopic')?.value;if(tid){const m=metricFor(tid),left=Math.max(0,TARGET_EVIDENCE-m.evidence);setText($('#bankHelper'),m.measured?`Tópico medido: ${m.evidence} evidências e ${m.accuracy}% de desempenho.`:`Amostra ${m.evidence}/${TARGET_EVIDENCE}. Faltam ${left} evidências diferentes.`);}}
+  function chooseBankQuestion(){let rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const mode=$('#bankMode')?.value||'unseen';if(mode==='unseen'){const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));if(unseen.length)rows=unseen;}if(mode==='review'){const rev=rows.filter(q=>state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date());if(rev.length)rows=rev;}return rows.length?rows[Math.floor(Math.random()*rows.length)]:null;}
   function questionState(q){const st=state.qStates.get(q.id);if(!st||!st.seen_count)return'NOVA';if(st.last_is_correct===false)return'ERRADA';if(st.status==='mastered')return'DOMINADA';if(st.next_review_at&&new Date(st.next_review_at)<=new Date())return'REVISÃO';return'RESPONDIDA';}
-  function startBank(){if(!requireUser())return;const q=chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');showQuestion(q);}
-  function showQuestion(q){state.bank.current=q;state.bank.selected=null;state.bank.answered=false;state.bank.confidence=3;state.bank.startedAt=Date.now();clearInterval(state.bank.timer);state.bank.timer=setInterval(tickBankTimer,1000);$('#questionCard').classList.remove('hidden');$('#bankConfirmBtn').classList.add('hidden');$('#bankNextBtn').classList.add('hidden');$('#questionFeedback').className='question-feedback hidden';$('#questionMeta').textContent=`${q.board||q.exam_name||'Banco próprio'}${q.year?` • ${q.year}`:''}`;$('#questionSubject').textContent=q.subject_label||subjectById(q.subject_id)?.name||'Matéria';$('#questionTopic').textContent=q.topic_label||topicById(q.topic_id)?.title||'Assunto';$('#questionState').textContent=questionState(q);$('#questionStatement').textContent=q.statement;$('#questionAnswers').innerHTML=Object.entries(q.alternatives||{}).map(([l,text])=>`<button class="answer" data-answer="${esc(l)}"><span class="answer-letter">${esc(l)}</span><span>${esc(text)}</span></button>`).join('');$$('[data-bank-confidence]').forEach(b=>b.classList.toggle('active',b.dataset.bankConfidence==='3'));$('#questionTimer').textContent='00:00';$('#questionCard').scrollIntoView({behavior:'smooth',block:'start'});}
-  function tickBankTimer(){if(!state.bank.current||state.bank.answered)return;const sec=Math.floor((Date.now()-state.bank.startedAt)/1000);$('#questionTimer').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;}
-  function clientAttemptId(){return crypto?.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;}
+  function startBank(q=null,taskId=null){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');state.bank.activeTaskId=taskId;showQuestion(q);}
+  function showQuestion(q){state.bank.current=q;state.bank.selected=null;state.bank.answered=false;state.bank.confidence=3;state.bank.startedAt=Date.now();clearInterval(state.bank.timer);state.bank.timer=setInterval(tickQuestionTimer,1000);$('#questionCard')?.classList.remove('hidden');$('#questionConfirmButton')?.classList.add('hidden');$('#questionNextButton')?.classList.add('hidden');$('#questionFeedback').className='question-feedback hidden';setText($('#questionMeta'),`${q.board||q.exam_name||'Banco próprio'}${q.year?` • ${q.year}`:''}`);setText($('#questionSubject'),q.subject_label||subjectById(q.subject_id)?.name||'Matéria');setText($('#questionTopic'),q.topic_label||topicById(q.topic_id)?.title||'Assunto');setText($('#questionState'),questionState(q));setText($('#questionStatement'),q.statement);setHtml($('#questionAnswers'),Object.entries(q.alternatives||{}).map(([l,text])=>`<button class="answer" data-answer="${esc(l)}"><span class="answer-letter">${esc(l)}</span><span>${esc(text)}</span></button>`).join(''));$$('[data-confidence]').forEach(b=>b.classList.toggle('active',b.dataset.confidence==='3'));setText($('#questionTimer'),'00:00');$('#questionCard')?.scrollIntoView({behavior:'smooth',block:'start'});}
+  function tickQuestionTimer(){if(!state.bank.current||state.bank.answered)return;const sec=Math.floor((Date.now()-state.bank.startedAt)/1000);setText($('#questionTimer'),`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`);}
+  function clientAttemptId(){return crypto?.randomUUID?crypto.randomUUID():`${Date.now()}-0000-4000-8000-000000000000`;}
+  async function confirmQuestion(){const q=state.bank.current;if(!q||state.bank.answered||!state.bank.selected)return;const selected=state.bank.selected.toUpperCase(),right=String(q.correct_answer||'').toUpperCase(),correct=selected===right,secs=Math.max(1,Math.round((Date.now()-state.bank.startedAt)/1000));$('#questionConfirmButton').disabled=true;try{const {data,error}=await state.db.rpc('record_question_attempt_atomic',{p_question_id:q.id,p_selected_answer:selected,p_response_time_seconds:secs,p_confidence:Number(state.bank.confidence),p_client_attempt_id:clientAttemptId(),p_reasoning_text:null,p_source_kind:q.source_kind||'personal_module'});if(error||!data?.ok)throw error||new Error('Não foi possível registrar a resposta.');state.bank.answered=true;clearInterval(state.bank.timer);if(!data.duplicate){state.bank.total+=1;if(correct)state.bank.score+=1;}$$('#questionAnswers .answer').forEach(btn=>{const l=btn.dataset.answer;btn.disabled=true;if(l===right)btn.classList.add('correct');if(l===selected&&!correct)btn.classList.add('wrong');});$('#questionConfirmButton').classList.add('hidden');$('#questionNextButton').classList.remove('hidden');renderQuestionFeedback(q,selected,correct,secs);if(state.bank.activeTaskId)await advanceTaskProgress(state.bank.activeTaskId,1,false);toast(correct?'Acertou. Resposta registrada.':'Erro registrado e revisão agendada.',correct?'ok':'neutral');await loadData();}
+    catch(error){showError(error);}finally{$('#questionConfirmButton').disabled=false;}}
+  function renderQuestionFeedback(q,selected,correct,secs){const right=String(q.correct_answer||'').toUpperCase(),opt=q.option_explanations||{},node=$('#questionFeedback');node.className=`question-feedback ${correct?'good':'bad'}`;setHtml(node,`<h3>${correct?'✓ Acerto':`✕ Erro • gabarito ${esc(right)}`}</h3><p>${esc(q.explanation||'Explicação em preparação.')}</p>${Object.keys(opt).length?Object.entries(opt).map(([l,text])=>`<div class="option-review"><strong>${esc(l)}${l===right?' • correta':''}${l===selected&&!correct?' • sua resposta':''}</strong> — ${esc(text)}</div>`).join(''):''}<small>Tempo: ${secs}s • confiança ${state.bank.confidence===5?'alta':state.bank.confidence===2?'baixa':'média'}</small>`);}
 
-  async function confirmBank(){
-    const q=state.bank.current;if(!q||state.bank.answered||!state.bank.selected)return;$('#bankConfirmBtn').disabled=true;const selected=state.bank.selected.toUpperCase(),right=String(q.correct_answer||'').toUpperCase(),correct=selected===right,secs=Math.max(1,Math.round((Date.now()-state.bank.startedAt)/1000));
-    try{const {data,error}=await state.db.rpc('record_question_attempt_atomic',{p_question_id:q.id,p_selected_answer:selected,p_response_time_seconds:secs,p_confidence:Number(state.bank.confidence),p_client_attempt_id:clientAttemptId(),p_reasoning_text:null,p_source_kind:q.source_kind||'personal_module'});if(error||!data?.ok)throw error||new Error('Não foi possível registrar a resposta.');state.bank.answered=true;clearInterval(state.bank.timer);state.bank.total+=data.duplicate?0:1;if(correct&&!data.duplicate)state.bank.score+=1;$$('#questionAnswers .answer').forEach(btn=>{const l=btn.dataset.answer;btn.disabled=true;if(l===right)btn.classList.add('correct');if(l===selected&&!correct)btn.classList.add('wrong');});$('#bankConfirmBtn').classList.add('hidden');$('#bankNextBtn').classList.remove('hidden');renderQuestionFeedback(q,selected,correct,secs);toast(correct?'Acertou. Resposta registrada.':'Erro registrado e revisão agendada.',correct?'ok':'neutral');await refreshAfterAttempt(q,data,selected,correct,secs);}
-    catch(e){showError(e);}finally{$('#bankConfirmBtn').disabled=false;}
+  function latestSavedQc(topicId){return state.links.find(l=>l.topic_id===topicId&&l.source_kind==='qconcursos_filter')||null;}
+  function buildQcUrl(){const t=topicById($('#qcTopic')?.value);if(!t)return null;const saved=latestSavedQc(t.id),board=$('#qcBoard')?.value||'';if(saved&&!board)return{url:saved.url,label:'Filtro exato salvo',kind:'saved'};const s=subjectById(t.subject_id),u=new URL(QC_BASE),did=DISCIPLINE_IDS[s?.name];if(did)u.searchParams.append('discipline_ids[]',did);if(board)u.searchParams.append('examining_board_ids[]',board);const preset=TOPIC_PRESETS[t.syllabus_code];if(Array.isArray(preset))preset.forEach(id=>u.searchParams.append('subject_ids[]',id));if(saved&&board){try{const x=new URL(saved.url);x.searchParams.set('examining_board_ids[]',board);return{url:x.toString(),label:'Filtro salvo + banca',kind:'saved'};}catch{}}return{url:u.toString(),label:(did||preset?.length)?'Filtro automático':'Filtro amplo — confirme o assunto no QC',kind:(did||preset?.length)?'generated':'broad'};}
+  function renderQc(){const t=topicById($('#qcTopic')?.value),built=buildQcUrl();setHtml($('#qcPreview'),built&&t?`<strong>${esc(built.label)}</strong><span>${esc(subjectById(t.subject_id)?.name||'')} → ${esc(t.title)}${$('#qcBoard')?.value?` • ${esc(BOARD_LABELS[$('#qcBoard').value]||'Banca')}`:''}</span>`:'<strong>Escolha um assunto.</strong><span>A plataforma vai preparar o melhor recorte disponível.</span>');if(t){const m=metricFor(t.id),left=Math.max(0,TARGET_EVIDENCE-m.evidence);setText($('#qcEvidencePill'),`${m.evidence}/${TARGET_EVIDENCE} evidências`);if(document.activeElement!==$('#qcTotal'))$('#qcTotal').value=String(left||TARGET_EVIDENCE);}else setText($('#qcEvidencePill'),'0/10 evidências');}
+  async function saveQcFilter(){if(!requireUser())return;const t=topicById($('#qcTopic')?.value),built=buildQcUrl();if(!t||!built)return toast('Escolha um assunto.','error');const s=subjectById(t.subject_id),u=new URL(built.url),row={user_id:state.user.id,topic_id:t.id,source_kind:'qconcursos_filter',title:`Filtro QC • ${s?.name||''} • ${t.title}`,url:u.toString(),domain:u.hostname,trust_level:'subscription',status:'saved',metadata_json:{source:'mentor_v3',version:VERSION,syllabus_code:t.syllabus_code||''}};const {data,error}=await state.db.from('external_source_links').upsert(row,{onConflict:'user_id,url'}).select('*').single();if(error)throw error;state.links=[data,...state.links.filter(x=>x.id!==data.id&&x.url!==data.url)];toast('Filtro salvo.','ok');renderQc();}
+  async function recordExternal(){if(!requireUser())return;const t=topicById($('#qcTopic')?.value),built=buildQcUrl();if(!t)return toast('Escolha o assunto.','error');const total=Number($('#qcTotal').value),correct=Number($('#qcCorrect').value),confidence=Number($('#qcConfidence').value),duration=$('#qcDuration').value===''?null:Number($('#qcDuration').value),notes=$('#qcNotes').value.trim();if(!Number.isInteger(total)||total<1||!Number.isInteger(correct)||correct<0||correct>total)return toast('Confira questões e acertos.','error');$('#qcRecordButton').disabled=true;setText($('#qcMessage'),'Registrando e recalculando...');try{const {data:{session}}=await state.db.auth.getSession();if(!session)throw new Error('Sessão expirada.');const res=await fetch(`${SUPABASE_URL}/functions/v1/record-external-practice`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({source_kind:'qconcursos',subject_id:t.subject_id,topic_id:t.id,source_url:built?.url||null,total_questions:total,correct_count:correct,confidence,duration_minutes:duration,notes})});const data=await res.json();if(!res.ok||!data.ok)throw new Error(data.error||'Não foi possível registrar.');toast(`Bateria registrada: ${correct}/${total}.`,'ok');await loadData();const report=await runMentor('weakness',false);renderQcReport(report);setText($('#qcMessage'),'Resultado salvo. A missão do dia foi atualizada quando aplicável.');}
+    catch(error){setText($('#qcMessage'),error?.message||'Falha ao registrar.');showError(error);}finally{$('#qcRecordButton').disabled=false;}}
+  function renderQcReport(r){if(!r)return;$('#qcReportPanel').classList.remove('hidden');setText($('#qcReportHeadline'),r.headline||'Resultado analisado');setText($('#qcReportEvidence'),evidenceText(r.evidence_level));setText($('#qcReportSummary'),r.summary||'');setText($('#qcReportNext'),r.next_action||'');}
+  function renderExternalHistory(){setText($('#externalCount'),state.external.length);setHtml($('#externalHistory'),state.external.length?state.external.slice(0,15).map(b=>{const t=topicById(b.topic_id),s=t?subjectById(t.subject_id):null;return `<div class="table-row"><div><strong>${esc(s?.name||'')} • ${esc(t?.title||'')}</strong><span>${dateTime(b.practiced_at)} • ${b.source_kind==='qconcursos'?'QConcursos':esc(b.source_kind||'Externa')}</span></div><span class="row-score">${b.correct_count}/${b.total_questions} • ${pct(b.correct_count,b.total_questions)}%</span></div>`;}).join(''):'<div class="empty-state">Nenhuma bateria registrada.</div>');}
+
+  function renderPerformance(){const evidence=totalEvidence(),correct=totalCorrect();setText($('#perfEvidence'),fmt(evidence));setText($('#perfAccuracy'),evidence?`${pct(correct,evidence)}%`:'—');setText($('#perfMeasured'),measuredCount());setText($('#perfConsolidated'),consolidatedCount());const rows=state.topics.map(t=>({t,m:metricFor(t.id)})).filter(x=>x.m.evidence>0);const measured=rows.filter(x=>x.m.measured);const weak=(measured.length?measured:rows).sort((a,b)=>a.m.accuracy-b.m.accuracy||b.m.evidence-a.m.evidence).slice(0,6),strong=measured.filter(x=>x.m.accuracy>=80).sort((a,b)=>Number(b.m.consolidated)-Number(a.m.consolidated)||b.m.accuracy-a.m.accuracy).slice(0,6);setHtml($('#weakTopics'),weak.length?weak.map(topicRowHtml).join(''):'<div class="empty-state">Sem dados suficientes.</div>');setHtml($('#strongTopics'),strong.length?strong.map(topicRowHtml).join(''):'<div class="empty-state">Ainda não há tópico com amostra forte.</div>');renderSubjectPerformance();}
+  function topicRowHtml({t,m}){const s=subjectById(t.subject_id);return `<div class="table-row"><div><strong>${esc(s?.name||'')} • ${esc(t.title)}</strong><span>${m.evidence}/${TARGET_EVIDENCE} evidências • confiança ${m.confidence}%${m.consolidated?' • consolidado':''}</span></div><span class="row-score">${m.accuracy}%</span></div>`;}
+  function renderSubjectPerformance(){const rows=state.subjects.map(s=>{const ts=state.topics.filter(t=>t.subject_id===s.id),ms=ts.map(t=>metricFor(t.id)),e=ms.reduce((a,m)=>a+m.evidence,0),c=ms.reduce((a,m)=>a+m.correct,0),measured=ms.filter(m=>m.measured).length;return{s,e,accuracy:e?pct(c,e):0,measured,total:ts.length};});setHtml($('#subjectPerformance'),`<div class="performance-row header"><span>Matéria</span><span>Acerto</span><span>Evidências</span><span>Medidos</span><span>Progresso</span></div>`+rows.map(r=>`<div class="performance-row"><strong>${esc(r.s.name)}</strong><span>${r.e?`${r.accuracy}%`:'—'}</span><span>${r.e}</span><span>${r.measured}/${r.total}</span><div class="performance-bar"><span style="width:${pct(r.measured,r.total)}%"></span></div></div>`).join(''));}
+
+  function renderPlan(){const p=state.prefs||{};if($('#prefDailyMinutes'))$('#prefDailyMinutes').value=Number(p.daily_minutes||60);if($('#prefReviewRatio'))$('#prefReviewRatio').value=Number(p.review_ratio??40);if($('#prefBuffer'))$('#prefBuffer').value=Number(p.buffer_percent??15);const days=new Set((p.study_days||[1,2,3,4,5,6]).map(Number));$$('#weekdayPicker input').forEach(x=>x.checked=days.has(Number(x.value)));setHtml($('#planSubjects'),state.subjects.map(s=>{const ts=state.topics.filter(t=>t.subject_id===s.id),measured=ts.filter(t=>metricFor(t.id).measured).length,e=ts.reduce((a,t)=>a+metricFor(t.id).evidence,0);return `<article class="subject-plan-card"><h2>${esc(s.name.toUpperCase())}</h2><p>Velocidade de estudo: <strong>Adaptativa</strong></p><p>Assuntos: <strong>${ts.length}</strong></p><p>Modalidades: <strong>estudo, revisão, questões</strong></p><p>Progresso medido: <strong>${measured}/${ts.length}</strong> • ${e} evidências</p><div class="actions"><button class="secondary-button" data-subject-open="${s.id}">Ver assuntos</button></div></article>`;}).join(''));}
+  async function savePreferences(){if(!requireUser())return;const daily=Number($('#prefDailyMinutes').value),review=Number($('#prefReviewRatio').value),buffer=Number($('#prefBuffer').value),days=$$('#weekdayPicker input:checked').map(x=>Number(x.value));if(!Number.isFinite(daily)||daily<20||daily>480||!days.length)return toast('Confira os horários e dias de estudo.','error');const row={user_id:state.user.id,daily_minutes:Math.round(daily),study_days:days,review_ratio:clamp(Math.round(review),0,100),buffer_percent:clamp(Math.round(buffer),0,50),timezone:TZ,updated_at:new Date().toISOString()};const {error}=await state.db.from('study_preferences').upsert(row,{onConflict:'user_id'});if(error)throw error;toast('Horários salvos. Replanejando...','ok');await loadData({plan:false});await replan();}
+
+  function renderSyllabus(){const subjectSelect=$('#syllabusSubject');if(subjectSelect&&!subjectSelect.dataset.ready){subjectSelect.innerHTML='<option value="">Todas</option>'+state.subjects.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');subjectSelect.dataset.ready='1';}const sid=subjectSelect?.value||state.syllabusSubject||'',filter=$('#syllabusFilter')?.value||state.syllabusFilter||'all';state.syllabusSubject=sid;state.syllabusFilter=filter;const topicPass=t=>{const m=metricFor(t.id);if(filter==='unmeasured')return !m.measured;if(filter==='weak')return m.measured&&m.accuracy<60;if(filter==='strong')return m.measured&&m.accuracy>=80;if(filter==='consolidated')return m.consolidated;return true;};const groups=state.subjects.filter(s=>!sid||s.id===sid).map(s=>({s,ts:state.topics.filter(t=>t.subject_id===s.id&&topicPass(t))})).filter(g=>g.ts.length);setHtml($('#syllabusList'),groups.length?groups.map(g=>`<section class="panel syllabus-subject"><div class="syllabus-subject-head"><h2>${esc(g.s.name)}</h2><span class="pill">${g.ts.filter(t=>metricFor(t.id).measured).length}/${g.ts.length} medidos</span></div>${g.ts.map(syllabusTopicHtml).join('')}</section>`).join(''):'<div class="empty-state panel">Nenhum assunto neste filtro.</div>');}
+  function syllabusTopicHtml(t){const m=metricFor(t.id),cls=m.consolidated?'consolidated':!m.measured?'':m.accuracy<60?'weak':m.accuracy<80?'mid':'strong',status=m.consolidated?'Consolidado':m.measured?`${m.accuracy}%`:`${m.evidence}/${TARGET_EVIDENCE}`;return `<div class="syllabus-topic"><span class="topic-dot ${cls}"></span><div><strong>${esc(t.syllabus_code||'')} • ${esc(t.title)}</strong><span>${m.evidence?`${m.evidence} evidências • desempenho ${m.accuracy}% • confiança ${m.confidence}%`:'Ainda sem evidência'}</span></div><span class="topic-status-badge">${status}</span></div>`;}
+
+  function renderSettings(){renderIdentity();}
+  function evidenceText(level){return level==='high'?'Evidência alta':level==='medium'?'Evidência média':'Evidência baixa';}
+  async function runMentor(intent='today',persist=false){if(!state.user)return null;const {data:{session}}=await state.db.auth.getSession();if(!session)return null;const res=await fetch(`${SUPABASE_URL}/functions/v1/mentor-analyze`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({intent,persist})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Falha na análise.');state.mentor=data;renderMentor(data);return data;}
+  function renderMentor(r){if(!r)return;setText($('#dashboardMentorHeadline'),r.headline||'Seu próximo passo');setText($('#dashboardMentorSummary'),r.summary||'');setText($('#dashboardMentorNext'),r.next_action||'');setText($('#dashboardEvidence'),evidenceText(r.evidence_level));setText($('#mentorHeadline'),r.headline||'Análise');setText($('#mentorSummary'),r.summary||'');setText($('#mentorNext'),r.next_action||'');setText($('#mentorEvidence'),evidenceText(r.evidence_level));const labels={today:'LEITURA DE HOJE',weakness:'FRAQUEZAS',pattern:'PADRÕES DE ERRO',advance:'DECISÃO DE AVANÇO',review:'REVISÕES'};setText($('#mentorIntentLabel'),labels[r.intent]||'MENTORA');$$('.mentor-action').forEach(b=>b.classList.toggle('active',b.dataset.mentorIntent===r.intent));setHtml($('#mentorReasons'),(r.reasons||[]).length?(r.reasons||[]).map(x=>`<div class="reason">${esc(x)}</div>`).join(''):'<div class="empty-state">Sem observações adicionais.</div>');setHtml($('#mentorFocus'),(r.focus||[]).length?r.focus.map(f=>`<div class="table-row"><div><strong>${esc(f.subject||'')} • ${esc(f.title||'')}</strong><span>${f.attempts||0} evidências • ${f.evidence||'low'}</span></div><span class="row-score">${f.accuracy??0}%</span></div>`).join(''):'<div class="empty-state">Amostra ainda pequena.</div>');}
+
+  function populateStudyModal(){const s=$('#studyModalSubject'),t=$('#studyModalTopic');if(!s||!t)return;s.innerHTML='<option value="">Escolha</option>'+state.subjects.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');const render=()=>{const rows=state.topics.filter(x=>x.subject_id===s.value);t.innerHTML='<option value="">Escolha</option>'+rows.map(x=>`<option value="${x.id}">${esc(x.syllabus_code||'')} — ${esc(x.title)}</option>`).join('');};if(!s.dataset.bound){s.addEventListener('change',render);s.dataset.bound='1';}render();}
+  function openStudyModal(){const m=$('#studyModal');m.classList.add('open');m.setAttribute('aria-hidden','false');}
+  function closeStudyModal(){const m=$('#studyModal');m.classList.remove('open');m.setAttribute('aria-hidden','true');}
+  async function saveOutsideStudy(){if(!requireUser())return;const topicId=$('#studyModalTopic').value,t=topicById(topicId),minutes=Number($('#studyModalMinutes').value);if(!t||!Number.isFinite(minutes)||minutes<1||minutes>480)return toast('Escolha o assunto e informe os minutos.','error');const ended=new Date(),started=new Date(ended.getTime()-minutes*60000);const {error}=await state.db.from('study_sessions').insert({user_id:state.user.id,subject_id:t.subject_id,topic_id:t.id,started_at:started.toISOString(),ended_at:ended.toISOString(),duration_minutes:Math.round(minutes),questions_answered:0,correct_answers:0});if(error)throw error;closeStudyModal();toast('Estudo registrado.','ok');await loadData();}
+
+  function buildStudyDates(today,prefs){const allowed=new Set((prefs.study_days||[1,2,3,4,5,6]).map(Number)),start=toLocalDate(today),dates=[];for(let i=0;i<HORIZON_DAYS;i++){const d=addDays(start,i);if(allowed.has(isoWeekday(d)))dates.push(dateKey(d));}return dates;}
+  async function ensureReviewsInPlan(){const today=dateKey(),end=dateKey(addDays(toLocalDate(today),HORIZON_DAYS-1)),studyDates=buildStudyDates(today,state.prefs||{});if(!studyDates.length)return;const inserts=[];for(const r of state.reviews){if(!r.question_id||!r.topic_id)continue;let due=dateKey(new Date(r.due_at));if(due<today)due=today;let day=studyDates.find(x=>x>=due)||studyDates[studyDates.length-1];if(day>end)continue;const anyExisting=state.plan.some(p=>p.task_type==='review'&&p.question_id===r.question_id&&p.status!=='skipped');if(anyExisting)continue;inserts.push({user_id:state.user.id,topic_id:r.topic_id,question_id:r.question_id,scheduled_for:day,task_type:'review',question_target:1,status:'pending',duration_minutes:REVIEW_MINUTES,priority:100,source_reason:'revisao_programada',plan_version:'v3-clean',sort_order:10});}if(inserts.length){const {error}=await state.db.from('study_plan_items').insert(inserts);if(error)throw error;}}
+  async function normalizeAndFillPlan(){if(state.planBusy)return;state.planBusy=true;try{await loadData({plan:false});const prefs=state.prefs||{},today=dateKey(),dates=buildStudyDates(today,prefs),hard=Math.max(20,Number(prefs.daily_minutes||60));if(!dates.length)return;const end=dates[dates.length-1];const {data:items,error}=await state.db.from('study_plan_items').select('*').eq('user_id',state.user.id).gte('scheduled_for',today).lte('scheduled_for',end).in('status',['pending','in_progress','completed']).order('scheduled_for').order('sort_order');if(error)throw error;const topicMap=new Map(state.topics.map(t=>[t.id,t])),dayInfo=new Map(dates.map(d=>[d,{subjects:new Set(),minutes:0,items:[]} ]));(items||[]).filter(x=>x.status!=='pending').forEach(x=>{const info=dayInfo.get(x.scheduled_for);if(!info)return;const sid=topicMap.get(x.topic_id)?.subject_id;if(sid)info.subjects.add(sid);info.minutes+=planMinutes(x);info.items.push(x);});const pending=(items||[]).filter(x=>x.status==='pending').sort((a,b)=>(a.task_type==='review'?-1:1)-(b.task_type==='review'?-1:1)||Number(b.priority||0)-Number(a.priority||0));const assignments=[],overflow=[];for(const item of pending){const sid=topicMap.get(item.topic_id)?.subject_id,duration=planMinutes(item),earliest=item.scheduled_for<today?today:item.scheduled_for;let chosen=dates.find(day=>day>=earliest&&((!sid)||dayInfo.get(day).subjects.has(sid)||dayInfo.get(day).subjects.size<MAX_SUBJECTS_PER_DAY)&&dayInfo.get(day).minutes+duration<=hard);if(!chosen)chosen=dates.find(day=>((!sid)||dayInfo.get(day).subjects.has(sid)||dayInfo.get(day).subjects.size<MAX_SUBJECTS_PER_DAY)&&dayInfo.get(day).minutes+duration<=hard);if(!chosen){overflow.push(item);continue;}const info=dayInfo.get(chosen);if(sid)info.subjects.add(sid);info.minutes+=duration;info.items.push(item);assignments.push({item,chosen});}
+    for(const a of assignments){if(a.item.scheduled_for!==a.chosen){const {error:e}=await state.db.from('study_plan_items').update({scheduled_for:a.chosen,displaced_from:a.item.displaced_from||a.item.scheduled_for}).eq('id',a.item.id).eq('user_id',state.user.id);if(e)throw e;}}
+    for(const item of overflow){const {error:e}=await state.db.from('study_plan_items').update({status:'skipped'}).eq('id',item.id).eq('user_id',state.user.id).eq('status','pending');if(e)throw e;}
+    await loadData({plan:false});
+    for(const day of dates){const dayItems=state.plan.filter(p=>p.scheduled_for===day&&['pending','in_progress','completed'].includes(p.status)),minutes=dayItems.reduce((s,p)=>s+planMinutes(p),0),subjects=[...new Set(dayItems.map(p=>topicById(p.topic_id)?.subject_id).filter(Boolean))].slice(0,MAX_SUBJECTS_PER_DAY);let remaining=hard-minutes;if(remaining<QUESTION_MINUTES)continue;const already=dayItems.filter(p=>String(p.source_reason||'').startsWith('cap_fill_'));if(already.length)continue;const subjectScore=sid=>Math.max(0,...state.topics.filter(t=>t.subject_id===sid).map(t=>{const m=metricFor(t.id);return Math.max(0,TARGET_EVIDENCE-m.evidence)*12+(100-m.accuracy);}));if(subjects.length<MAX_SUBJECTS_PER_DAY){const extras=state.subjects.filter(s=>!subjects.includes(s.id)).sort((a,b)=>subjectScore(b.id)-subjectScore(a.id));while(subjects.length<MAX_SUBJECTS_PER_DAY&&extras.length)subjects.push(extras.shift().id);}if(!subjects.length)continue;const candidates=subjects.map(sid=>{const topics=state.topics.filter(t=>t.subject_id===sid).sort((a,b)=>{const ma=metricFor(a.id),mb=metricFor(b.id);const needA=Math.max(0,TARGET_EVIDENCE-ma.evidence),needB=Math.max(0,TARGET_EVIDENCE-mb.evidence);return needB-needA||ma.accuracy-mb.accuracy;});return topics[0];}).filter(Boolean);for(let i=0;i<candidates.length&&remaining>=QUESTION_MINUTES;i++){const t=candidates[i],m=metricFor(t.id),slotsLeft=candidates.length-i,share=Math.floor(remaining/slotsLeft),target=Math.max(1,Math.floor(share/QUESTION_MINUTES)),need=Math.max(0,TARGET_EVIDENCE-m.evidence);if(need)target=Math.min(target,need);target=Math.min(target,10);const duration=target*QUESTION_MINUTES;if(duration>remaining)continue;const row={user_id:state.user.id,topic_id:t.id,scheduled_for:day,task_type:'questions',question_target:target,status:'pending',duration_minutes:duration,priority:45,source_reason:'cap_fill_qconcursos',plan_version:'v3-clean',sort_order:900+i*10,progress_count:0};const {error:e}=await state.db.from('study_plan_items').insert(row);if(e)throw e;remaining-=duration;}}
+    await loadData({plan:false});
+  }finally{state.planBusy=false;}}
+  async function ensurePlan(){if(!state.user||state.planBusy)return;await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}
+  async function replan(){if(!requireUser())return;toast('Reorganizando o plano...');await ensurePlan();toast('Plano atualizado mantendo no máximo duas matérias por dia.','ok');}
+  async function advanceTaskProgress(id,count=1,reload=true){const item=state.plan.find(x=>x.id===id);if(!item)return;const target=Math.max(1,Number(item.question_target||1)),next=Math.min(target,Number(item.progress_count||0)+count),done=next>=target;const patch={progress_count:next,status:done?'completed':'in_progress'};if(done)patch.completed_at=new Date().toISOString();const {error}=await state.db.from('study_plan_items').update(patch).eq('id',id).eq('user_id',state.user.id);if(error)throw error;if(done)state.bank.activeTaskId=null;if(reload)await loadData();}
+  async function completeTask(id,reload=true){const {error}=await state.db.from('study_plan_items').update({status:'completed',progress_count:Math.max(1,Number(state.plan.find(x=>x.id===id)?.question_target||1)),completed_at:new Date().toISOString()}).eq('id',id).eq('user_id',state.user.id);if(error)throw error;if(reload){toast('Meta concluída.','ok');await loadData();}}
+
+  function bindInteractions(){
+    $$('[data-question-tab]').forEach(b=>b.addEventListener('click',()=>setQuestionTab(b.dataset.questionTab)));
+    ['bankSubject','bankTopic','bankMode'].forEach(id=>$('#'+id)?.addEventListener('change',renderBankCounts));$('#bankStartButton')?.addEventListener('click',()=>startBank());
+    $('#questionAnswers')?.addEventListener('click',e=>{const b=e.target.closest('[data-answer]');if(!b||state.bank.answered)return;state.bank.selected=b.dataset.answer;$$('#questionAnswers .answer').forEach(x=>x.classList.toggle('selected',x===b));$('#questionConfirmButton')?.classList.remove('hidden');});
+    $$('[data-confidence]').forEach(b=>b.addEventListener('click',()=>{state.bank.confidence=Number(b.dataset.confidence);$$('[data-confidence]').forEach(x=>x.classList.toggle('active',x===b));}));$('#questionConfirmButton')?.addEventListener('click',()=>confirmQuestion().catch(showError));$('#questionNextButton')?.addEventListener('click',()=>startBank());
+    ['qcSubject','qcTopic','qcBoard'].forEach(id=>$('#'+id)?.addEventListener('change',renderQc));$('#qcOpenButton')?.addEventListener('click',()=>{const x=buildQcUrl();if(!x)return toast('Escolha um assunto.','error');window.open(x.url,'_blank','noopener,noreferrer');});$('#qcSaveButton')?.addEventListener('click',()=>saveQcFilter().catch(showError));$('#qcRecordButton')?.addEventListener('click',()=>recordExternal().catch(showError));
+    $('#dailyRefreshButton')?.addEventListener('click',()=>loadData().catch(showError));$('#outsideStudyButton')?.addEventListener('click',openStudyModal);$('#studyModalClose')?.addEventListener('click',closeStudyModal);$('#studyModalSave')?.addEventListener('click',()=>saveOutsideStudy().catch(showError));
+    $('#dailyTasks')?.addEventListener('click',e=>{const c=e.target.closest('[data-task-complete]');if(c){completeTask(c.dataset.taskComplete).catch(showError);return;}const r=e.target.closest('[data-task-review]');if(r){const item=state.plan.find(x=>x.id===r.dataset.taskReview),q=state.questions.find(x=>x.id===item?.question_id);navigate('questions',{tab:'bank'});if(q)startBank(q,item.id);else{if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}startBank(null,item?.id);}return;}const b=e.target.closest('[data-task-bank]');if(b){const item=state.plan.find(x=>x.id===b.dataset.taskBank);navigate('questions',{tab:'bank'});if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}state.bank.activeTaskId=item?.id||null;startBank();return;}const q=e.target.closest('[data-task-qc]');if(q){const item=state.plan.find(x=>x.id===q.dataset.taskQc),t=topicById(item?.topic_id);navigate('questions',{tab:'external'});if(t){$('#qcSubject').value=t.subject_id;$('#qcSubject').dispatchEvent(new Event('change'));setTimeout(()=>{$('#qcTopic').value=t.id;renderQc();},0);}return;}});
+    $('#savePreferencesButton')?.addEventListener('click',()=>savePreferences().catch(showError));$('#planSubjects')?.addEventListener('click',e=>{const b=e.target.closest('[data-subject-open]');if(!b)return;navigate('syllabus');$('#syllabusSubject').value=b.dataset.subjectOpen;state.syllabusSubject=b.dataset.subjectOpen;renderSyllabus();});
+    $('#syllabusSubject')?.addEventListener('change',renderSyllabus);$('#syllabusFilter')?.addEventListener('change',renderSyllabus);$('#settingsReload')?.addEventListener('click',()=>loadData().catch(showError));
   }
-
-  function renderQuestionFeedback(q,selected,correct,secs){const node=$('#questionFeedback'),right=String(q.correct_answer||'').toUpperCase(),opt=q.option_explanations||{};node.className=`question-feedback ${correct?'good':'bad'}`;node.innerHTML=`<h3>${correct?'✓ Acerto':`✕ Erro • gabarito ${esc(right)}`}</h3><p>${esc(q.explanation||'Explicação em preparação.')}</p>${Object.keys(opt).length?`<div>${Object.entries(opt).map(([l,text])=>`<div class="option-review"><strong>${esc(l)}${l===right?' • correta':''}${l===selected&&!correct?' • sua resposta':''}</strong> — ${esc(text)}</div>`).join('')}</div>`:''}${q.answer_key_note?`<p><strong>Observação do gabarito:</strong> ${esc(q.answer_key_note)}</p>`:''}<small>Tempo: ${secs}s • confiança ${state.bank.confidence===5?'alta':state.bank.confidence===2?'baixa':'média'}</small>`;}
-  async function refreshAfterAttempt(q,data,selected,correct,secs){const old=state.qStates.get(q.id)||{seen_count:0,correct_count:0,wrong_count:0};state.qStates.set(q.id,{...old,question_id:q.id,seen_count:Number(old.seen_count||0)+(data.duplicate?0:1),correct_count:Number(old.correct_count||0)+(!data.duplicate&&correct?1:0),wrong_count:Number(old.wrong_count||0)+(!data.duplicate&&!correct?1:0),last_is_correct:correct,last_selected_answer:selected,last_response_time_seconds:secs,last_confidence:state.bank.confidence,last_attempt_at:new Date().toISOString(),next_review_at:data.next_review_at,status:data.status,review_stage:data.review_stage});renderBankCounts();await loadData();}
-
-  function evidenceText(level){return level==='high'?'EVIDÊNCIA ALTA':level==='medium'?'EVIDÊNCIA MÉDIA':'EVIDÊNCIA BAIXA';}
-  async function runMentor(intent='today',scroll=false){
-    if(!state.user)return null;$$('.mentor-action').forEach(b=>b.classList.toggle('active',b.dataset.mentorIntent===intent));$('#mentorHeadline').textContent='Analisando seu histórico…';
-    const {data,error}=await state.db.functions.invoke('mentor-analyze',{body:{intent,persist:false}});if(error)throw error;state.mentor=data;renderMentor(data,intent);if(intent==='today')renderHomeMentor(data);if(scroll)$('#mentorHeadline').scrollIntoView({behavior:'smooth',block:'center'});return data;
-  }
-  function renderHomeMentor(r){if(!r)return;$('#homeMentorHeadline').textContent=r.headline||'Seu próximo passo';$('#homeMentorSummary').textContent=r.summary||'';$('#homeNextAction').textContent=r.next_action||'';$('#homeEvidence').textContent=evidenceText(r.evidence_level);}
-  function renderMentor(r,intent){if(!r)return;const labels={today:'LEITURA DE HOJE',weakness:'FRAQUEZAS',pattern:'PADRÕES',advance:'POSSO AVANÇAR?',review:'REVISÕES'};$('#mentorIntentLabel').textContent=labels[intent]||'MENTORA';$('#mentorHeadline').textContent=r.headline||'Leitura pronta';$('#mentorSummary').textContent=r.summary||'';$('#mentorNext').textContent=r.next_action||'';$('#mentorEvidence').textContent=evidenceText(r.evidence_level);$('#mentorReasons').innerHTML=(r.reasons||[]).length?(r.reasons||[]).map(x=>`<div class="reason">${esc(x)}</div>`).join(''):'<div class="empty">Sem motivos adicionais.</div>';$('#mentorFocus').innerHTML=(r.focus||[]).length?r.focus.map(f=>`<article class="list-row"><div><strong>${esc(f.subject||'')} • ${esc(f.title||'')}</strong><span>${f.attempts||0} evidências • domínio ${Math.round(Number(f.mastery_score||0))}% • prioridade ${f.priority||0}</span></div><span class="list-score">${f.accuracy||0}%</span></article>`).join(''):'<div class="empty">Ainda não há foco medido.</div>';}
-  function renderKnowledge(){const ext=state.external.reduce((s,b)=>s+Number(b.total_questions||0),0);$('#knowAttempts').textContent=fmt(state.attempts.length);$('#knowExternal').textContent=fmt(ext);$('#knowSessions').textContent=fmt(state.sessions.length);$('#knowTopics').textContent=fmt(state.mastery.filter(m=>Number(m.attempts_count||0)>0).length);}
-
-  function bindStudy(){
-    $('#studyTopic').addEventListener('change',renderStudyStatus);$('#studySubject').addEventListener('change',()=>setTimeout(renderStudyStatus,0));$('#recordStudyBtn').addEventListener('click',recordStudy);
-    document.addEventListener('click',e=>{const f=e.target.closest('[data-syllabus-filter]');if(f){state.syllabusFilter=f.dataset.syllabusFilter;$$('[data-syllabus-filter]').forEach(x=>x.classList.toggle('active',x===f));renderStudy();}const topic=e.target.closest('[data-study-topic]');if(topic){const t=topicById(topic.dataset.studyTopic);if(!t)return;$('#studySubject').value=t.subject_id;$('#studySubject').dispatchEvent(new Event('change'));setTimeout(()=>{$('#studyTopic').value=t.id;renderStudyStatus();window.scrollTo({top:110,behavior:'smooth'});},0);}});
-  }
-
-  function bindQc(){['#qcSubject','#qcTopic','#qcBoard','#qcPreset'].forEach(id=>$(id)?.addEventListener('change',()=>setTimeout(renderQc,0)));$('#qcOpenBtn').addEventListener('click',()=>{const built=buildQcUrl();if(!built)return toast('Escolha um assunto.','error');window.open(built.url,'_blank','noopener,noreferrer');});$('#qcSaveBtn').addEventListener('click',saveQcFilter);$('#qcRecordBtn').addEventListener('click',recordExternal);}
-  function bindBank(){['#bankSubject','#bankTopic'].forEach(id=>$(id).addEventListener('change',()=>{setTimeout(renderBankCounts,0)}));$('#bankStartBtn').addEventListener('click',startBank);$('#bankConfirmBtn').addEventListener('click',confirmBank);$('#bankNextBtn').addEventListener('click',()=>{const q=chooseBankQuestion();q?showQuestion(q):toast('Sessão concluída neste filtro.','ok');});$('#questionAnswers').addEventListener('click',e=>{const btn=e.target.closest('[data-answer]');if(!btn||state.bank.answered)return;state.bank.selected=btn.dataset.answer;$$('#questionAnswers .answer').forEach(x=>x.classList.toggle('selected',x===btn));$('#bankConfirmBtn').classList.remove('hidden');});$('#bankConfidenceRow').addEventListener('click',e=>{const b=e.target.closest('[data-bank-confidence]');if(!b||state.bank.answered)return;state.bank.confidence=Number(b.dataset.bankConfidence);$$('[data-bank-confidence]').forEach(x=>x.classList.toggle('active',x===b));});}
-  function bindMentor(){$('#refreshAllBtn').addEventListener('click',async()=>{if(!requireUser())return;try{await loadData();await runMentor('today',false);toast('Dados atualizados.','ok');}catch(e){showError(e);}});}
-
-  function showError(error){console.error(error);toast(error?.message||'Algo deu errado. Tente novamente.','error');setSync('Falha ao sincronizar','warn');}
-  function clearUser(){state.user=null;state.subjects=[];state.topics=[];state.mastery=[];state.attempts=[];state.external=[];state.sessions=[];state.plan=[];state.reviews=[];state.links=[];state.questions=[];state.qStates=new Map();setSync('Entre para sincronizar','warn');$('#accountBtn').textContent='M';$('#homeGreeting').textContent='Seu estudo, sem bagunça.';$('#homeMentorHeadline').textContent='Entre para carregar sua leitura.';$('#homeMentorSummary').textContent='Seu histórico fica vinculado à sua conta.';$('#homeNextAction').textContent='Faça login para continuar de onde parou.';}
 
   async function boot(){
-    if(!window.supabase?.createClient)throw new Error('Supabase SDK não carregou.');state.db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    bindNavigation();bindAuth();bindStudy();bindQc();bindBank();bindMentor();
-    const {data:{session}}=await state.db.auth.getSession();state.user=session?.user||null;
-    if(state.user){$('#accountBtn').textContent=(state.user.user_metadata?.display_name||state.user.email||'M').slice(0,1).toUpperCase();await loadData();}
-    else{clearUser();openAuth('signin');}
-    state.db.auth.onAuthStateChange((event,sessionNow)=>{setTimeout(async()=>{if(sessionNow?.user){state.user=sessionNow.user;$('#accountBtn').textContent=(state.user.user_metadata?.display_name||state.user.email||'M').slice(0,1).toUpperCase();closeAuth();try{await loadData();toast('Histórico carregado.','ok');}catch(e){showError(e);}}else if(event==='SIGNED_OUT'){clearUser();openAuth('signin');}},0);});
-    const initial=location.hash.slice(1);if(['home','study','external','bank','mentor'].includes(initial))navigate(initial);
+    bindNavigation();bindAuth();bindInteractions();if(!window.supabase?.createClient){toast('Falha ao carregar a conexão.','error');return;}state.db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session}}=await state.db.auth.getSession();state.user=session?.user||null;if(state.user)await loadData();else{renderIdentity();setSync('Entre na conta');openAuth('signin');}
+    state.db.auth.onAuthStateChange(async(_event,session2)=>{state.user=session2?.user||null;if(state.user){closeAuth();await loadData();}else{state.profile=null;state.plan=[];state.attempts=[];state.external=[];renderAll();setSync('Entre na conta');openAuth('signin');}});
+    navigate(location.hash.slice(1)||'dashboard',{smooth:false});
   }
 
   boot().catch(showError);
