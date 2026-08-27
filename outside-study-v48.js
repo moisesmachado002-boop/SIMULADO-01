@@ -26,6 +26,105 @@
     return db;
   }
 
+  function injectStyles() {
+    if ($('#manualStudyV481Styles')) return;
+    const style = document.createElement('style');
+    style.id = 'manualStudyV481Styles';
+    style.textContent = `
+      #studyModal .modal-card {
+        max-height: calc(100dvh - 24px) !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 24px !important;
+      }
+      #studyModal .modal-card > label,
+      #studyModalQuestionsBox label {
+        display: block;
+        min-width: 0;
+      }
+      #studyModalActivityTypeLabel { margin-bottom: 14px; }
+      #studyModalQuestionsBox {
+        margin: 14px 0 16px;
+        padding: 14px;
+        background: #f7f7f7;
+        border: 1px solid #e3e3e3;
+        border-radius: 14px;
+      }
+      #studyModalQuestionsBox[hidden] { display: none !important; }
+      #studyModalQuestionsBox .manual-q-grid {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+        gap: 12px;
+        align-items: start;
+      }
+      #studyModalQuestionsBox input,
+      #studyModalNotes,
+      #studyModalActivityType,
+      #studyModalSubject,
+      #studyModalTopic,
+      #studyModalMinutes {
+        box-sizing: border-box;
+        width: 100%;
+      }
+      #studyModalQuestionSummary {
+        margin: 12px 0 0 !important;
+        padding: 11px 12px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid #ddd;
+        color: #555 !important;
+        font-size: 15px;
+        line-height: 1.35;
+        font-weight: 750 !important;
+      }
+      #studyModalNotesLabel {
+        margin-top: 14px;
+      }
+      #studyModalNotesLabel .manual-optional {
+        display: inline;
+        margin-left: 4px;
+        font-weight: 400;
+        color: #777;
+        font-size: .92em;
+      }
+      #studyModalSave {
+        margin-top: 16px;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        box-shadow: 0 -8px 18px rgba(255,255,255,.92);
+      }
+      @media (max-width: 520px) {
+        #studyModal .modal-card {
+          width: calc(100vw - 24px) !important;
+          max-width: none !important;
+          padding: 22px 20px 20px !important;
+          border-radius: 20px !important;
+        }
+        #studyModal .modal-card h2 {
+          font-size: 31px !important;
+          line-height: 1.05;
+          margin-bottom: 20px;
+        }
+        #studyModalQuestionsBox {
+          padding: 12px;
+        }
+        #studyModalQuestionsBox .manual-q-grid {
+          gap: 10px;
+        }
+        #studyModalQuestionsBox .manual-q-grid label {
+          font-size: 14px;
+          line-height: 1.2;
+        }
+        #studyModalQuestionSummary {
+          font-size: 14px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function syncForm() {
     const type = $('#studyModalActivityType')?.value || 'study';
     const qBox = $('#studyModalQuestionsBox');
@@ -34,7 +133,7 @@
     if (qBox) qBox.hidden = type !== 'questions';
     if (minutesLabel) {
       minutesLabel.firstChild.textContent = type === 'questions'
-        ? 'Tempo total das questões'
+        ? 'Tempo total das questões (min)'
         : type === 'review'
           ? 'Minutos de revisão'
           : 'Minutos estudados';
@@ -50,10 +149,13 @@
   function syncQuestionSummary() {
     const total = Math.max(0, Number($('#studyModalQuestionsTotal')?.value || 0));
     const wrong = Math.max(0, Number($('#studyModalQuestionsWrong')?.value || 0));
-    const correct = Math.max(0, total - wrong);
+    const safeWrong = Math.min(wrong, total);
+    const correct = Math.max(0, total - safeWrong);
     const acc = total ? Math.round(correct / total * 100) : 0;
     const node = $('#studyModalQuestionSummary');
-    if (node) node.textContent = total ? `${correct} acertos • ${wrong} erros • ${acc}%` : 'Informe a quantidade de questões.';
+    if (node) node.textContent = total
+      ? `${correct} acertos • ${safeWrong} erros • ${acc}% de acerto`
+      : 'Informe a quantidade de questões.';
   }
 
   function enhanceModal() {
@@ -63,6 +165,7 @@
     const minutes = $('#studyModalMinutes');
     const save = $('#studyModalSave');
     if (!modal || !card || !subject || !minutes || !save) return false;
+    injectStyles();
     if ($('#studyModalActivityType')) return true;
 
     const subjectGrid = subject.closest('.form-grid');
@@ -80,22 +183,23 @@
     qBox.id = 'studyModalQuestionsBox';
     qBox.hidden = true;
     qBox.innerHTML = `
-      <div class="form-grid two">
-        <label>Quantas questões fez?
+      <div class="manual-q-grid">
+        <label>Questões feitas
           <input type="number" id="studyModalQuestionsTotal" min="1" max="500" value="20" inputmode="numeric" />
         </label>
-        <label>Quantas errou?
+        <label>Erros
           <input type="number" id="studyModalQuestionsWrong" min="0" max="500" value="0" inputmode="numeric" />
         </label>
       </div>
-      <div id="studyModalQuestionSummary" style="margin:-4px 0 12px;color:#666;font-weight:700">20 acertos • 0 erros • 100%</div>`;
+      <div id="studyModalQuestionSummary">20 acertos • 0 erros • 100% de acerto</div>`;
     subjectGrid.insertAdjacentElement('afterend', qBox);
 
     const minutesLabel = minutes.closest('label');
     if (minutesLabel) minutesLabel.id = 'studyModalMinutesLabel';
 
     const notes = document.createElement('label');
-    notes.innerHTML = `Observação <span style="font-weight:400;color:#777">(opcional)</span>
+    notes.id = 'studyModalNotesLabel';
+    notes.innerHTML = `Observação <span class="manual-optional">(opcional)</span>
       <input type="text" id="studyModalNotes" maxlength="240" placeholder="Ex.: videoaula, PDF, lei seca, simulado..." />`;
     if (minutesLabel) minutesLabel.insertAdjacentElement('afterend', notes);
 
