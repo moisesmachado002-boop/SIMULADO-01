@@ -13,10 +13,10 @@
   <div class="loader"><strong>Mentor IA V4</strong><span>Carregando ciclo e inteligência preditiva…</span></div>
   <script>
     (async () => {
-      const response = await fetch('./v2.html?base=20260827-v4', { cache: 'no-store' });
+      const response = await fetch('./v2.html?base=20260827-v41', { cache: 'no-store' });
       if (!response.ok) throw new Error('Não foi possível carregar a interface base.');
       let html = await response.text();
-      html = html.replace('</body>', '<script src="./intelligence-core.js?v=4.0.0"><\/script></body>');
+      html = html.replace('</body>', '<script src="./intelligence-core-v4.1.js?v=4.1.0"><\/script></body>');
       document.open();
       document.write(html);
       document.close();
