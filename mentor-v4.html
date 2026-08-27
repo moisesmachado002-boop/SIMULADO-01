@@ -6,16 +6,16 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Mentor IA V4.3 — PMBA</title>
+  <title>Mentor IA V4.3.1 — PMBA</title>
   <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
 </head>
 <body>
-  <div class="loader"><strong>Mentor IA V4.3</strong><span>Organizando o ciclo por assunto de foco…</span></div>
+  <div class="loader"><strong>Mentor IA V4.3.1</strong><span>Organizando o estudo por assunto de foco…</span></div>
   <script>
     (async () => {
       const [htmlResponse, jsResponse] = await Promise.all([
-        fetch('./v2.html?base=20260827-v43', { cache: 'no-store' }),
-        fetch('./v2.js?base=20260827-v43', { cache: 'no-store' })
+        fetch('./v2.html?base=20260827-v431', { cache: 'no-store' }),
+        fetch('./v2.js?base=20260827-v431', { cache: 'no-store' })
       ]);
       if (!htmlResponse.ok || !jsResponse.ok) throw new Error('Não foi possível carregar a interface base.');
 
@@ -24,13 +24,31 @@
 
       const oldEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
       const newEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;if(window.MentorIntelligence?.run){await window.MentorIntelligence.run({reload:false});await loadData({plan:false});return;}await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
-      if (!appJs.includes(oldEnsurePlan)) throw new Error('A versão base mudou e o planejador V4.3 não pôde assumir o controle com segurança.');
+      if (!appJs.includes(oldEnsurePlan)) throw new Error('A versão base mudou e o planejador V4.3.1 não pôde assumir o controle.');
       appJs = appJs.replace(oldEnsurePlan, newEnsurePlan);
+
+      const oldStartBank = "function startBank(q=null,taskId=null){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');state.bank.activeTaskId=taskId;showQuestion(q);}";
+      const newStartBank = "function startBank(q=null,taskId=undefined){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');if(taskId!==undefined)state.bank.activeTaskId=taskId;showQuestion(q);}";
+      if (!appJs.includes(oldStartBank)) throw new Error('Não foi possível aplicar a correção de progresso do Banco.');
+      appJs = appJs.replace(oldStartBank, newStartBank);
+
+      const oldReviewOpen = "navigate('questions',{tab:'bank'});if(q)startBank(q,item.id);else{if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}startBank(null,item?.id);}";
+      const newReviewOpen = "navigate('questions',{tab:'bank'});if(item?.topic_id){const t=topicById(item.topic_id);if(t&&$('#bankSubject')){$('#bankSubject').value=t.subject_id;$('#bankSubject').dispatchEvent(new Event('change'));}$('#bankTopic').value=item.topic_id;}if($('#bankMode'))$('#bankMode').value='review';renderBankCounts();if(q)startBank(q,item.id);else startBank(null,item?.id);";
+      if (!appJs.includes(oldReviewOpen)) throw new Error('Não foi possível ativar o bloco agrupado de revisões.');
+      appJs = appJs.replace(oldReviewOpen, newReviewOpen);
+
+      const oldBankOpen = "if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}state.bank.activeTaskId=item?.id||null;startBank();";
+      const newBankOpen = "if(item?.topic_id){const t=topicById(item.topic_id);if(t&&$('#bankSubject')){$('#bankSubject').value=t.subject_id;$('#bankSubject').dispatchEvent(new Event('change'));}$('#bankTopic').value=item.topic_id;}if($('#bankMode'))$('#bankMode').value='unseen';renderBankCounts();startBank(null,item?.id);";
+      if (!appJs.includes(oldBankOpen)) throw new Error('Não foi possível ativar o progresso do bloco de questões.');
+      appJs = appJs.replace(oldBankOpen, newBankOpen);
+
+      appJs = appJs.replace("p.task_type==='review'?'Revisão':`${target} questão(ões)`", "p.task_type==='review'?`${target} revisão(ões)`:`${target} questão(ões)`");
+      appJs = appJs.replace("p.task_type==='review'?'1 revisão':`${p.question_target||0} questões`", "p.task_type==='review'?`${p.question_target||1} revisão(ões)`:`${p.question_target||0} questões`");
 
       const appBlob = new Blob([appJs], { type: 'text/javascript' });
       const appBlobUrl = URL.createObjectURL(appBlob);
       const oldScript = '<script src="v2.js?v=3.0.0"><\/script>';
-      const newScripts = '<script src="./intelligence-core-v4.3.js?v=4.3.0"><\/script><script src="' + appBlobUrl + '"><\/script>';
+      const newScripts = '<script src="./intelligence-core-v4.3.1.js?v=4.3.1"><\/script><script src="' + appBlobUrl + '"><\/script>';
       if (!html.includes(oldScript)) throw new Error('O carregador da interface mudou.');
       html = html.replace(oldScript, newScripts);
 
