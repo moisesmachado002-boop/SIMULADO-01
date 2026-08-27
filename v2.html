@@ -3,271 +3,291 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#08101d" />
-  <meta name="description" content="Mentor IA 2.0 — estudo, QConcursos, banco próprio e mentora adaptativa para PMBA." />
-  <title>Mentor IA 2.0 — PMBA</title>
+  <meta name="theme-color" content="#f2c500" />
+  <meta name="description" content="Mentor IA — painel de estudos adaptativo para PMBA." />
+  <title>Mentor IA — PMBA</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="v2.css?v=2.0.0" />
+  <link rel="stylesheet" href="v2.css?v=3.0.0" />
 </head>
 <body>
-  <div class="app" id="app">
+  <div class="shell" id="appShell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu principal">
+      <div class="sidebar-brand">
+        <button class="brand-button" data-page="dashboard" aria-label="Abrir painel">
+          <span class="brand-badge">M</span>
+          <span class="brand-copy"><strong>MENTOR IA</strong><small>PMBA 2026</small></span>
+        </button>
+        <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">×</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">⌂</span><span>Painel</span></button>
+        <button class="nav-item" data-page="daily"><span class="nav-icon">▣</span><span>Metas Diárias</span></button>
+        <button class="nav-item" data-page="week"><span class="nav-icon">▦</span><span>Resumo da Semana</span></button>
+        <button class="nav-item" data-page="questions"><span class="nav-icon">✓</span><span>Questões</span></button>
+        <button class="nav-item" data-page="performance"><span class="nav-icon">◔</span><span>Meu Desempenho</span></button>
+
+        <button class="nav-item nav-parent" id="planMenuToggle" aria-expanded="true">
+          <span class="nav-icon">⚙</span><span>Meu Plano</span><span class="nav-caret">⌄</span>
+        </button>
+        <div class="nav-submenu open" id="planSubmenu">
+          <button data-page="plan">Disciplinas do Plano</button>
+          <button data-page="plan" data-plan-focus="schedule">Editar Horários</button>
+          <button data-action="replan">Replanejar agora</button>
+          <button data-page="syllabus">Rever Assuntos do Plano</button>
+        </div>
+
+        <button class="nav-item" data-page="syllabus"><span class="nav-icon">☷</span><span>Edital do Plano</span></button>
+        <button class="nav-item" data-page="mentor"><span class="nav-icon">✦</span><span>Mentora IA</span></button>
+        <button class="nav-item" data-page="settings"><span class="nav-icon">◉</span><span>Configurações</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status"><span class="status-dot"></span><span id="sidebarSync">Conectando...</span></div>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <header class="topbar">
-      <button class="brand" data-go="home" aria-label="Ir para início">
-        <span class="brand-mark">M</span>
-        <span><strong>Mentor IA</strong><small>2.0 • PMBA</small></span>
-      </button>
-      <div class="top-actions">
-        <span class="sync-pill" id="syncPill">Conectando…</span>
-        <button class="avatar-btn" id="accountBtn" aria-label="Conta">M</button>
+      <div class="topbar-left">
+        <button class="menu-button" id="menuButton" aria-label="Abrir menu">☰</button>
+        <div class="topbar-title"><strong id="topbarPageTitle">Painel</strong><small id="topbarPageSubtitle">Seu estudo em um só lugar</small></div>
+      </div>
+      <div class="topbar-actions">
+        <span class="sync-badge" id="syncBadge">Conectando...</span>
+        <button class="icon-button" data-page="mentor" aria-label="Ajuda da Mentora">?</button>
+        <button class="icon-button" data-page="daily" aria-label="Metas do dia">🔔</button>
+        <button class="account-button" id="accountButton">
+          <span class="avatar">M</span><span id="accountName">Conta</span><span>⌄</span>
+        </button>
       </div>
     </header>
 
-    <main>
-      <section class="view active" data-view="home">
-        <div class="hero">
-          <div class="hero-copy">
-            <span class="eyebrow">PAINEL INTELIGENTE</span>
-            <h1 id="homeGreeting">Seu estudo, sem bagunça.</h1>
-            <p id="homeSub">A Mentora cruza edital, questões, revisões e histórico para dizer o próximo passo.</p>
+    <main class="content">
+      <section class="page active" data-page-view="dashboard">
+        <div class="welcome-panel panel">
+          <div class="welcome-copy">
+            <p class="hello" id="dashboardHello">Olá 👋</p>
+            <h1>Seu plano de estudos está em andamento.</h1>
+            <div class="progress-label"><span>Progresso do edital medido</span><strong id="dashboardProgressText">0%</strong></div>
+            <div class="progress-track"><span id="dashboardProgressBar"></span></div>
+            <p class="muted" id="dashboardPlanMessage">A Mentora organiza revisões, questões e prioridades sem ultrapassar duas matérias por dia.</p>
           </div>
-          <button class="primary hero-cta" data-mentor-intent="today">✦ Ver meu próximo passo</button>
+          <button class="primary-button" data-page="daily">Ver metas de hoje</button>
         </div>
 
-        <div class="metric-grid" id="homeMetrics">
-          <article class="metric"><span>Questões</span><strong id="metricQuestions">—</strong><small>evidências</small></article>
-          <article class="metric"><span>Acerto</span><strong id="metricAccuracy">—</strong><small>geral</small></article>
-          <article class="metric"><span>Edital medido</span><strong id="metricMeasured">—</strong><small>tópicos</small></article>
-          <article class="metric"><span>Revisões</span><strong id="metricReviews">—</strong><small>vencidas</small></article>
+        <div class="stat-grid four">
+          <article class="stat-card"><span>Dias estudando</span><strong id="statDays">0</strong><small>dias com atividade</small></article>
+          <article class="stat-card"><span>Horas registradas</span><strong id="statHours">0h</strong><small>estudo + baterias</small></article>
+          <article class="stat-card"><span>Tempo em questões</span><strong id="statTimed">0h</strong><small>tempo cronometrado</small></article>
+          <article class="stat-card"><span>Taxa de acertos</span><strong id="statAccuracy">—</strong><small>evidências distintas</small></article>
         </div>
 
-        <article class="mentor-now card accent-card">
-          <div class="card-title-row">
-            <div><span class="eyebrow">MENTORA • AGORA</span><h2 id="homeMentorHeadline">Carregando sua leitura…</h2></div>
-            <span class="evidence-badge" id="homeEvidence">—</span>
-          </div>
-          <p id="homeMentorSummary">Vou usar apenas o que você realmente fez.</p>
-          <div class="next-action" id="homeNextAction">Aguardando dados…</div>
-          <button class="secondary" data-go="mentor">Abrir análise completa</button>
-        </article>
-
-        <div class="two-col">
-          <section class="card">
-            <div class="card-title-row"><div><span class="eyebrow">MISSÃO DE HOJE</span><h2>Seu roteiro</h2></div><button class="text-btn" data-go="study">Estudo</button></div>
-            <div id="todayPlan" class="stack-list"><div class="empty">Carregando plano…</div></div>
+        <div class="dashboard-grid">
+          <section class="panel quick-panel">
+            <div class="panel-heading"><div><small>ATALHOS RÁPIDOS</small><h2>Acesso direto</h2></div></div>
+            <div class="quick-actions">
+              <button data-page="daily"><span>🎯</span><strong>Metas<br>Diárias</strong></button>
+              <button data-page="week"><span>🗓️</span><strong>Resumo<br>da Semana</strong></button>
+              <button data-page="questions"><span>📝</span><strong>Questões</strong></button>
+              <button data-page="performance"><span>📊</span><strong>Meu<br>Desempenho</strong></button>
+              <button data-page="plan"><span>📚</span><strong>Meu<br>Plano</strong></button>
+              <button data-page="mentor"><span>✦</span><strong>Mentora<br>IA</strong></button>
+            </div>
           </section>
-          <section class="card">
-            <div class="card-title-row"><div><span class="eyebrow">RAIO-X</span><h2>Onde apertar</h2></div><button class="text-btn" data-mentor-intent="weakness">Atualizar</button></div>
-            <div id="weakList" class="stack-list"><div class="empty">Ainda sem leitura.</div></div>
+
+          <section class="panel mentor-panel">
+            <div class="panel-heading"><div><small>MENTORA • AGORA</small><h2 id="dashboardMentorHeadline">Analisando seu histórico...</h2></div><span class="pill" id="dashboardEvidence">—</span></div>
+            <p id="dashboardMentorSummary" class="muted">A leitura usa apenas o que você realmente respondeu e estudou.</p>
+            <div class="mentor-next" id="dashboardMentorNext">Aguardando dados...</div>
+            <button class="text-button" data-page="mentor">Abrir análise completa →</button>
           </section>
         </div>
-      </section>
 
-      <section class="view" data-view="study">
-        <div class="page-head">
-          <span class="eyebrow">ESTUDO</span>
-          <h1>Edital + execução</h1>
-          <p>Aqui fica teoria, progresso do edital e o registro do que você realmente estudou. Questões ficam em abas próprias.</p>
-        </div>
-
-        <article class="card filter-card">
-          <div class="filter-grid">
-            <label>Matéria<select id="studySubject"><option value="">Escolha a matéria</option></select></label>
-            <label>Assunto<select id="studyTopic"><option value="">Escolha o assunto</option></select></label>
-          </div>
-          <div id="studyTopicStatus" class="topic-status"><span>Selecione um assunto para ver o diagnóstico.</span></div>
-          <div class="study-log-row">
-            <label>Minutos estudados<input type="number" id="studyMinutes" min="1" max="480" value="30" /></label>
-            <button class="primary" id="recordStudyBtn">✓ Registrar estudo</button>
-          </div>
-          <p class="helper" id="studyMessage">O registro entra no seu histórico de estudo e fica disponível no painel.</p>
-        </article>
-
-        <section class="card">
-          <div class="card-title-row"><div><span class="eyebrow">EDITAL VERTICALIZADO</span><h2>Mapa completo</h2></div><span class="count-pill" id="syllabusCount">—</span></div>
-          <div class="syllabus-filters">
-            <button class="chip active" data-syllabus-filter="all">Todos</button>
-            <button class="chip" data-syllabus-filter="unseen">Não medidos</button>
-            <button class="chip" data-syllabus-filter="weak">Baixo desempenho</button>
-            <button class="chip" data-syllabus-filter="strong">Bem encaminhados</button>
-          </div>
-          <div id="syllabusMap" class="syllabus-map"><div class="empty">Carregando edital…</div></div>
+        <section class="panel week-preview-panel">
+          <div class="panel-heading"><div><small>PLANEJAMENTO</small><h2>Próximos dias</h2></div><button class="text-button" data-page="week">Ver semana</button></div>
+          <div class="week-strip" id="dashboardWeekStrip"><div class="empty-state">Carregando plano...</div></div>
         </section>
       </section>
 
-      <section class="view" data-view="external">
-        <div class="page-head">
-          <span class="eyebrow">QUESTÕES EXTERNAS</span>
-          <h1>QConcursos inteligente</h1>
-          <p>Você escolhe o item do edital; a plataforma prepara o recorte e depois traz o resultado de volta para a Mentora.</p>
+      <section class="page" data-page-view="daily">
+        <div class="page-header"><div><p class="eyebrow">METAS DIÁRIAS</p><h1 id="dailyGreeting">Seu estudo de hoje</h1><p class="muted">Execute o que foi planejado e registre o que fizer fora da plataforma.</p></div><button class="secondary-button" id="dailyRefreshButton">Atualizar</button></div>
+        <div class="stat-grid four compact-stats">
+          <article class="stat-card icon-stat"><span>📅</span><div><strong id="dailyDate">—</strong><small>dia do plano</small></div></article>
+          <article class="stat-card icon-stat"><span>📚</span><div><strong id="dailySubjects">0</strong><small>matérias</small></div></article>
+          <article class="stat-card icon-stat"><span>🕒</span><div><strong id="dailyMinutes">0 min</strong><small>meta do dia</small></div></article>
+          <article class="stat-card icon-stat"><span>✅</span><div><strong id="dailyCompleted">0%</strong><small>concluído</small></div></article>
+        </div>
+        <div class="daily-progress panel"><div class="progress-label"><span>Progresso diário</span><strong id="dailyProgressText">0%</strong></div><div class="progress-track"><span id="dailyProgressBar"></span></div></div>
+        <div class="daily-list" id="dailyTasks"><div class="empty-state panel">Carregando metas...</div></div>
+        <button class="outside-study" id="outsideStudyButton">＋ Estudou algo fora do planejado? Registrar aqui</button>
+      </section>
+
+      <section class="page" data-page-view="week">
+        <div class="page-header"><div><p class="eyebrow">RESUMO DA SEMANA</p><h1>Sua semana de estudos</h1><p class="muted">Veja o que estava planejado, o que foi concluído e onde o plano precisa se adaptar.</p></div><button class="secondary-button" data-action="replan">Replanejar</button></div>
+        <div class="stat-grid four compact-stats">
+          <article class="stat-card"><span>Minutos planejados</span><strong id="weekPlanned">0</strong><small>na semana</small></article>
+          <article class="stat-card"><span>Minutos concluídos</span><strong id="weekDone">0</strong><small>metas finalizadas</small></article>
+          <article class="stat-card"><span>Questões planejadas</span><strong id="weekQuestions">0</strong><small>novas + revisões</small></article>
+          <article class="stat-card"><span>Execução</span><strong id="weekRate">0%</strong><small>do planejamento</small></article>
+        </div>
+        <section class="panel"><div class="week-board" id="weekBoard"><div class="empty-state">Carregando semana...</div></div></section>
+      </section>
+
+      <section class="page" data-page-view="questions">
+        <div class="page-header"><div><p class="eyebrow">QUESTÕES</p><h1>Prática e diagnóstico</h1><p class="muted">Banco próprio e QConcursos ficam separados, mas alimentam a mesma leitura da Mentora.</p></div></div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-question-tab="bank">Banco da Plataforma</button>
+          <button class="tab" data-question-tab="external">QConcursos</button>
         </div>
 
-        <div class="flow-steps">
-          <span class="active">1 Filtrar</span><span>2 Resolver no QC</span><span>3 Registrar</span><span>4 Relatório IA</span>
+        <div class="question-tab active" data-question-panel="bank">
+          <section class="panel filters-panel">
+            <div class="form-grid three">
+              <label>Matéria<select id="bankSubject"><option value="">Todas</option></select></label>
+              <label>Assunto<select id="bankTopic"><option value="">Todos</option></select></label>
+              <label>Modo<select id="bankMode"><option value="unseen">Priorizar inéditas</option><option value="review">Revisões</option><option value="all">Todas</option></select></label>
+            </div>
+            <div class="inline-stats"><span><strong id="bankAvailable">0</strong> disponíveis</span><span><strong id="bankNew">0</strong> inéditas</span><span><strong id="bankSessionScore">0/0</strong> nesta sessão</span></div>
+            <div class="actions"><button class="primary-button" id="bankStartButton">Iniciar sessão</button><span class="helper" id="bankHelper">Escolha um filtro e comece.</span></div>
+          </section>
+
+          <article class="panel question-card hidden" id="questionCard">
+            <div class="question-meta"><span id="questionMeta">Questão</span><strong id="questionTimer">00:00</strong></div>
+            <div class="question-tags"><span id="questionSubject" class="tag">Matéria</span><span id="questionTopic" class="tag muted-tag">Assunto</span><span id="questionState" class="tag gray-tag">NOVA</span></div>
+            <h2 id="questionStatement">Enunciado</h2>
+            <div class="answer-list" id="questionAnswers"></div>
+            <div class="confidence-selector"><span>Confiança na resposta:</span><button data-confidence="2">Baixa</button><button class="active" data-confidence="3">Média</button><button data-confidence="5">Alta</button></div>
+            <button class="primary-button hidden" id="questionConfirmButton">Confirmar resposta</button>
+            <div class="question-feedback hidden" id="questionFeedback"></div>
+            <button class="secondary-button hidden" id="questionNextButton">Próxima questão →</button>
+          </article>
         </div>
 
-        <article class="card qc-builder">
-          <div class="card-title-row"><div><span class="eyebrow">1 • MONTE O CADERNO</span><h2>Filtro pelo edital</h2></div><span class="qc-badge">QCONCURSOS</span></div>
-          <div class="filter-grid three">
-            <label>Matéria<select id="qcSubject"><option value="">Escolha</option></select></label>
-            <label>Assunto<select id="qcTopic"><option value="">Escolha</option></select></label>
-            <label>Banca<select id="qcBoard"><option value="">Todas</option><option value="189">IBFC</option><option value="2">CEBRASPE</option><option value="152">VUNESP</option><option value="63">FGV</option></select></label>
-          </div>
-          <div id="qcPresetWrap" class="hidden">
-            <label>Subfoco<select id="qcPreset"></select></label>
-          </div>
-          <div class="qc-preview" id="qcPreview">
-            <div><strong>Escolha um assunto.</strong><span>Vou procurar primeiro um filtro exato já salvo para ele.</span></div>
-          </div>
-          <div class="action-row">
-            <button class="primary" id="qcOpenBtn">Abrir caderno no QConcursos ↗</button>
-            <button class="secondary" id="qcSaveBtn">Salvar este filtro</button>
-          </div>
-          <p class="helper">A 2.0 não pede sua senha do QConcursos e não copia questões protegidas. Ela prepara e guarda o recorte de estudo.</p>
-        </article>
+        <div class="question-tab" data-question-panel="external">
+          <section class="panel">
+            <div class="panel-heading"><div><small>1 • MONTE A BATERIA</small><h2>Filtro pelo edital</h2></div><span class="pill">QCONCURSOS</span></div>
+            <div class="form-grid three">
+              <label>Matéria<select id="qcSubject"><option value="">Escolha</option></select></label>
+              <label>Assunto<select id="qcTopic"><option value="">Escolha</option></select></label>
+              <label>Banca<select id="qcBoard"><option value="">Todas</option><option value="189">IBFC</option><option value="2">CEBRASPE</option><option value="152">VUNESP</option><option value="63">FGV</option></select></label>
+            </div>
+            <div class="qc-preview" id="qcPreview"><strong>Escolha um assunto.</strong><span>A plataforma vai preparar o melhor recorte disponível.</span></div>
+            <div class="actions"><button class="primary-button" id="qcOpenButton">Abrir no QConcursos ↗</button><button class="secondary-button" id="qcSaveButton">Salvar filtro</button></div>
+          </section>
 
-        <article class="card result-card">
-          <div class="card-title-row"><div><span class="eyebrow">2 • VOLTE COM O RESULTADO</span><h2>Registrar bateria</h2></div><span class="count-pill" id="qcSelectedLabel">Nenhum tópico</span></div>
-          <div class="result-grid">
-            <label>Questões feitas<input id="qcTotal" type="number" min="1" max="500" value="10" /></label>
-            <label>Acertos<input id="qcCorrect" type="number" min="0" max="500" value="0" /></label>
-            <label>Confiança<select id="qcConfidence"><option value="2">Baixa</option><option value="3" selected>Média</option><option value="5">Alta</option></select></label>
-            <label>Tempo total (min)<input id="qcDuration" type="number" min="0" max="720" placeholder="Opcional" /></label>
+          <section class="panel qc-result-panel">
+            <div class="panel-heading"><div><small>2 • VOLTE COM O RESULTADO</small><h2>Registrar bateria</h2></div><span class="pill" id="qcEvidencePill">0/10 evidências</span></div>
+            <div class="form-grid four">
+              <label>Questões feitas<input id="qcTotal" type="number" min="1" max="500" value="10" /></label>
+              <label>Acertos<input id="qcCorrect" type="number" min="0" max="500" value="0" /></label>
+              <label>Confiança<select id="qcConfidence"><option value="2">Baixa</option><option value="3" selected>Média</option><option value="5">Alta</option></select></label>
+              <label>Tempo total (min)<input id="qcDuration" type="number" min="0" max="720" placeholder="Opcional" /></label>
+            </div>
+            <label>Observação<textarea id="qcNotes" rows="2" maxlength="1200" placeholder="Ex.: errei por conceito, interpretação, cálculo, pressa..."></textarea></label>
+            <button class="primary-button" id="qcRecordButton">Registrar e analisar</button>
+            <p class="helper" id="qcMessage">O resultado entra no desempenho e na confiança da amostra do tópico.</p>
+          </section>
+
+          <section class="panel hidden" id="qcReportPanel">
+            <div class="panel-heading"><div><small>RELATÓRIO DA MENTORA</small><h2 id="qcReportHeadline">Resultado analisado</h2></div><span class="pill" id="qcReportEvidence">—</span></div>
+            <p class="muted" id="qcReportSummary"></p><div class="mentor-next" id="qcReportNext"></div>
+          </section>
+
+          <section class="panel"><div class="panel-heading"><div><small>HISTÓRICO</small><h2>Últimas baterias externas</h2></div><span class="pill" id="externalCount">0</span></div><div class="table-list" id="externalHistory"><div class="empty-state">Nenhuma bateria registrada.</div></div></section>
+        </div>
+      </section>
+
+      <section class="page" data-page-view="performance">
+        <div class="page-header"><div><p class="eyebrow">MEU DESEMPENHO</p><h1>Seu raio-X de aprendizagem</h1><p class="muted">Desempenho e confiança da amostra são separados para evitar conclusões falsas com poucas questões.</p></div><button class="secondary-button" data-mentor-intent="weakness">Atualizar análise</button></div>
+        <div class="stat-grid four">
+          <article class="stat-card"><span>Evidências</span><strong id="perfEvidence">0</strong><small>questões distintas + externas</small></article>
+          <article class="stat-card"><span>Acerto geral</span><strong id="perfAccuracy">—</strong><small>desempenho atual</small></article>
+          <article class="stat-card"><span>Tópicos medidos</span><strong id="perfMeasured">0</strong><small>10+ evidências</small></article>
+          <article class="stat-card"><span>Consolidados</span><strong id="perfConsolidated">0</strong><small>retenção confirmada</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-heading"><div><small>PRIORIDADE</small><h2>Onde apertar</h2></div></div><div class="table-list" id="weakTopics"><div class="empty-state">Sem dados suficientes.</div></div></section>
+          <section class="panel"><div class="panel-heading"><div><small>PONTOS FORTES</small><h2>Bem encaminhados</h2></div></div><div class="table-list" id="strongTopics"><div class="empty-state">Sem tópicos consolidados.</div></div></section>
+        </div>
+        <section class="panel"><div class="panel-heading"><div><small>POR MATÉRIA</small><h2>Desempenho do plano</h2></div></div><div class="performance-table" id="subjectPerformance"></div></section>
+      </section>
+
+      <section class="page" data-page-view="plan">
+        <div class="page-header"><div><p class="eyebrow">MEU PLANO</p><h1>Disciplinas do Plano</h1><p class="muted">Organize a carga de estudo. O plano limita o dia a no máximo duas matérias.</p></div><button class="primary-button" data-action="replan">Replanejar agora</button></div>
+        <section class="panel preferences-panel" id="schedulePreferences">
+          <div class="panel-heading"><div><small>HORÁRIOS</small><h2>Carga diária</h2></div></div>
+          <div class="form-grid three">
+            <label>Minutos por dia<input type="number" id="prefDailyMinutes" min="20" max="480" /></label>
+            <label>Percentual de revisão<input type="number" id="prefReviewRatio" min="0" max="100" /></label>
+            <label>Margem de segurança<input type="number" id="prefBuffer" min="0" max="50" /></label>
           </div>
-          <textarea id="qcNotes" rows="2" maxlength="1200" placeholder="Observação opcional: onde sentiu dificuldade? errava conta? conceito? leitura?"></textarea>
-          <button class="primary" id="qcRecordBtn">Registrar e gerar relatório da IA</button>
-          <p class="helper" id="qcMessage">Depois do registro, acertos e erros atualizam seu desempenho e a confiança da amostra do tópico.</p>
-        </article>
-
-        <article class="card hidden" id="qcReportCard">
-          <div class="card-title-row"><div><span class="eyebrow">RELATÓRIO AUTOMÁTICO</span><h2 id="qcReportHeadline">Resultado analisado</h2></div><span class="evidence-badge" id="qcReportEvidence">—</span></div>
-          <p id="qcReportSummary"></p>
-          <div class="next-action" id="qcReportNext"></div>
-        </article>
-
-        <section class="card">
-          <div class="card-title-row"><div><span class="eyebrow">HISTÓRICO EXTERNO</span><h2>Últimas baterias</h2></div><span class="count-pill" id="externalCount">0</span></div>
-          <div id="externalHistory" class="stack-list"><div class="empty">Nenhuma bateria registrada ainda.</div></div>
+          <div class="weekday-picker" id="weekdayPicker">
+            <label><input type="checkbox" value="1">Seg</label><label><input type="checkbox" value="2">Ter</label><label><input type="checkbox" value="3">Qua</label><label><input type="checkbox" value="4">Qui</label><label><input type="checkbox" value="5">Sex</label><label><input type="checkbox" value="6">Sáb</label><label><input type="checkbox" value="7">Dom</label>
+          </div>
+          <button class="secondary-button" id="savePreferencesButton">Salvar horários</button>
         </section>
+        <div class="subject-card-grid" id="planSubjects"><div class="empty-state panel">Carregando disciplinas...</div></div>
       </section>
 
-      <section class="view" data-view="bank">
-        <div class="page-head">
-          <span class="eyebrow">QUESTÕES DA PLATAFORMA</span>
-          <h1>Banco próprio</h1>
-          <p>Separado do QConcursos: aqui você resolve as questões já cadastradas, recebe correção completa e alimenta as revisões.</p>
-        </div>
-
-        <article class="card filter-card">
-          <div class="filter-grid">
-            <label>Matéria<select id="bankSubject"><option value="">Todas</option></select></label>
-            <label>Assunto<select id="bankTopic"><option value="">Todos</option></select></label>
-          </div>
-          <div class="bank-stats-line"><span><strong id="bankAvailable">0</strong> disponíveis</span><span><strong id="bankNewCount">0</strong> inéditas</span><span><strong id="bankSessionScore">0/0</strong> sessão</span></div>
-          <button class="primary" id="bankStartBtn">Iniciar sessão</button>
-          <p class="helper" id="bankMessage">A sessão prioriza questões que ainda não foram vistas.</p>
-        </article>
-
-        <article class="card question-card hidden" id="questionCard">
-          <div class="question-top"><span id="questionMeta">Questão</span><span id="questionTimer">00:00</span></div>
-          <div class="question-tags"><span id="questionSubject" class="tag">Matéria</span><span id="questionTopic" class="tag muted">Assunto</span><span id="questionState" class="tag subtle">NOVA</span></div>
-          <h2 id="questionStatement">Enunciado</h2>
-          <div id="questionAnswers" class="answers"></div>
-          <div class="confidence-row" id="bankConfidenceRow"><span>Confiança:</span><button data-bank-confidence="2">Baixa</button><button data-bank-confidence="3" class="active">Média</button><button data-bank-confidence="5">Alta</button></div>
-          <button class="primary hidden" id="bankConfirmBtn">Confirmar resposta</button>
-          <div id="questionFeedback" class="question-feedback hidden"></div>
-          <button class="secondary hidden" id="bankNextBtn">Próxima questão →</button>
-        </article>
+      <section class="page" data-page-view="syllabus">
+        <div class="page-header"><div><p class="eyebrow">EDITAL DO PLANO</p><h1>Edital verticalizado</h1><p class="muted">Acompanhe assunto por assunto, com evidência, desempenho e estado de retenção.</p></div></div>
+        <section class="panel filters-panel"><div class="form-grid two"><label>Matéria<select id="syllabusSubject"><option value="">Todas</option></select></label><label>Estado<select id="syllabusFilter"><option value="all">Todos</option><option value="unmeasured">Não medidos</option><option value="weak">Baixo desempenho</option><option value="strong">Bem encaminhados</option><option value="consolidated">Consolidados</option></select></label></div></section>
+        <div class="syllabus-list" id="syllabusList"><div class="empty-state panel">Carregando edital...</div></div>
       </section>
 
-      <section class="view" data-view="mentor">
-        <div class="page-head">
-          <span class="eyebrow">MENTORA IA</span>
-          <h1>Ela conhece seu histórico.</h1>
-          <p>Não é um chat solto: as respostas abaixo são calculadas a partir das suas questões, revisões, desempenho, confiança da amostra e plano.</p>
-        </div>
-
+      <section class="page" data-page-view="mentor">
+        <div class="page-header"><div><p class="eyebrow">MENTORA IA</p><h1>Análise baseada no seu histórico</h1><p class="muted">Sem achismo: a Mentora usa questões, revisões, plano e evidências registradas.</p></div></div>
         <div class="mentor-actions">
-          <button class="mentor-action active" data-mentor-intent="today"><span>Hoje</span><small>O que faço agora?</small></button>
-          <button class="mentor-action" data-mentor-intent="weakness"><span>Fraquezas</span><small>Onde estou pior?</small></button>
-          <button class="mentor-action" data-mentor-intent="pattern"><span>Padrões</span><small>Como estou errando?</small></button>
-          <button class="mentor-action" data-mentor-intent="advance"><span>Avançar?</span><small>Posso mudar de assunto?</small></button>
-          <button class="mentor-action" data-mentor-intent="review"><span>Revisões</span><small>O que está vencido?</small></button>
+          <button class="mentor-action active" data-mentor-intent="today"><strong>Hoje</strong><span>O que faço agora?</span></button>
+          <button class="mentor-action" data-mentor-intent="weakness"><strong>Fraquezas</strong><span>Onde estou pior?</span></button>
+          <button class="mentor-action" data-mentor-intent="pattern"><strong>Padrões</strong><span>Como estou errando?</span></button>
+          <button class="mentor-action" data-mentor-intent="advance"><strong>Avançar?</strong><span>Posso mudar de assunto?</span></button>
+          <button class="mentor-action" data-mentor-intent="review"><strong>Revisões</strong><span>O que está vencido?</span></button>
         </div>
-
-        <article class="card mentor-report">
-          <div class="mentor-orb">✦</div>
-          <div>
-            <div class="card-title-row"><div><span class="eyebrow" id="mentorIntentLabel">LEITURA DE HOJE</span><h2 id="mentorHeadline">Carregando…</h2></div><span class="evidence-badge" id="mentorEvidence">—</span></div>
-            <p id="mentorSummary">Aguarde a leitura do seu histórico.</p>
-            <div class="next-action" id="mentorNext">—</div>
-          </div>
-        </article>
-
-        <div class="two-col">
-          <section class="card"><span class="eyebrow">POR QUÊ?</span><h2>Evidências usadas</h2><div id="mentorReasons" class="reason-list"><div class="empty">—</div></div></section>
-          <section class="card"><span class="eyebrow">FOCO</span><h2>Tópicos prioritários</h2><div id="mentorFocus" class="stack-list"><div class="empty">—</div></div></section>
-        </div>
-
-        <section class="card">
-          <div class="card-title-row"><div><span class="eyebrow">O QUE A IA SABE</span><h2>Seu rastro de estudo</h2></div><button class="text-btn" id="refreshAllBtn">Atualizar</button></div>
-          <div class="knowledge-strip" id="knowledgeStrip">
-            <div><strong id="knowAttempts">—</strong><span>questões internas distintas</span></div>
-            <div><strong id="knowExternal">—</strong><span>questões externas</span></div>
-            <div><strong id="knowSessions">—</strong><span>sessões de estudo</span></div>
-            <div><strong id="knowTopics">—</strong><span>tópicos medidos</span></div>
-          </div>
+        <section class="panel mentor-report">
+          <div class="mentor-orb">✦</div><div><div class="panel-heading"><div><small id="mentorIntentLabel">LEITURA DE HOJE</small><h2 id="mentorHeadline">Carregando...</h2></div><span class="pill" id="mentorEvidence">—</span></div><p class="muted" id="mentorSummary">Aguarde a leitura do seu histórico.</p><div class="mentor-next" id="mentorNext">—</div></div>
         </section>
+        <div class="dashboard-grid"><section class="panel"><div class="panel-heading"><div><small>POR QUÊ?</small><h2>Evidências usadas</h2></div></div><div class="reason-list" id="mentorReasons"></div></section><section class="panel"><div class="panel-heading"><div><small>FOCO</small><h2>Tópicos prioritários</h2></div></div><div class="table-list" id="mentorFocus"></div></section></div>
+      </section>
+
+      <section class="page" data-page-view="settings">
+        <div class="page-header"><div><p class="eyebrow">CONFIGURAÇÕES</p><h1>Conta e plataforma</h1><p class="muted">Preferências básicas e ferramentas de manutenção do painel.</p></div></div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-heading"><div><small>CONTA</small><h2 id="settingsName">Mentor IA</h2></div></div><p class="muted" id="settingsEmail">—</p><button class="secondary-button" id="settingsSignOut">Sair da conta</button></section>
+          <section class="panel"><div class="panel-heading"><div><small>MANUTENÇÃO</small><h2>Sincronização</h2></div></div><p class="muted">Recarregue os dados da nuvem e refaça o planejamento quando necessário.</p><div class="actions"><button class="secondary-button" id="settingsReload">Atualizar dados</button><button class="primary-button" data-action="replan">Replanejar</button></div></section>
+        </div>
       </section>
     </main>
-
-    <nav class="bottom-nav" aria-label="Navegação principal">
-      <button class="nav active" data-go="home"><span>⌂</span><small>Hoje</small></button>
-      <button class="nav" data-go="study"><span>▤</span><small>Estudo</small></button>
-      <button class="nav" data-go="external"><span>↗</span><small>QConcursos</small></button>
-      <button class="nav" data-go="bank"><span>▣</span><small>Banco</small></button>
-      <button class="nav" data-go="mentor"><span>✦</span><small>IA</small></button>
-    </nav>
   </div>
 
   <div class="modal" id="authModal" aria-hidden="true">
     <div class="modal-card">
       <button class="modal-close" id="authClose" aria-label="Fechar">×</button>
-      <span class="brand-mark large">M</span>
-      <span class="eyebrow">MENTOR IA 2.0</span>
-      <h2 id="authTitle">Entrar</h2>
-      <p>Entre na mesma conta da sua mentoria para carregar todo o histórico.</p>
+      <span class="brand-badge large">M</span>
+      <p class="eyebrow">MENTOR IA</p><h2 id="authTitle">Entrar</h2><p class="muted">Use a mesma conta para carregar todo o seu histórico.</p>
       <label id="authNameWrap" class="hidden">Nome<input id="authName" type="text" autocomplete="name" /></label>
       <label>E-mail<input id="authEmail" type="email" autocomplete="email" /></label>
       <label>Senha<input id="authPassword" type="password" autocomplete="current-password" /></label>
-      <button class="primary" id="authSubmit">Entrar</button>
-      <button class="text-btn center" id="authSwitch">Criar nova conta</button>
+      <button class="primary-button full" id="authSubmit">Entrar</button>
+      <button class="text-button center" id="authSwitch">Criar nova conta</button>
       <p class="form-message" id="authMessage"></p>
     </div>
   </div>
 
-  <div class="modal" id="accountModal" aria-hidden="true">
-    <div class="modal-card compact-modal">
-      <button class="modal-close" id="accountClose" aria-label="Fechar">×</button>
-      <span class="eyebrow">CONTA</span><h2 id="accountName">Mentor IA</h2><p id="accountEmail">—</p>
-      <button class="secondary" id="signOutBtn">Sair da conta</button>
-      <a class="text-link" href="./">Voltar para a versão atual</a>
+  <div class="modal" id="studyModal" aria-hidden="true">
+    <div class="modal-card wide-modal">
+      <button class="modal-close" id="studyModalClose" aria-label="Fechar">×</button>
+      <p class="eyebrow">REGISTRAR ESTUDO</p><h2>Estudo fora do planejado</h2>
+      <div class="form-grid two"><label>Matéria<select id="studyModalSubject"></select></label><label>Assunto<select id="studyModalTopic"></select></label></div>
+      <label>Minutos estudados<input type="number" id="studyModalMinutes" min="1" max="480" value="30" /></label>
+      <button class="primary-button full" id="studyModalSave">Registrar estudo</button>
     </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
-  <script>
-    window.addEventListener('mentor:subject-cap-applied', () => {
-      const key='mentor-v2-subject-cap-refresh';
-      if (sessionStorage.getItem(key)) return;
-      sessionStorage.setItem(key,'1');
-      setTimeout(()=>location.reload(),80);
-    });
-    setTimeout(()=>sessionStorage.removeItem('mentor-v2-subject-cap-refresh'),2500);
-  </script>
-  <script src="schedule-subject-cap.js?v=2.0.0"></script>
-  <script src="v2.js?v=2.0.1"></script>
-  <script src="evidence-depth.js?v=2.1.0"></script>
+  <script src="v2.js?v=3.0.0"></script>
 </body>
 </html>
