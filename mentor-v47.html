@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Mentor IA V4.7</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#f4f4f4;overflow:hidden}iframe{display:block;width:100%;height:100dvh;border:0;background:#f4f4f4}</style>
+</head>
+<body>
+<iframe id="mentorFrame" src="./mentor-v4.html?build=20260827-v46-safe#daily" title="Mentor IA"></iframe>
+<script>
+(() => {
+  const frame = document.getElementById('mentorFrame');
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries++;
+    try {
+      const d = frame.contentDocument;
+      if (!d) return;
+      if (d.getElementById('appShell') && !d.getElementById('mentorV47ControlsScript')) {
+        const s = d.createElement('script');
+        s.id = 'mentorV47ControlsScript';
+        s.src = './controls-v47.js?build=20260827-1705';
+        s.async = false;
+        d.head.appendChild(s);
+        clearInterval(timer);
+      }
+    } catch (e) {}
+    if (tries > 160) clearInterval(timer);
+  }, 250);
+})();
+</script>
+</body>
+</html>
