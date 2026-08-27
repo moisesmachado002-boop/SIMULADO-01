@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08101d" />
+  <meta name="description" content="Mentor IA 2.0 — estudo, QConcursos, banco próprio e mentora adaptativa para PMBA." />
+  <title>Mentor IA 2.0 — PMBA</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="v2.css?v=2.0.0" />
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <button class="brand" data-go="home" aria-label="Ir para início">
+        <span class="brand-mark">M</span>
+        <span><strong>Mentor IA</strong><small>2.0 • PMBA</small></span>
+      </button>
+      <div class="top-actions">
+        <span class="sync-pill" id="syncPill">Conectando…</span>
+        <button class="avatar-btn" id="accountBtn" aria-label="Conta">M</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" data-view="home">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">PAINEL INTELIGENTE</span>
+            <h1 id="homeGreeting">Seu estudo, sem bagunça.</h1>
+            <p id="homeSub">A Mentora cruza edital, questões, revisões e histórico para dizer o próximo passo.</p>
+          </div>
+          <button class="primary hero-cta" data-mentor-intent="today">✦ Ver meu próximo passo</button>
+        </div>
+
+        <div class="metric-grid" id="homeMetrics">
+          <article class="metric"><span>Questões</span><strong id="metricQuestions">—</strong><small>evidências</small></article>
+          <article class="metric"><span>Acerto</span><strong id="metricAccuracy">—</strong><small>geral</small></article>
+          <article class="metric"><span>Edital medido</span><strong id="metricMeasured">—</strong><small>tópicos</small></article>
+          <article class="metric"><span>Revisões</span><strong id="metricReviews">—</strong><small>vencidas</small></article>
+        </div>
+
+        <article class="mentor-now card accent-card">
+          <div class="card-title-row">
+            <div><span class="eyebrow">MENTORA • AGORA</span><h2 id="homeMentorHeadline">Carregando sua leitura…</h2></div>
+            <span class="evidence-badge" id="homeEvidence">—</span>
+          </div>
+          <p id="homeMentorSummary">Vou usar apenas o que você realmente fez.</p>
+          <div class="next-action" id="homeNextAction">Aguardando dados…</div>
+          <button class="secondary" data-go="mentor">Abrir análise completa</button>
+        </article>
+
+        <div class="two-col">
+          <section class="card">
+            <div class="card-title-row"><div><span class="eyebrow">MISSÃO DE HOJE</span><h2>Seu roteiro</h2></div><button class="text-btn" data-go="study">Estudo</button></div>
+            <div id="todayPlan" class="stack-list"><div class="empty">Carregando plano…</div></div>
+          </section>
+          <section class="card">
+            <div class="card-title-row"><div><span class="eyebrow">RAIO-X</span><h2>Onde apertar</h2></div><button class="text-btn" data-mentor-intent="weakness">Atualizar</button></div>
+            <div id="weakList" class="stack-list"><div class="empty">Ainda sem leitura.</div></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" data-view="study">
+        <div class="page-head">
+          <span class="eyebrow">ESTUDO</span>
+          <h1>Edital + execução</h1>
+          <p>Aqui fica teoria, progresso do edital e o registro do que você realmente estudou. Questões ficam em abas próprias.</p>
+        </div>
+
+        <article class="card filter-card">
+          <div class="filter-grid">
+            <label>Matéria<select id="studySubject"><option value="">Escolha a matéria</option></select></label>
+            <label>Assunto<select id="studyTopic"><option value="">Escolha o assunto</option></select></label>
+          </div>
+          <div id="studyTopicStatus" class="topic-status"><span>Selecione um assunto para ver o diagnóstico.</span></div>
+          <div class="study-log-row">
+            <label>Minutos estudados<input type="number" id="studyMinutes" min="1" max="480" value="30" /></label>
+            <button class="primary" id="recordStudyBtn">✓ Registrar estudo</button>
+          </div>
+          <p class="helper" id="studyMessage">O registro entra no seu histórico de estudo e fica disponível no painel.</p>
+        </article>
+
+        <section class="card">
+          <div class="card-title-row"><div><span class="eyebrow">EDITAL VERTICALIZADO</span><h2>Mapa completo</h2></div><span class="count-pill" id="syllabusCount">—</span></div>
+          <div class="syllabus-filters">
+            <button class="chip active" data-syllabus-filter="all">Todos</button>
+            <button class="chip" data-syllabus-filter="unseen">Não medidos</button>
+            <button class="chip" data-syllabus-filter="weak">Baixo domínio</button>
+            <button class="chip" data-syllabus-filter="strong">Bem encaminhados</button>
+          </div>
+          <div id="syllabusMap" class="syllabus-map"><div class="empty">Carregando edital…</div></div>
+        </section>
+      </section>
+
+      <section class="view" data-view="external">
+        <div class="page-head">
+          <span class="eyebrow">QUESTÕES EXTERNAS</span>
+          <h1>QConcursos inteligente</h1>
+          <p>Você escolhe o item do edital; a plataforma prepara o recorte e depois traz o resultado de volta para a Mentora.</p>
+        </div>
+
+        <div class="flow-steps">
+          <span class="active">1 Filtrar</span><span>2 Resolver no QC</span><span>3 Registrar</span><span>4 Relatório IA</span>
+        </div>
+
+        <article class="card qc-builder">
+          <div class="card-title-row"><div><span class="eyebrow">1 • MONTE O CADERNO</span><h2>Filtro pelo edital</h2></div><span class="qc-badge">QCONCURSOS</span></div>
+          <div class="filter-grid three">
+            <label>Matéria<select id="qcSubject"><option value="">Escolha</option></select></label>
+            <label>Assunto<select id="qcTopic"><option value="">Escolha</option></select></label>
+            <label>Banca<select id="qcBoard"><option value="">Todas</option><option value="189">IBFC</option><option value="2">CEBRASPE</option><option value="152">VUNESP</option><option value="63">FGV</option></select></label>
+          </div>
+          <div id="qcPresetWrap" class="hidden">
+            <label>Subfoco<select id="qcPreset"></select></label>
+          </div>
+          <div class="qc-preview" id="qcPreview">
+            <div><strong>Escolha um assunto.</strong><span>Vou procurar primeiro um filtro exato já salvo para ele.</span></div>
+          </div>
+          <div class="action-row">
+            <button class="primary" id="qcOpenBtn">Abrir caderno no QConcursos ↗</button>
+            <button class="secondary" id="qcSaveBtn">Salvar este filtro</button>
+          </div>
+          <p class="helper">A 2.0 não pede sua senha do QConcursos e não copia questões protegidas. Ela prepara e guarda o recorte de estudo.</p>
+        </article>
+
+        <article class="card result-card">
+          <div class="card-title-row"><div><span class="eyebrow">2 • VOLTE COM O RESULTADO</span><h2>Registrar bateria</h2></div><span class="count-pill" id="qcSelectedLabel">Nenhum tópico</span></div>
+          <div class="result-grid">
+            <label>Questões feitas<input id="qcTotal" type="number" min="1" max="500" value="10" /></label>
+            <label>Acertos<input id="qcCorrect" type="number" min="0" max="500" value="0" /></label>
+            <label>Confiança<select id="qcConfidence"><option value="2">Baixa</option><option value="3" selected>Média</option><option value="5">Alta</option></select></label>
+            <label>Tempo total (min)<input id="qcDuration" type="number" min="0" max="720" placeholder="Opcional" /></label>
+          </div>
+          <textarea id="qcNotes" rows="2" maxlength="1200" placeholder="Observação opcional: onde sentiu dificuldade? errava conta? conceito? leitura?"></textarea>
+          <button class="primary" id="qcRecordBtn">Registrar e gerar relatório da IA</button>
+          <p class="helper" id="qcMessage">Depois do registro, acertos e erros entram no domínio do tópico.</p>
+        </article>
+
+        <article class="card hidden" id="qcReportCard">
+          <div class="card-title-row"><div><span class="eyebrow">RELATÓRIO AUTOMÁTICO</span><h2 id="qcReportHeadline">Resultado analisado</h2></div><span class="evidence-badge" id="qcReportEvidence">—</span></div>
+          <p id="qcReportSummary"></p>
+          <div class="next-action" id="qcReportNext"></div>
+        </article>
+
+        <section class="card">
+          <div class="card-title-row"><div><span class="eyebrow">HISTÓRICO EXTERNO</span><h2>Últimas baterias</h2></div><span class="count-pill" id="externalCount">0</span></div>
+          <div id="externalHistory" class="stack-list"><div class="empty">Nenhuma bateria registrada ainda.</div></div>
+        </section>
+      </section>
+
+      <section class="view" data-view="bank">
+        <div class="page-head">
+          <span class="eyebrow">QUESTÕES DA PLATAFORMA</span>
+          <h1>Banco próprio</h1>
+          <p>Separado do QConcursos: aqui você resolve as questões já cadastradas, recebe correção completa e alimenta as revisões.</p>
+        </div>
+
+        <article class="card filter-card">
+          <div class="filter-grid">
+            <label>Matéria<select id="bankSubject"><option value="">Todas</option></select></label>
+            <label>Assunto<select id="bankTopic"><option value="">Todos</option></select></label>
+          </div>
+          <div class="bank-stats-line"><span><strong id="bankAvailable">0</strong> disponíveis</span><span><strong id="bankNewCount">0</strong> inéditas</span><span><strong id="bankSessionScore">0/0</strong> sessão</span></div>
+          <button class="primary" id="bankStartBtn">Iniciar sessão</button>
+          <p class="helper" id="bankMessage">A sessão prioriza questões que ainda não foram vistas.</p>
+        </article>
+
+        <article class="card question-card hidden" id="questionCard">
+          <div class="question-top"><span id="questionMeta">Questão</span><span id="questionTimer">00:00</span></div>
+          <div class="question-tags"><span id="questionSubject" class="tag">Matéria</span><span id="questionTopic" class="tag muted">Assunto</span><span id="questionState" class="tag subtle">NOVA</span></div>
+          <h2 id="questionStatement">Enunciado</h2>
+          <div id="questionAnswers" class="answers"></div>
+          <div class="confidence-row" id="bankConfidenceRow"><span>Confiança:</span><button data-bank-confidence="2">Baixa</button><button data-bank-confidence="3" class="active">Média</button><button data-bank-confidence="5">Alta</button></div>
+          <button class="primary hidden" id="bankConfirmBtn">Confirmar resposta</button>
+          <div id="questionFeedback" class="question-feedback hidden"></div>
+          <button class="secondary hidden" id="bankNextBtn">Próxima questão →</button>
+        </article>
+      </section>
+
+      <section class="view" data-view="mentor">
+        <div class="page-head">
+          <span class="eyebrow">MENTORA IA</span>
+          <h1>Ela conhece seu histórico.</h1>
+          <p>Não é um chat solto: as respostas abaixo são calculadas a partir das suas questões, revisões, domínio e plano.</p>
+        </div>
+
+        <div class="mentor-actions">
+          <button class="mentor-action active" data-mentor-intent="today"><span>Hoje</span><small>O que faço agora?</small></button>
+          <button class="mentor-action" data-mentor-intent="weakness"><span>Fraquezas</span><small>Onde estou pior?</small></button>
+          <button class="mentor-action" data-mentor-intent="pattern"><span>Padrões</span><small>Como estou errando?</small></button>
+          <button class="mentor-action" data-mentor-intent="advance"><span>Avançar?</span><small>Posso mudar de assunto?</small></button>
+          <button class="mentor-action" data-mentor-intent="review"><span>Revisões</span><small>O que está vencido?</small></button>
+        </div>
+
+        <article class="card mentor-report">
+          <div class="mentor-orb">✦</div>
+          <div>
+            <div class="card-title-row"><div><span class="eyebrow" id="mentorIntentLabel">LEITURA DE HOJE</span><h2 id="mentorHeadline">Carregando…</h2></div><span class="evidence-badge" id="mentorEvidence">—</span></div>
+            <p id="mentorSummary">Aguarde a leitura do seu histórico.</p>
+            <div class="next-action" id="mentorNext">—</div>
+          </div>
+        </article>
+
+        <div class="two-col">
+          <section class="card"><span class="eyebrow">POR QUÊ?</span><h2>Evidências usadas</h2><div id="mentorReasons" class="reason-list"><div class="empty">—</div></div></section>
+          <section class="card"><span class="eyebrow">FOCO</span><h2>Tópicos prioritários</h2><div id="mentorFocus" class="stack-list"><div class="empty">—</div></div></section>
+        </div>
+
+        <section class="card">
+          <div class="card-title-row"><div><span class="eyebrow">O QUE A IA SABE</span><h2>Seu rastro de estudo</h2></div><button class="text-btn" id="refreshAllBtn">Atualizar</button></div>
+          <div class="knowledge-strip" id="knowledgeStrip">
+            <div><strong id="knowAttempts">—</strong><span>questões internas</span></div>
+            <div><strong id="knowExternal">—</strong><span>questões externas</span></div>
+            <div><strong id="knowSessions">—</strong><span>sessões de estudo</span></div>
+            <div><strong id="knowTopics">—</strong><span>tópicos medidos</span></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegação principal">
+      <button class="nav active" data-go="home"><span>⌂</span><small>Hoje</small></button>
+      <button class="nav" data-go="study"><span>▤</span><small>Estudo</small></button>
+      <button class="nav" data-go="external"><span>↗</span><small>QConcursos</small></button>
+      <button class="nav" data-go="bank"><span>▣</span><small>Banco</small></button>
+      <button class="nav" data-go="mentor"><span>✦</span><small>IA</small></button>
+    </nav>
+  </div>
+
+  <div class="modal" id="authModal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="modal-close" id="authClose" aria-label="Fechar">×</button>
+      <span class="brand-mark large">M</span>
+      <span class="eyebrow">MENTOR IA 2.0</span>
+      <h2 id="authTitle">Entrar</h2>
+      <p>Entre na mesma conta da sua mentoria para carregar todo o histórico.</p>
+      <label id="authNameWrap" class="hidden">Nome<input id="authName" type="text" autocomplete="name" /></label>
+      <label>E-mail<input id="authEmail" type="email" autocomplete="email" /></label>
+      <label>Senha<input id="authPassword" type="password" autocomplete="current-password" /></label>
+      <button class="primary" id="authSubmit">Entrar</button>
+      <button class="text-btn center" id="authSwitch">Criar nova conta</button>
+      <p class="form-message" id="authMessage"></p>
+    </div>
+  </div>
+
+  <div class="modal" id="accountModal" aria-hidden="true">
+    <div class="modal-card compact-modal">
+      <button class="modal-close" id="accountClose" aria-label="Fechar">×</button>
+      <span class="eyebrow">CONTA</span><h2 id="accountName">Mentor IA</h2><p id="accountEmail">—</p>
+      <button class="secondary" id="signOutBtn">Sair da conta</button>
+      <a class="text-link" href="./">Voltar para a versão atual</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
+  <script src="v2.js?v=2.0.0"></script>
+</body>
+</html>
