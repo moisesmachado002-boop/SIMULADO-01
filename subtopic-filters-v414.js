@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  if (window.__mentorSubtopicsV414) return;
-  window.__mentorSubtopicsV414 = true;
+  if (window.__mentorSubtopicsV4141) return;
+  window.__mentorSubtopicsV4141 = true;
 
   const URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
   const KEY='sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
@@ -10,7 +10,7 @@
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
   const esc=(v='')=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let subtopics=[],counts=new Map();
+  let subtopics=[],counts=new Map(),busy=false;
 
   function injectStyle(){
     if($('#subtopicV414Style'))return;
@@ -36,26 +36,37 @@
     const label=document.createElement('label');label.className='v414-subtopic-label';label.id=selectId+'Label';label.innerHTML=`${labelText}<select id="${selectId}"><option value="">Todos do tópico</option></select>${external?'<small class="v414-subtopic-hint">Organiza o recorte. Quando o QC não tiver ID exato salvo, confirme este subassunto no site externo.</small>':''}`;
     topicLabel.insertAdjacentElement('afterend',label);
     topicLabel.parentElement?.classList.add('v414-four');
-    sel=label.querySelector('select');
-    return sel;
+    return label.querySelector('select');
   }
 
-  function fill(topicId,selectId){
+  function optionSignature(rows){return rows.map(x=>`${x.id}:${x.title}:${countFor(x.id)}`).join('|');}
+
+  function fill(topicId,selectId,force=false){
     const topic=$('#'+topicId),sel=$('#'+selectId),label=$('#'+selectId+'Label');if(!topic||!sel||!label)return;
-    const rows=children(topic.value||'');
-    label.hidden=!topic.value||!rows.length;
+    const parent=topic.value||'',rows=children(parent),sig=optionSignature(rows);
+    const shouldHide=!parent||!rows.length;
+    if(label.hidden!==shouldHide)label.hidden=shouldHide;
+    if(shouldHide){
+      if(sel.value)sel.value='';
+      sel.dataset.parent='';sel.dataset.sig='';
+      return;
+    }
+    if(!force&&sel.dataset.parent===parent&&sel.dataset.sig===sig)return;
     const old=sel.value;
+    busy=true;
     sel.innerHTML='<option value="">Todos do tópico</option>'+rows.map(x=>`<option value="${esc(x.id)}">${esc(x.title)}${countFor(x.id)?` (${countFor(x.id)})`:''}</option>`).join('');
     if(rows.some(x=>x.id===old))sel.value=old;
     else sel.value='';
+    sel.dataset.parent=parent;sel.dataset.sig=sig;
+    queueMicrotask(()=>{busy=false;});
   }
 
   function injectFilters(){
     const bank=ensureSelect('bankTopic','bankSubtopic','Subassunto');
     const qc=ensureSelect('qcTopic','qcSubtopic','Subassunto',true);
-    if(bank&&!bank.dataset.v414){bank.dataset.v414='1';bank.addEventListener('change',()=>{bank.dispatchEvent(new CustomEvent('mentor-subtopic-change',{bubbles:false}));$('#bankMode')?.dispatchEvent(new Event('change'));});}
+    if(bank&&!bank.dataset.v414){bank.dataset.v414='1';bank.addEventListener('change',()=>{$('#bankMode')?.dispatchEvent(new Event('change'));});}
     if(qc&&!qc.dataset.v414){qc.dataset.v414='1';qc.addEventListener('change',decorateQcPreview);}
-    ['bankTopic','qcTopic'].forEach(id=>{const el=$('#'+id);if(el&&!el.dataset.v414Topic){el.dataset.v414Topic='1';el.addEventListener('change',()=>{fill(id,id==='bankTopic'?'bankSubtopic':'qcSubtopic');if(id==='qcTopic')decorateQcPreview();});}});
+    ['bankTopic','qcTopic'].forEach(id=>{const el=$('#'+id);if(el&&!el.dataset.v414Topic){el.dataset.v414Topic='1';el.addEventListener('change',()=>{fill(id,id==='bankTopic'?'bankSubtopic':'qcSubtopic',true);if(id==='qcTopic')decorateQcPreview();});}});
     fill('bankTopic','bankSubtopic');fill('qcTopic','qcSubtopic');
   }
 
@@ -80,7 +91,9 @@
       const rows=children(parent);if(!rows.length)return;
       row.classList.add('v414-has-children');
       let box=row.querySelector('.v414-subtopic-list');if(!box){box=document.createElement('div');box.className='v414-subtopic-list';strong.parentElement?.appendChild(box);}
-      box.innerHTML=rows.map(x=>`<span class="v414-subtopic-chip">${esc(x.title)}${countFor(x.id)?` <b>${countFor(x.id)}q</b>`:''}</span>`).join('');
+      const sig=optionSignature(rows);
+      if(box.dataset.sig===sig)return;
+      busy=true;box.innerHTML=rows.map(x=>`<span class="v414-subtopic-chip">${esc(x.title)}${countFor(x.id)?` <b>${countFor(x.id)}q</b>`:''}</span>`).join('');box.dataset.sig=sig;queueMicrotask(()=>{busy=false;});
     });
   }
 
@@ -99,10 +112,18 @@
     injectFilters();decorateSyllabus();
   }
 
-  const obs=new MutationObserver(()=>{
+  const obs=new MutationObserver(mutations=>{
+    if(busy)return;
+    const relevant=mutations.some(m=>{
+      const target=m.target?.nodeType===1?m.target:m.target?.parentElement;
+      if(!target)return false;
+      if(target.closest?.('.v414-subtopic-label,.v414-subtopic-list'))return false;
+      return target.id==='syllabusList'||target.closest?.('#syllabusList')||target.id==='bankTopic'||target.id==='qcTopic'||target.closest?.('[data-page-view="questions"]');
+    });
+    if(!relevant)return;
     clearTimeout(window.__mentorSubtopicsMut);
-    window.__mentorSubtopicsMut=setTimeout(()=>{injectFilters();decorateSyllabus();},120);
+    window.__mentorSubtopicsMut=setTimeout(()=>{injectFilters();decorateSyllabus();},250);
   });
   obs.observe(document.documentElement,{subtree:true,childList:true});
-  setTimeout(()=>load().catch(e=>console.warn('subtopics v4.14',e)),700);
+  setTimeout(()=>load().catch(e=>console.warn('subtopics v4.14.1',e)),700);
 })();
