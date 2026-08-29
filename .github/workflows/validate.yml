@@ -30,76 +30,51 @@ jobs:
         run: |
           import pathlib
           index = pathlib.Path('index.html').read_text(encoding='utf-8')
-          wrapper = pathlib.Path('mentor-v427.html').read_text(encoding='utf-8')
+          wrapper = pathlib.Path('mentor-v428.html').read_text(encoding='utf-8')
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          if 'mentor-v427.html' not in index:
-              raise SystemExit('index.html is not pointing to mentor-v427.html')
-          required_modules = [
-              'controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js',
-              'study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js',
-              'question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js',
-              'report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js',
-              'analytics-v423.js','pdf-export-v424.js','plan-feasibility-v425.js','daily-mission-v427.js'
-          ]
-          missing = [item for item in required_modules if item not in wrapper]
-          if missing:
-              raise SystemExit('Missing V4.27 modules: ' + ', '.join(missing))
-          if 'mentor-v4.html' not in wrapper:
-              raise SystemExit('V4.27 wrapper is not loading mentor-v4.html')
-          if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core:
-              raise SystemExit('mentor-v4.html base loader is incomplete')
+          if 'mentor-v428.html' not in index:
+              raise SystemExit('index.html is not pointing to mentor-v428.html')
+          required = ['controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js']
+          missing=[x for x in required if x not in wrapper]
+          if missing: raise SystemExit('Missing V4.28 modules: '+', '.join(missing))
+          for forbidden in ['plan-feasibility-v425.js','daily-mission-v427.js']:
+              if forbidden in wrapper: raise SystemExit('Old mutating daily planner still loaded: '+forbidden)
+          if 'mentor-v4.html' not in wrapper: raise SystemExit('V4.28 wrapper base missing')
+          if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core: raise SystemExit('base loader incomplete')
           print('Production entrypoints validated')
+      - name: Check V4.28 daily goals
+        shell: python
+        run: |
+          import pathlib
+          daily=pathlib.Path('daily-goals-v428.js').read_text(encoding='utf-8')
+          required=['apply_monitored_topic_policies_v428','Meta de hoje travada','weightedProgress','BLOCO CONJUNTO','1 POR VEZ','v428-hidden']
+          missing=[x for x in required if x not in daily]
+          if missing: raise SystemExit('V4.28 daily goals invariant missing: '+', '.join(missing))
+          print('Daily goals V4.28 validated')
       - name: Check analytics
         shell: python
         run: |
           import pathlib
-          analytics = pathlib.Path('analytics-v423.js').read_text(encoding='utf-8')
-          required = ['Total de Questões Feitas','Por disciplina','Por assunto','Evolução por assunto','LEGACY_ZERO_DUVIDAS','v423WeekGrid']
-          missing = [item for item in required if item not in analytics]
-          if missing:
-              raise SystemExit('Analytics invariant missing: ' + ', '.join(missing))
+          a=pathlib.Path('analytics-v423.js').read_text(encoding='utf-8')
+          for x in ['Total de Questões Feitas','Por disciplina','Por assunto','Evolução por assunto','LEGACY_ZERO_DUVIDAS','v423WeekGrid']:
+              if x not in a: raise SystemExit('Analytics invariant missing: '+x)
           print('Analytics validated')
       - name: Check PDF hotfix
         shell: python
         run: |
           import pathlib
-          pdf = pathlib.Path('pdf-export-v424.js').read_text(encoding='utf-8')
-          required = ['jspdf/2.5.1/jspdf.umd.min.js','cdn.jsdelivr.net/npm/jspdf@2.5.1','mentor-download-binary','#r422Pdf']
-          missing = [item for item in required if item not in pdf]
-          if missing:
-              raise SystemExit('PDF invariant missing: ' + ', '.join(missing))
-          print('PDF hotfix validated')
-      - name: Check V4.25 feasible planning
-        shell: python
-        run: |
-          import pathlib
-          plan = pathlib.Path('plan-feasibility-v425.js').read_text(encoding='utf-8')
-          required = ['apply_feasible_plan_scopes','subassuntos','Estudo guiado','Carga plausível','question_target']
-          missing = [item for item in required if item not in plan]
-          if missing:
-              raise SystemExit('V4.25 planning invariant missing: ' + ', '.join(missing))
-          print('V4.25 feasible planning validated')
-      - name: Check V4.27 monitored study policy
-        shell: python
-        run: |
-          import pathlib
-          daily = pathlib.Path('daily-mission-v427.js').read_text(encoding='utf-8')
-          required = ['apply_topic_study_policies_v427','BLOCO CONJUNTO','1 POR VEZ','REGRA MONITORADA','questões — ${child.title}']
-          missing = [item for item in required if item not in daily]
-          if missing:
-              raise SystemExit('V4.27 study-policy invariant missing: ' + ', '.join(missing))
-          print('V4.27 monitored study policy validated')
+          p=pathlib.Path('pdf-export-v424.js').read_text(encoding='utf-8')
+          for x in ['jspdf/2.5.1/jspdf.umd.min.js','cdn.jsdelivr.net/npm/jspdf@2.5.1','mentor-download-binary','#r422Pdf']:
+              if x not in p: raise SystemExit('PDF invariant missing: '+x)
+          print('PDF validated')
       - name: Check report consolidation
         shell: python
         run: |
           import pathlib
-          wrapper = pathlib.Path('mentor-v427.html').read_text(encoding='utf-8')
-          forbidden = ['report-export-v417.js','report-export-v419.js','report-cleanup-v421.js']
-          found = [item for item in forbidden if item in wrapper]
-          if found:
-              raise SystemExit('Legacy report modules still loaded: ' + ', '.join(found))
-          report = pathlib.Path('report-v422.js').read_text(encoding='utf-8')
-          for required in [".in('status',['pending','in_progress','completed'])", 'pending_review_topics', 'active_plan_items']:
-              if required not in report:
-                  raise SystemExit('Report invariant missing: ' + required)
+          wrapper=pathlib.Path('mentor-v428.html').read_text(encoding='utf-8')
+          for x in ['report-export-v417.js','report-export-v419.js','report-cleanup-v421.js']:
+              if x in wrapper: raise SystemExit('Legacy report module loaded: '+x)
+          report=pathlib.Path('report-v422.js').read_text(encoding='utf-8')
+          for x in [".in('status',['pending','in_progress','completed'])",'pending_review_topics','active_plan_items']:
+              if x not in report: raise SystemExit('Report invariant missing: '+x)
           print('Report consolidation validated')
