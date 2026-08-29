@@ -30,22 +30,22 @@ jobs:
         run: |
           import pathlib
           index = pathlib.Path('index.html').read_text(encoding='utf-8')
-          wrapper = pathlib.Path('mentor-v423.html').read_text(encoding='utf-8')
+          wrapper = pathlib.Path('mentor-v424.html').read_text(encoding='utf-8')
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          if 'mentor-v423.html' not in index:
-              raise SystemExit('index.html is not pointing to mentor-v423.html')
+          if 'mentor-v424.html' not in index:
+              raise SystemExit('index.html is not pointing to mentor-v424.html')
           required_modules = [
               'controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js',
               'study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js',
               'question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js',
               'report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js',
-              'analytics-v423.js'
+              'analytics-v423.js','pdf-export-v424.js'
           ]
           missing = [item for item in required_modules if item not in wrapper]
           if missing:
-              raise SystemExit('Missing V4.23 modules: ' + ', '.join(missing))
+              raise SystemExit('Missing V4.24 modules: ' + ', '.join(missing))
           if 'mentor-v4.html' not in wrapper:
-              raise SystemExit('V4.23 wrapper is not loading mentor-v4.html')
+              raise SystemExit('V4.24 wrapper is not loading mentor-v4.html')
           if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core:
               raise SystemExit('mentor-v4.html base loader is incomplete')
           print('Production entrypoints validated')
@@ -59,11 +59,21 @@ jobs:
           if missing:
               raise SystemExit('V4.23 analytics invariant missing: ' + ', '.join(missing))
           print('V4.23 analytics validated')
+      - name: Check V4.24 PDF hotfix
+        shell: python
+        run: |
+          import pathlib
+          pdf = pathlib.Path('pdf-export-v424.js').read_text(encoding='utf-8')
+          required = ['jspdf/2.5.1/jspdf.umd.min.js','cdn.jsdelivr.net/npm/jspdf@2.5.1','mentor-download-binary','#r422Pdf']
+          missing = [item for item in required if item not in pdf]
+          if missing:
+              raise SystemExit('V4.24 PDF invariant missing: ' + ', '.join(missing))
+          print('V4.24 PDF hotfix validated')
       - name: Check report consolidation
         shell: python
         run: |
           import pathlib
-          wrapper = pathlib.Path('mentor-v423.html').read_text(encoding='utf-8')
+          wrapper = pathlib.Path('mentor-v424.html').read_text(encoding='utf-8')
           forbidden = ['report-export-v417.js','report-export-v419.js','report-cleanup-v421.js']
           found = [item for item in forbidden if item in wrapper]
           if found:
