@@ -6,11 +6,11 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Mentor IA V4.16.1</title>
+<title>Mentor IA V4.16.2</title>
 <style>html,body{margin:0;width:100%;height:100%;background:#f4f4f4;overflow:hidden}iframe{display:block;width:100%;height:100dvh;border:0;background:#f4f4f4}</style>
 </head>
 <body>
-<iframe id="mentorFrame" src="./mentor-v4.html?build=20260828-v4161#daily" title="Mentor IA"></iframe>
+<iframe id="mentorFrame" src="./mentor-v4.html?build=20260828-v4162#daily" title="Mentor IA"></iframe>
 <script>
 (() => {
   const frame=document.getElementById('mentorFrame');let tries=0;
@@ -20,17 +20,17 @@
       const d=frame.contentDocument;if(!d)return;
       if(d.getElementById('appShell')){
         const modules=[
-          ['mentorV47ControlsScript','./controls-v47.js?build=20260828-2115'],
-          ['mentorV48OutsideStudyScript','./outside-study-v48.js?build=20260828-2115'],
-          ['mentorV49LayoutScript','./nav-layout-v49.js?build=20260828-2115'],
-          ['mentorV49ResourcesScript','./resources-v49.js?build=20260828-2115'],
-          ['mentorV410StudyTimerScript','./study-timer-v410.js?build=20260828-2115'],
-          ['mentorV411FeedbackCoachScript','./feedback-coach-v411.js?build=20260828-2115'],
-          ['mentorV415OverdueLockScript','./overdue-lock-v415.js?build=20260828-2115'],
-          ['mentorV412EliminationScript','./question-elimination-v412.js?build=20260828-2115'],
-          ['mentorV416TimerReviewManualScript','./timer-review-manual-v416.js?build=20260828-2115'],
-          ['mentorV4141SubtopicFiltersScript','./subtopic-filters-v414.js?build=20260828-2115'],
-          ['mentorV417ReportScript','./report-export-v417.js?build=20260828-2115']
+          ['mentorV47ControlsScript','./controls-v47.js?build=20260828-2125'],
+          ['mentorV48OutsideStudyScript','./outside-study-v48.js?build=20260828-2125'],
+          ['mentorV49LayoutScript','./nav-layout-v49.js?build=20260828-2125'],
+          ['mentorV49ResourcesScript','./resources-v49.js?build=20260828-2125'],
+          ['mentorV410StudyTimerScript','./study-timer-v410.js?build=20260828-2125'],
+          ['mentorV411FeedbackCoachScript','./feedback-coach-v411.js?build=20260828-2125'],
+          ['mentorV415OverdueLockScript','./overdue-lock-v415.js?build=20260828-2125'],
+          ['mentorV412EliminationScript','./question-elimination-v412.js?build=20260828-2125'],
+          ['mentorV416TimerReviewManualScript','./timer-review-manual-v416.js?build=20260828-2125'],
+          ['mentorV4141SubtopicFiltersScript','./subtopic-filters-v414.js?build=20260828-2125'],
+          ['mentorV417ReportScript','./report-export-v417.js?build=20260828-2125']
         ];
         modules.forEach(([id,src])=>{if(d.getElementById(id))return;const s=d.createElement('script');s.id=id;s.src=src;s.async=false;d.head.appendChild(s);});
         clearInterval(timer);
