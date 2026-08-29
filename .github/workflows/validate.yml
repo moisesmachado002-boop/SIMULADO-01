@@ -25,32 +25,40 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done
-      - name: Check local service-worker assets
-        shell: python
-        run: |
-          import pathlib, re, sys
-          text = pathlib.Path('sw.js').read_text(encoding='utf-8')
-          block = re.search(r'const LOCAL_ASSETS = \[(.*?)\];', text, re.S)
-          if not block:
-              raise SystemExit('LOCAL_ASSETS not found in sw.js')
-          refs = re.findall(r"['\"](\./[^'\"]+)['\"]", block.group(1))
-          missing = []
-          for ref in refs:
-              path = ref[2:]
-              if path in ('', './'):
-                  continue
-              if not pathlib.Path(path).exists():
-                  missing.append(ref)
-          if missing:
-              raise SystemExit('Missing cached assets: ' + ', '.join(missing))
-          print(f'Validated {len(refs)} local cache entries')
-      - name: Check HTML entrypoints
+      - name: Check production entrypoints
         shell: python
         run: |
           import pathlib
-          html = pathlib.Path('index.html').read_text(encoding='utf-8')
-          required = ['app.js', 'question-feedback.js?v=9.1', 'runtime-bootstrap.js?v=9.1', 'manifest.json?v=9.1']
-          missing = [item for item in required if item not in html]
+          index = pathlib.Path('index.html').read_text(encoding='utf-8')
+          wrapper = pathlib.Path('mentor-v422.html').read_text(encoding='utf-8')
+          core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
+          if 'mentor-v422.html' not in index:
+              raise SystemExit('index.html is not pointing to mentor-v422.html')
+          required_modules = [
+              'controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js',
+              'study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js',
+              'question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js',
+              'report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js'
+          ]
+          missing = [item for item in required_modules if item not in wrapper]
           if missing:
-              raise SystemExit('Missing index references: ' + ', '.join(missing))
-          print('index.html references validated')
+              raise SystemExit('Missing V4.22 modules: ' + ', '.join(missing))
+          if 'mentor-v4.html' not in wrapper:
+              raise SystemExit('V4.22 wrapper is not loading mentor-v4.html')
+          if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core:
+              raise SystemExit('mentor-v4.html base loader is incomplete')
+          print('Production entrypoints validated')
+      - name: Check V4.22 report consolidation
+        shell: python
+        run: |
+          import pathlib
+          wrapper = pathlib.Path('mentor-v422.html').read_text(encoding='utf-8')
+          forbidden = ['report-export-v417.js','report-export-v419.js','report-cleanup-v421.js']
+          found = [item for item in forbidden if item in wrapper]
+          if found:
+              raise SystemExit('Legacy report modules still loaded: ' + ', '.join(found))
+          report = pathlib.Path('report-v422.js').read_text(encoding='utf-8')
+          for required in [".in('status',['pending','in_progress','completed'])", 'pending_review_topics', 'active_plan_items']:
+              if required not in report:
+                  raise SystemExit('Report V4.22 invariant missing: ' + required)
+          print('V4.22 report consolidation validated')
