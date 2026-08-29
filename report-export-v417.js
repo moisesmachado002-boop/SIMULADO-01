@@ -3,19 +3,20 @@
   if (window.__mentorReportV417) return;
   window.__mentorReportV417 = true;
 
-  const URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
+  const SUPABASE_URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
   const KEY='sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
   const TZ='America/Bahia';
-  const db=window.supabase?.createClient?.(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  const db=window.supabase?.createClient?.(SUPABASE_URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   if(!db)return;
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const dateKey=(d=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
   const pct=(a,b)=>b?Math.round((Number(a||0)/Number(b))*1000)/10:0;
-  const safe=(v='')=>String(v??'');
 
   function toast(text,kind='neutral'){
     const n=$('#toast');if(!n)return;n.textContent=text;n.dataset.kind=kind;n.classList.add('show');
-    clearTimeout(window.__reportToast);window.__reportToast=setTimeout(()=>n.classList.remove('show'),3800);
+    n.style.zIndex='100500';
+    n.style.bottom='90px';
+    clearTimeout(window.__reportToast);window.__reportToast=setTimeout(()=>n.classList.remove('show'),4200);
   }
 
   function injectStyles(){
@@ -28,7 +29,7 @@
       .v417-card small{display:block;color:#777;font-weight:750;margin-bottom:6px}.v417-card strong{font-size:24px}
       .v417-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.v417-actions button{min-height:44px}
       .v417-note{margin-top:14px;padding:13px 15px;border-radius:10px;background:#f6f7f8;color:#555;font-size:13px;line-height:1.5}
-      .v417-status{font-size:13px;color:#666;margin-top:10px}
+      .v417-status{font-size:13px;color:#666;margin-top:10px}.v417-status.error{color:#9c1f1f;font-weight:800}
       @media(max-width:720px){.v417-grid{grid-template-columns:1fr}.v417-hero{align-items:flex-start;flex-direction:column}.v417-actions{display:grid;grid-template-columns:1fr}.v417-actions button{width:100%}}
     `;document.head.appendChild(s);
   }
@@ -82,12 +83,12 @@
     history.replaceState(null,'','#reports');
     $('#appShell')?.classList.remove('menu-open');
     window.scrollTo({top:0,behavior:'smooth'});
-    refreshPreview(false);
+    refreshPreview(false).catch(()=>{});
   }
 
   async function loadReportData(){
     const {data:{user}}=await db.auth.getUser();if(!user)throw new Error('Entre na sua conta para gerar o relatório.');
-    const now=new Date(),today=dateKey(now);
+    const today=dateKey();
     const [prefsR,subR,topicR,masteryR,attemptR,externalR,sessionsR,reviewsR,planR,cycleR]=await Promise.all([
       db.from('study_preferences').select('daily_minutes,study_days,review_ratio,buffer_percent,timezone').eq('user_id',user.id).maybeSingle(),
       db.from('subjects').select('id,name,position').eq('active',true).order('position'),
@@ -119,82 +120,57 @@
     const namePlan=x=>({date:x.scheduled_for,original_date:x.carried_from_date||null,subject:subjectById.get(topicById.get(x.topic_id)?.subject_id)||null,topic:topicById.get(x.topic_id)?.title||null,topic_code:topicById.get(x.topic_id)?.syllabus_code||null,task_type:x.task_type,target_questions:x.task_type==='questions'?Number(x.question_target||0):0,progress_questions:x.task_type==='questions'?Number(x.progress_count||0):0,duration_minutes:x.duration_minutes,status:x.status,source_reason:x.source_reason,completed_at:x.completed_at});
     const pendingReviews=reviews.filter(x=>x.status==='pending');
     return{
-      schema:'mentor-ia-study-report-v3',
-      generated_at:new Date().toISOString(),timezone:TZ,
-      privacy_note:'Relatório sem e-mail, senha ou identificador da conta.',
-      preferences:prefsR.data||{},cycle:cycleR.data||null,
+      schema:'mentor-ia-study-report-v3',generated_at:new Date().toISOString(),timezone:TZ,
+      privacy_note:'Relatório sem e-mail, senha ou identificador da conta.',preferences:prefsR.data||{},cycle:cycleR.data||null,
       summary:{internal_questions:attempts.length,internal_correct:internalCorrect,internal_accuracy_percent:pct(internalCorrect,attempts.length),external_questions:extQ,external_correct:extC,external_accuracy_percent:pct(extC,extQ),total_questions:attempts.length+extQ,total_correct:internalCorrect+extC,total_accuracy_percent:pct(internalCorrect+extC,attempts.length+extQ),study_seconds:totalStudySeconds,study_minutes:Math.round(totalStudySeconds/60),pending_reviews:pendingReviews.length,planned_items:plan.length},
-      by_subject:bySubject,
-      topic_performance:topicStats,
-      recent_internal_attempts:attempts.slice(0,500).map(nameAttempt),
-      recent_external_batches:external.slice(0,250).map(nameExternal),
-      recent_study_sessions:sessions.slice(0,300).map(nameSession),
-      pending_reviews:pendingReviews.slice(0,300).map(x=>({subject:subjectById.get(topicById.get(x.topic_id)?.subject_id)||null,topic:topicById.get(x.topic_id)?.title||null,topic_code:topicById.get(x.topic_id)?.syllabus_code||null,due_at:x.due_at,trigger_reason:x.trigger_reason})),
-      current_plan:plan.map(namePlan)
+      by_subject:bySubject,topic_performance:topicStats,recent_internal_attempts:attempts.slice(0,500).map(nameAttempt),recent_external_batches:external.slice(0,250).map(nameExternal),recent_study_sessions:sessions.slice(0,300).map(nameSession),
+      pending_reviews:pendingReviews.slice(0,300).map(x=>({subject:subjectById.get(topicById.get(x.topic_id)?.subject_id)||null,topic:topicById.get(x.topic_id)?.title||null,topic_code:topicById.get(x.topic_id)?.syllabus_code||null,due_at:x.due_at,trigger_reason:x.trigger_reason})),current_plan:plan.map(namePlan)
     };
   }
 
   function triggerDownload(name,text,type){
-    const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    const blob=new Blob([text],{type});
+    const objectUrl=window.URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=objectUrl;a.download=name;a.style.display='none';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>window.URL.revokeObjectURL(objectUrl),2000);
   }
 
   function txtSummary(r){
     const s=r.summary||{};
-    const lines=[
-      'MENTOR IA — RESUMO DE ESTUDOS',
-      `Gerado em: ${new Date(r.generated_at).toLocaleString('pt-BR')}`,
-      '',
-      `Questões totais registradas: ${s.total_questions||0}`,
-      `Acertos totais: ${s.total_correct||0}`,
-      `Taxa geral: ${s.total_accuracy_percent||0}%`,
-      `Tempo estudado: ${s.study_minutes||0} min`,
-      `Revisões pendentes: ${s.pending_reviews||0}`,
-      '',
-      'DESEMPENHO POR MATÉRIA'
-    ];
+    const lines=['MENTOR IA — RESUMO DE ESTUDOS',`Gerado em: ${new Date(r.generated_at).toLocaleString('pt-BR')}`,'',`Questões totais registradas: ${s.total_questions||0}`,`Acertos totais: ${s.total_correct||0}`,`Taxa geral: ${s.total_accuracy_percent||0}%`,`Tempo estudado: ${s.study_minutes||0} min`,`Revisões pendentes: ${s.pending_reviews||0}`,'','DESEMPENHO POR MATÉRIA'];
     (r.by_subject||[]).forEach(x=>lines.push(`${x.subject}: ${x.questions} questões | ${x.accuracy_percent}% | ${x.study_minutes} min | mediana ${x.median_response_seconds??'—'}s/questão`));
-    lines.push('','Observação: o relatório completo em JSON contém desempenho por assunto, confiança, erros, revisões, sessões e cronograma.');
-    return lines.join('\n');
+    lines.push('','Observação: o relatório completo em JSON contém desempenho por assunto, confiança, erros, revisões, sessões e cronograma.');return lines.join('\n');
   }
 
   async function refreshPreview(showToast){
-    const st=$('#v417Status');if(st)st.textContent='Atualizando dados…';
+    const st=$('#v417Status');if(st){st.classList.remove('error');st.textContent='Atualizando dados…';}
     try{
       const r=await loadReportData();
       if($('#v417Questions'))$('#v417Questions').textContent=String(r.summary.total_questions||0);
       if($('#v417Minutes'))$('#v417Minutes').textContent=`${r.summary.study_minutes||0} min`;
       if($('#v417Reviews'))$('#v417Reviews').textContent=String(r.summary.pending_reviews||0);
       if(st)st.textContent=`Atualizado agora • ${r.summary.total_accuracy_percent||0}% de acerto geral`;
-      if(showToast)toast('Dados do relatório atualizados.','ok');
-      return r;
-    }catch(e){if(st)st.textContent=e?.message||'Não foi possível carregar o relatório.';if(showToast)toast(st.textContent,'error');throw e;}
+      if(showToast)toast('Dados do relatório atualizados.','ok');return r;
+    }catch(e){if(st){st.classList.add('error');st.textContent=e?.message||'Não foi possível carregar o relatório.';}if(showToast)toast(st?.textContent||'Erro no relatório.','error');throw e;}
   }
 
   async function download(kind){
     const btn=kind==='json'?$('#v417DownloadJson'):$('#v417DownloadTxt');if(btn)btn.disabled=true;
+    const st=$('#v417Status');
     try{
+      if(st){st.classList.remove('error');st.textContent='Gerando arquivo…';}
       const r=await refreshPreview(false),stamp=dateKey();
       if(kind==='json')triggerDownload(`mentor-ia-relatorio-${stamp}.json`,JSON.stringify(r,null,2),'application/json;charset=utf-8');
       else triggerDownload(`mentor-ia-resumo-${stamp}.txt`,txtSummary(r),'text/plain;charset=utf-8');
+      if(st)st.textContent='Arquivo gerado e enviado para a pasta de downloads do navegador.';
       toast('Relatório baixado. Agora você pode anexá-lo no chat.','ok');
-    }catch(e){toast(e?.message||'Não foi possível gerar o relatório.','error');}
+    }catch(e){const msg=e?.message||'Não foi possível gerar o relatório.';if(st){st.classList.add('error');st.textContent=`Erro ao baixar: ${msg}`;}toast(msg,'error');}
     finally{if(btn)btn.disabled=false;}
   }
 
-  document.addEventListener('click',e=>{
-    const b=e.target.closest('[data-v417-report]');
-    if(b){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openReport();}
-  },true);
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-v417-report]');if(b){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openReport();}},true);
   window.addEventListener('hashchange',()=>{if(location.hash==='#reports')openReport();});
-
-  let tries=0;const timer=setInterval(()=>{
-    tries++;
-    if($('#appShell')&&$('main.content')&&$('.sidebar-nav')){
-      injectPage();patchNav();
-      const mo=new MutationObserver(()=>{clearTimeout(window.__v417NavPatch);window.__v417NavPatch=setTimeout(patchNav,80);});mo.observe($('.sidebar-nav'),{childList:true,subtree:true});
-      if(location.hash==='#reports')openReport();
-      clearInterval(timer);
-    }
-    if(tries>180)clearInterval(timer);
-  },200);
+  let tries=0;const timer=setInterval(()=>{tries++;if($('#appShell')&&$('main.content')&&$('.sidebar-nav')){injectPage();patchNav();const mo=new MutationObserver(()=>{clearTimeout(window.__v417NavPatch);window.__v417NavPatch=setTimeout(patchNav,80);});mo.observe($('.sidebar-nav'),{childList:true,subtree:true});if(location.hash==='#reports')openReport();clearInterval(timer);}if(tries>180)clearInterval(timer);},200);
 })();
