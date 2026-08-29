@@ -6,26 +6,29 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Mentor IA V4.14 — PMBA</title>
+  <title>Mentor IA V4.21 — PMBA</title>
   <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
 </head>
 <body>
-  <div class="loader"><strong>Mentor IA V4.14</strong><span>Organizando assuntos e subassuntos…</span></div>
+  <div class="loader"><strong>Mentor IA V4.21</strong><span>Organizando assuntos e subassuntos…</span></div>
   <script>
     (async () => {
       const [htmlResponse, jsResponse, coreResponse] = await Promise.all([
-        fetch('./v2.html?base=20260828-v414', { cache: 'no-store' }),
-        fetch('./v2.js?base=20260828-v414', { cache: 'no-store' }),
-        fetch('./intelligence-core-v4.5.js?base=20260828-v414', { cache: 'no-store' })
+        fetch('./v2.html?base=20260828-v421', { cache: 'no-store' }),
+        fetch('./v2.js?base=20260828-v421', { cache: 'no-store' }),
+        fetch('./intelligence-core-v4.5.js?base=20260828-v421', { cache: 'no-store' })
       ]);
       if (!htmlResponse.ok || !jsResponse.ok || !coreResponse.ok) throw new Error('Não foi possível carregar a interface base.');
       let html = await htmlResponse.text(), appJs = await jsResponse.text(), coreJs = await coreResponse.text();
 
       coreJs = coreJs
-        .replace("const VERSION='4.5.0';", "const VERSION='4.14.0';")
+        .replace("const VERSION='4.5.0';", "const VERSION='4.21.0';")
         .replace('SUBJECT_SAMPLE_MIN=8', 'SUBJECT_SAMPLE_MIN=2')
-        .replace("const completedCount=completedRows.reduce((s,p)=>s+Math.max(1,Number(p.question_target||1)),0);", "const completedCount=completedRows.reduce((s,p)=>s+(p.task_type==='questions'?Number(p.question_target||0):0),0);")
-        .replace("const reviewTarget=existingReview?Math.min(remaining,Math.max(1,Number(existingReview.question_target||1))):Math.min(MAX_REVIEW_QUESTIONS,due.length,remaining);\n        const questionTarget=existingQuestions?Math.max(1,Number(existingQuestions.question_target||1)):Math.max(0,remaining-reviewTarget);", "const reviewTarget=existingReview?1:(due.length?1:0);\n        const risk=idx.maxRisk(topic.id),reviewMinutes=reviewTarget?(risk>=95||due.length>=4?15:risk>=80||due.length>=2?12:8):0;\n        const questionTarget=Math.max(0,remaining-Math.ceil(reviewMinutes*60/paceSec));")
+        .replace("const MAX_SUBJECTS=2,MIN_DAILY_QUESTIONS=30,BASE_PER_SUBJECT=20,MEDIUM_PER_SUBJECT=30,CRITICAL_PER_SUBJECT=40;", "const MAX_SUBJECTS=2,MIN_DAILY_QUESTIONS=20,BASE_PER_SUBJECT=20,MEDIUM_PER_SUBJECT=20,CRITICAL_PER_SUBJECT=20;")
+        .replace("quota:n===1?MIN_DAILY_QUESTIONS:Math.floor(MIN_DAILY_QUESTIONS/n)", "quota:BASE_PER_SUBJECT")
+        .replace("function isGenerated(p){const s=String(p.source_reason||'');return s.startsWith(SOURCE_PREFIX)||OLD_PREFIXES.some(x=>s.startsWith(x))||s==='cap_fill_qconcursos'||s.startsWith('revisao_');}", "function isGenerated(p){const s=String(p.source_reason||'');return s.startsWith(SOURCE_PREFIX)||OLD_PREFIXES.some(x=>s.startsWith(x))||s==='cap_fill_qconcursos'||s.startsWith('revisao_')||s.startsWith('overdue_v412_')||s.startsWith('locked_overdue_')||s.startsWith('replanned_overdue_');}")
+        .replace("const completedCount=completedRows.reduce((s,p)=>s+Math.max(1,Number(p.question_target||1)),0);", "let completedCount=completedRows.reduce((s,p)=>s+(p.task_type==='questions'?Number(p.question_target||0):0),0);if(day===m.today&&completedRows.some(p=>p.carried_from_date))completedCount=Math.max(completedCount,quota);")
+        .replace("const reviewTarget=existingReview?Math.min(remaining,Math.max(1,Number(existingReview.question_target||1))):Math.min(MAX_REVIEW_QUESTIONS,due.length,remaining);\n        const questionTarget=existingQuestions?Math.max(1,Number(existingQuestions.question_target||1)):Math.max(0,remaining-reviewTarget);", "const completedReview=m.plan.some(p=>p.scheduled_for===day&&p.topic_id===topic.id&&p.task_type==='review'&&p.status==='completed'&&isGenerated(p));\n        const reviewTarget=completedReview?0:(existingReview?1:(due.length?1:0));\n        const risk=idx.maxRisk(topic.id),reviewMinutes=reviewTarget?(risk>=95||due.length>=4?15:risk>=80||due.length>=2?12:8):0;\n        const questionTarget=existingQuestions?Math.max(1,Number(existingQuestions.question_target||1)):remaining;")
         .replace("const first=due[0]||{question_id:existingReview?.question_id},risk=forgettingRisk(idx.stateByQ.get(first.question_id));\n          desired.push({key:`${day}|review|${topic.id}`,scheduled_for:day,topic_id:topic.id,question_id:first.question_id||existingReview?.question_id,task_type:'review',question_target:reviewTarget,duration_minutes:Math.ceil(reviewTarget*paceSec/60),priority:risk>=95?100:risk>=85?96:90,status:'pending',source_reason:`${SOURCE_PREFIX}review`,plan_version:PLAN,sort_order:slot*100+10,progress_count:0});", "desired.push({key:`${day}|review|${topic.id}`,scheduled_for:day,topic_id:topic.id,question_id:null,task_type:'review',question_target:1,duration_minutes:reviewMinutes,priority:risk>=95?100:risk>=85?96:90,status:'pending',source_reason:`${SOURCE_PREFIX}review`,plan_version:PLAN,sort_order:slot*100+10,progress_count:0});")
         .replace("schema:'mentor-ia-study-report-v1'", "schema:'mentor-ia-study-report-v2'")
         .replace("target:Number(p.question_target||0)", "target_questions:p.task_type==='questions'?Number(p.question_target||0):0");
@@ -39,7 +42,7 @@
       const newStartBank = "function startBank(q=null,taskId=undefined){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');if(taskId!==undefined)state.bank.activeTaskId=taskId;showQuestion(q);}";
       if (appJs.includes(oldStartBank)) appJs = appJs.replace(oldStartBank, newStartBank);
 
-      // V4.14 — mantém o tópico oficial como métrica, mas permite filtrar questões por subassunto.
+      // V4.14+ — mantém o tópico oficial como métrica, mas permite filtrar questões por subassunto.
       appJs = appJs
         .replace("topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not", "topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind,subtopic_id').not")
         .replace("function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}", "function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',stid=$('#bankSubtopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(!stid||q.subtopic_id===stid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}")
