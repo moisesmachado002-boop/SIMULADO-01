@@ -15,11 +15,16 @@ if(!(await frame.locator('[data-page="daily"]').count()))throw new Error('Daily 
 if(!(await frame.locator('[data-page="week"]').count()))throw new Error('Week navigation missing');
 if(!(await frame.locator('#savePreferencesButton').count()))throw new Error('Schedule preferences button missing');
 
-await frame.locator('[data-page="plan"]').first().click();
-await frame.waitForTimeout(150);
+if(await frame.locator('#authModal.open').count())await frame.locator('#authClose').click();
+const planNav=frame.locator('[data-page="plan"]:visible').first();
+if(!(await planNav.count()))throw new Error('Visible Plan navigation missing');
+await planNav.click();
+await frame.waitForTimeout(180);
 if(!(await frame.locator('[data-page-view="plan"].active').count()))throw new Error('Plan navigation failed');
-await frame.locator('[data-page="week"]').first().click();
-await frame.waitForTimeout(150);
+const weekNav=frame.locator('[data-page="week"]:visible').first();
+if(!(await weekNav.count()))throw new Error('Visible Week navigation missing');
+await weekNav.click();
+await frame.waitForTimeout(180);
 if(!(await frame.locator('[data-page-view="week"].active').count()))throw new Error('Week navigation failed');
 
 const forbidden=['mentorV47ControlsScript','mentorV428DailyGoalsScript','mentorV430PriorityPlannerScript','mentorV431WeekSummaryScript'];
