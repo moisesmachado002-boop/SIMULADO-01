@@ -34,11 +34,13 @@ jobs:
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
           if 'mentor-v431.html' not in index:
               raise SystemExit('index.html is not pointing to mentor-v431.html')
-          if '20260830-1925-v434-stable2' not in index or '20260830-1925-v434-stable2' not in wrapper:
+          if '20260830-1945-v435-stable' not in index or '20260830-1945-v435-stable' not in wrapper:
               raise SystemExit('production entry and wrapper are not on the same stable build')
           required = ['mentor-request-guard-v432.js','controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','daily-actions-v432.js','math-feedback-v429.js','priority-planner-v430.js','week-summary-v431.js']
           missing=[x for x in required if x not in wrapper]
           if missing: raise SystemExit('Missing production modules: '+', '.join(missing))
+          for x in ['loadModule','attempt<3','module-load','mentorModuleError']:
+              if x not in wrapper: raise SystemExit('Resilient module loader missing: '+x)
           for forbidden in ['plan-feasibility-v425.js','daily-mission-v427.js']:
               if forbidden in wrapper: raise SystemExit('Old mutating daily planner still loaded: '+forbidden)
           if 'mentor-v4.html' not in wrapper: raise SystemExit('production wrapper base missing')
@@ -56,7 +58,7 @@ jobs:
           controls=pathlib.Path('controls-v47.js').read_text(encoding='utf-8')
           for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
               if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
-          for x in ['SOMENTE LEITURA','Replanejar esta semana','rebuild_smart_week_v431','mentor-preferences-changed','[data-action="replan"]','stopImmediatePropagation']:
+          for x in ['SOMENTE LEITURA','Replanejar esta semana','rebuild_smart_week_v431','mentor-preferences-changed','[data-action="replan"]','stopImmediatePropagation','review|','REVISÕES']:
               if x not in week: raise SystemExit('Stable week invariant missing: '+x)
           if 'materialize_due_reviews_v432' in week:
               raise SystemExit('Frontend review materialization returned; rebuild_smart_week_v431 must own review packing')
@@ -64,11 +66,11 @@ jobs:
               if x not in daily_actions: raise SystemExit('Direct daily action invariant missing: '+x)
           for forbidden in ['native.click','#dailyTasks','LEGACY_RELAY_ACTIONS']:
               if forbidden in daily_actions: raise SystemExit('Legacy hidden-button dependency returned: '+forbidden)
-          for x in ['subtopic_id,plan_item_id','batchFor','mentor-plan-changed']:
+          for x in ['subtopic_id,plan_item_id','batchFor','mentor-plan-changed','review|','review-bundle']:
               if x not in daily: raise SystemExit('Daily exact-result invariant missing: '+x)
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in guard: raise SystemExit('Mentor request guard missing: '+x)
-          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton','removeLegacyReopen','mentor-preferences-changed']:
+          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton','removeLegacyReopen','mentor-preferences-changed','Horários salvos e cronograma atualizado']:
               if x not in controls: raise SystemExit('Centralized controls invariant missing: '+x)
           for forbidden in ['manualComplete','function reopen','Reabrir na meta de hoje','dataset.v47Reopen =','dataset.v47Reopen=','[data-action="replan"]']:
               if forbidden in controls: raise SystemExit('Legacy completion/replan behavior returned: '+forbidden)
@@ -105,7 +107,7 @@ jobs:
         run: |
           import pathlib
           w=pathlib.Path('week-summary-v431.js').read_text(encoding='utf-8')
-          required=['Semana em modo estável','BLOCO CONJUNTO','1 POR VEZ','Total do dia','SOMENTE LEITURA']
+          required=['Semana em modo estável','BLOCO CONJUNTO','1 POR VEZ','Total do dia','SOMENTE LEITURA','Revisões da matéria']
           missing=[x for x in required if x not in w]
           if missing: raise SystemExit('Weekly invariant missing: '+', '.join(missing))
           print('Weekly summary validated')
