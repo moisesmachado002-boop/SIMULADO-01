@@ -49,13 +49,18 @@ jobs:
           core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
           week=pathlib.Path('week-summary-v431.js').read_text(encoding='utf-8')
           daily_actions=pathlib.Path('daily-actions-v432.js').read_text(encoding='utf-8')
+          daily=pathlib.Path('daily-goals-v428.js').read_text(encoding='utf-8')
           guard=pathlib.Path('mentor-request-guard-v432.js').read_text(encoding='utf-8')
           for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
               if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
           for x in ['SOMENTE LEITURA','materialize_due_reviews_v432','Replanejar esta semana','rebuild_smart_week_v431']:
               if x not in week: raise SystemExit('Stable week invariant missing: '+x)
-          for x in ['data-task-complete','data-task-review','data-task-bank','data-task-qc']:
-              if x not in daily_actions: raise SystemExit('Daily action relay missing: '+x)
+          for x in ['complete_topic_review_v432','adjust_learning_plan_progress','plan_item_id','subtopic_id','/functions/v1/record-external-practice','mentor-plan-changed','data-task-complete','data-task-review','data-task-bank','data-task-qc']:
+              if x not in daily_actions: raise SystemExit('Direct daily action invariant missing: '+x)
+          for forbidden in ['native.click','#dailyTasks','LEGACY_RELAY_ACTIONS']:
+              if forbidden in daily_actions: raise SystemExit('Legacy hidden-button dependency returned: '+forbidden)
+          for x in ['subtopic_id,plan_item_id','batchFor','mentor-plan-changed']:
+              if x not in daily: raise SystemExit('Daily exact-result invariant missing: '+x)
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in guard: raise SystemExit('Mentor request guard missing: '+x)
           print('Stabilization invariants validated')
