@@ -34,14 +34,28 @@ jobs:
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
           if 'mentor-v431.html' not in index:
               raise SystemExit('index.html is not pointing to mentor-v431.html')
-          required = ['controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','math-feedback-v429.js','priority-planner-v430.js','week-summary-v431.js']
+          required = ['controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','daily-actions-v432.js','math-feedback-v429.js','priority-planner-v430.js','week-summary-v431.js']
           missing=[x for x in required if x not in wrapper]
-          if missing: raise SystemExit('Missing V4.31 modules: '+', '.join(missing))
+          if missing: raise SystemExit('Missing production modules: '+', '.join(missing))
           for forbidden in ['plan-feasibility-v425.js','daily-mission-v427.js']:
               if forbidden in wrapper: raise SystemExit('Old mutating daily planner still loaded: '+forbidden)
-          if 'mentor-v4.html' not in wrapper: raise SystemExit('V4.31 wrapper base missing')
+          if 'mentor-v4.html' not in wrapper: raise SystemExit('production wrapper base missing')
           if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core: raise SystemExit('base loader incomplete')
           print('Production entrypoints validated')
+      - name: Check stabilization invariants
+        shell: python
+        run: |
+          import pathlib
+          core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
+          week=pathlib.Path('week-summary-v431.js').read_text(encoding='utf-8')
+          daily_actions=pathlib.Path('daily-actions-v432.js').read_text(encoding='utf-8')
+          for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
+              if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
+          for x in ['SOMENTE LEITURA','materialize_due_reviews_v432','Replanejar esta semana','rebuild_smart_week_v431']:
+              if x not in week: raise SystemExit('Stable week invariant missing: '+x)
+          for x in ['data-task-complete','data-task-review','data-task-bank','data-task-qc']:
+              if x not in daily_actions: raise SystemExit('Daily action relay missing: '+x)
+          print('Stabilization invariants validated')
       - name: Check V4.28 daily goals
         shell: python
         run: |
@@ -69,15 +83,15 @@ jobs:
           missing=[x for x in required if x not in p]
           if missing: raise SystemExit('V4.30 priority planner invariant missing: '+', '.join(missing))
           print('Priority planner V4.30 validated')
-      - name: Check V4.31 weekly summary
+      - name: Check weekly summary
         shell: python
         run: |
           import pathlib
           w=pathlib.Path('week-summary-v431.js').read_text(encoding='utf-8')
-          required=['Semana organizada por foco','PROVA • ORDEM • CONTINUIDADE','BLOCO CONJUNTO','1 POR VEZ','rebuild_smart_week_v431','Total do dia']
+          required=['Semana em modo estável','BLOCO CONJUNTO','1 POR VEZ','Total do dia','SOMENTE LEITURA']
           missing=[x for x in required if x not in w]
-          if missing: raise SystemExit('V4.31 weekly invariant missing: '+', '.join(missing))
-          print('Weekly summary V4.31 validated')
+          if missing: raise SystemExit('Weekly invariant missing: '+', '.join(missing))
+          print('Weekly summary validated')
       - name: Check analytics
         shell: python
         run: |
