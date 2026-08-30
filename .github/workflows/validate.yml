@@ -30,16 +30,16 @@ jobs:
         run: |
           import pathlib
           index = pathlib.Path('index.html').read_text(encoding='utf-8')
-          wrapper = pathlib.Path('mentor-v429.html').read_text(encoding='utf-8')
+          wrapper = pathlib.Path('mentor-v430.html').read_text(encoding='utf-8')
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          if 'mentor-v429.html' not in index:
-              raise SystemExit('index.html is not pointing to mentor-v429.html')
-          required = ['controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','math-feedback-v429.js']
+          if 'mentor-v430.html' not in index:
+              raise SystemExit('index.html is not pointing to mentor-v430.html')
+          required = ['controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','math-feedback-v429.js','priority-planner-v430.js']
           missing=[x for x in required if x not in wrapper]
-          if missing: raise SystemExit('Missing V4.29 modules: '+', '.join(missing))
+          if missing: raise SystemExit('Missing V4.30 modules: '+', '.join(missing))
           for forbidden in ['plan-feasibility-v425.js','daily-mission-v427.js']:
               if forbidden in wrapper: raise SystemExit('Old mutating daily planner still loaded: '+forbidden)
-          if 'mentor-v4.html' not in wrapper: raise SystemExit('V4.29 wrapper base missing')
+          if 'mentor-v4.html' not in wrapper: raise SystemExit('V4.30 wrapper base missing')
           if 'intelligence-core-v4.5.js' not in core or 'v2.js' not in core: raise SystemExit('base loader incomplete')
           print('Production entrypoints validated')
       - name: Check V4.28 daily goals
@@ -60,6 +60,15 @@ jobs:
           missing=[x for x in required if x not in f]
           if missing: raise SystemExit('V4.29 math feedback invariant missing: '+', '.join(missing))
           print('Math feedback V4.29 validated')
+      - name: Check V4.30 priority planner
+        shell: python
+        run: |
+          import pathlib
+          p=pathlib.Path('priority-planner-v430.js').read_text(encoding='utf-8')
+          required=['apply_smart_priorities_v430','Ordem inteligente ativa','PROVA PMBA','CONTINUIDADE','Um tópico do fim do edital não pula']
+          missing=[x for x in required if x not in p]
+          if missing: raise SystemExit('V4.30 priority planner invariant missing: '+', '.join(missing))
+          print('Priority planner V4.30 validated')
       - name: Check analytics
         shell: python
         run: |
@@ -80,7 +89,7 @@ jobs:
         shell: python
         run: |
           import pathlib
-          wrapper=pathlib.Path('mentor-v429.html').read_text(encoding='utf-8')
+          wrapper=pathlib.Path('mentor-v430.html').read_text(encoding='utf-8')
           for x in ['report-export-v417.js','report-export-v419.js','report-cleanup-v421.js']:
               if x in wrapper: raise SystemExit('Legacy report module loaded: '+x)
           report=pathlib.Path('report-v422.js').read_text(encoding='utf-8')
