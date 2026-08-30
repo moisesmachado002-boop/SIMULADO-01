@@ -34,6 +34,8 @@ jobs:
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
           if 'mentor-v431.html' not in index:
               raise SystemExit('index.html is not pointing to mentor-v431.html')
+          if '20260830-1907-v434-stable' not in index or '20260830-1907-v434-stable' not in wrapper:
+              raise SystemExit('production entry and wrapper are not on the same stable build')
           required = ['mentor-request-guard-v432.js','controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','daily-actions-v432.js','math-feedback-v429.js','priority-planner-v430.js','week-summary-v431.js']
           missing=[x for x in required if x not in wrapper]
           if missing: raise SystemExit('Missing production modules: '+', '.join(missing))
@@ -51,6 +53,7 @@ jobs:
           daily_actions=pathlib.Path('daily-actions-v432.js').read_text(encoding='utf-8')
           daily=pathlib.Path('daily-goals-v428.js').read_text(encoding='utf-8')
           guard=pathlib.Path('mentor-request-guard-v432.js').read_text(encoding='utf-8')
+          controls=pathlib.Path('controls-v47.js').read_text(encoding='utf-8')
           for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
               if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
           for x in ['SOMENTE LEITURA','materialize_due_reviews_v432','Replanejar esta semana','rebuild_smart_week_v431']:
@@ -63,6 +66,10 @@ jobs:
               if x not in daily: raise SystemExit('Daily exact-result invariant missing: '+x)
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in guard: raise SystemExit('Mentor request guard missing: '+x)
+          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton']:
+              if x not in controls: raise SystemExit('Centralized controls invariant missing: '+x)
+          for forbidden in ['manualComplete','data-v47-reopen','function reopen']:
+              if forbidden in controls: raise SystemExit('Legacy completion/reopen control returned: '+forbidden)
           print('Stabilization invariants validated')
       - name: Check V4.28 daily goals
         shell: python
