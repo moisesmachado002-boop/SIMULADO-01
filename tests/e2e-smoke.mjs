@@ -16,12 +16,15 @@ if(!(await frame.locator('[data-page="week"]').count()))throw new Error('Week na
 if(!(await frame.locator('#savePreferencesButton').count()))throw new Error('Schedule preferences button missing');
 
 if(await frame.locator('#authModal.open').count())await frame.locator('#authClose').click();
-const planNav=frame.locator('[data-page="plan"]:visible').first();
-if(!(await planNav.count()))throw new Error('Visible Plan navigation missing');
+const planGroup=frame.locator('[data-v49-toggle="plan"]');
+if(!(await planGroup.count()))throw new Error('Plan navigation group missing');
+await planGroup.click();
+const planNav=frame.locator('[data-v49-sub="plan"] [data-page="plan"]:visible').first();
+if(!(await planNav.count()))throw new Error('Visible Plan navigation missing after opening group');
 await planNav.click();
 await frame.waitForTimeout(180);
 if(!(await frame.locator('[data-page-view="plan"].active').count()))throw new Error('Plan navigation failed');
-const weekNav=frame.locator('[data-page="week"]:visible').first();
+const weekNav=frame.locator('.v49-direct[data-page="week"]');
 if(!(await weekNav.count()))throw new Error('Visible Week navigation missing');
 await weekNav.click();
 await frame.waitForTimeout(180);
