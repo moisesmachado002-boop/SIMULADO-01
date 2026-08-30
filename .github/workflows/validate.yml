@@ -32,15 +32,15 @@ jobs:
           index=pathlib.Path('index.html').read_text(encoding='utf-8')
           wrapper=pathlib.Path('mentor-v431.html').read_text(encoding='utf-8')
           core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          build='20260830-2025-v500-consolidated'
+          build='20260830-v500-final1'
           if build not in index or build not in wrapper: raise SystemExit('Production build mismatch')
           if 'mentor-v431.html' not in index: raise SystemExit('Production entry missing')
-          required=['mentor-request-guard-v432.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','plan-ui-v500.js','daily-actions-v432.js','math-feedback-v429.js']
+          required=['mentor-request-guard-v432.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','question-elimination-v412.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','plan-ui-v500.js','daily-actions-v432.js','math-feedback-v429.js']
           missing=[x for x in required if x not in wrapper]
           if missing: raise SystemExit('Missing production modules: '+', '.join(missing))
-          forbidden=['controls-v47.js','daily-goals-v428.js','priority-planner-v430.js','week-summary-v431.js','plan-feasibility-v425.js','daily-mission-v427.js']
+          forbidden=['controls-v47.js','daily-goals-v428.js','priority-planner-v430.js','week-summary-v431.js','plan-feasibility-v425.js','daily-mission-v427.js','overdue-lock-v415.js','timer-review-manual-v416.js']
           loaded=[x for x in forbidden if x in wrapper]
-          if loaded: raise SystemExit('Superseded planning modules still loaded: '+', '.join(loaded))
+          if loaded: raise SystemExit('Superseded/conflicting modules still loaded: '+', '.join(loaded))
           for x in ['loadModule','attempt<3','module-load','mentorModuleError']:
               if x not in wrapper: raise SystemExit('Resilient loader missing: '+x)
           for x in ['V5: carregar dados não altera o cronograma','bankSubtopic','plan-ui-v500']:
@@ -53,10 +53,10 @@ jobs:
         run: |
           import pathlib
           p=pathlib.Path('plan-ui-v500.js').read_text(encoding='utf-8')
-          required=['update_study_preferences_v434','rebuild_smart_week_v431','SOMENTE LEITURA','Revisões de','review|','data-task-review','data-task-bank','data-task-qc','data-task-complete','teto útil','review_ratio','stopImmediatePropagation','v500-native-hidden']
+          required=['update_study_preferences_v434','rebuild_smart_week_v431','SOMENTE LEITURA','Revisões de','review|','data-task-review','data-task-bank','data-task-qc','data-task-complete','teto útil','review_ratio','stopImmediatePropagation','v500-native-hidden','ATRASO','Nada foi movido automaticamente']
           missing=[x for x in required if x not in p]
           if missing: raise SystemExit('V5 plan invariant missing: '+', '.join(missing))
-          for forbidden in ['native.click','materialize_due_reviews_v432','apply_smart_priorities_v430']:
+          for forbidden in ['native.click','materialize_due_reviews_v432','apply_smart_priorities_v430','sync_overdue_study_day_lock','replan_overdue_study_day']:
               if forbidden in p: raise SystemExit('Legacy planner dependency returned: '+forbidden)
           print('V5 plan controller validated')
       - name: Check direct daily actions
