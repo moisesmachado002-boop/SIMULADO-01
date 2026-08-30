@@ -6,14 +6,14 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Mentor IA V4.31 — Estabilização</title>
+<title>Mentor IA V4.35 — Estabilização</title>
 <style>html,body{margin:0;width:100%;height:100%;background:#f4f4f4;overflow:hidden}iframe{display:block;width:100%;height:100dvh;border:0;background:#f4f4f4}</style>
 </head>
 <body>
 <iframe id="mentorFrame" title="Mentor IA"></iframe>
 <script>
 (() => {
-  const BUILD='20260830-1925-v434-stable2';
+  const BUILD='20260830-1945-v435-stable';
   const frame=document.getElementById('mentorFrame');
   const modules=[
     ['mentorV432RequestGuardScript','./mentor-request-guard-v432.js?build='+BUILD],
@@ -41,7 +41,9 @@
   ];
   function normalizedHash(value){const h=String(value||'').trim();return h&&h.startsWith('#')?h:'#daily';}
   function loadFrame(hash){frame.src='./mentor-v4.html?build='+BUILD+normalizedHash(hash);}
-  function injectModules(){let tries=0;const timer=setInterval(()=>{tries++;try{const d=frame.contentDocument;if(!d)return;if(d.getElementById('appShell')){modules.forEach(([id,src])=>{if(d.getElementById(id))return;const s=d.createElement('script');s.id=id;s.src=src;s.async=false;d.head.appendChild(s);});clearInterval(timer);}}catch(e){}if(tries>200)clearInterval(timer);},180);}
+  function loadModule(d,id,src){return new Promise((resolve,reject)=>{let attempt=0;const run=()=>{attempt++;const old=d.getElementById(id);if(old)old.remove();const s=d.createElement('script');s.id=id;s.async=false;s.dataset.attempt=String(attempt);s.src=src+(src.includes('?')?'&':'?')+'try='+attempt;s.onload=()=>{s.dataset.loaded='1';resolve();};s.onerror=()=>{s.remove();if(attempt<3)setTimeout(run,350*attempt);else reject(new Error(id));};d.head.appendChild(s);};run();});}
+  function showModuleError(d,failed){let box=d.getElementById('mentorModuleError');if(!box){box=d.createElement('div');box.id='mentorModuleError';box.style.cssText='position:fixed;top:0;left:0;right:0;z-index:999999;background:#7f1d1d;color:#fff;padding:9px 12px;font:600 12px system-ui;text-align:center';d.body.appendChild(box);}box.textContent='Alguns componentes não carregaram. Atualize a página. ('+failed.length+')';}
+  function injectModules(){let tries=0,running=false;const timer=setInterval(async()=>{tries++;if(running)return;try{const d=frame.contentDocument;if(!d)return;if(!d.getElementById('appShell'))return;clearInterval(timer);running=true;const failed=[];for(const [id,src] of modules){try{await loadModule(d,id,src);}catch(e){failed.push(id);console.error('module-load',id,e);}}if(failed.length)showModuleError(d,failed);else d.getElementById('mentorModuleError')?.remove();}catch(e){console.error('injectModules',e);}finally{running=false;}if(tries>240)clearInterval(timer);},180);}
   function downloadBlob(name,blob){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name||'arquivo';a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
   frame.addEventListener('load',injectModules);
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==frame.contentWindow)return;if(e.data?.type==='mentor-refresh'){const hash=normalizedHash(e.data.hash);history.replaceState(null,'',location.pathname+location.search+hash);loadFrame(hash);return;}if(e.data?.type==='mentor-download-text'){try{downloadBlob(e.data.name,new Blob([String(e.data.content??'')],{type:e.data.mime||'text/plain;charset=utf-8'}));}catch(err){console.error('download-text',err);}return;}if(e.data?.type==='mentor-download-binary'){try{downloadBlob(e.data.name,new Blob([e.data.buffer],{type:e.data.mime||'application/octet-stream'}));}catch(err){console.error('download-binary',err);}}});
