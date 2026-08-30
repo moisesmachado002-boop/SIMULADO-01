@@ -146,6 +146,7 @@
   }
 
   function clearMismatchedContext(e){
+    if(!e.isTrusted)return;
     const id=e.target?.id;if(['bankSubject','bankTopic','bankSubtopic'].includes(id)){const c=readCtx(BANK_KEY);if(c&&!bankContextMatches(c))clearCtx(BANK_KEY);}
     if(['qcSubject','qcTopic','qcSubtopic'].includes(id)){const c=readCtx(QC_KEY);if(c&&!qcContextMatches(c))clearCtx(QC_KEY);}
   }
