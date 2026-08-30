@@ -34,7 +34,7 @@ jobs:
           core = pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
           if 'mentor-v431.html' not in index:
               raise SystemExit('index.html is not pointing to mentor-v431.html')
-          if '20260830-1907-v434-stable' not in index or '20260830-1907-v434-stable' not in wrapper:
+          if '20260830-1925-v434-stable2' not in index or '20260830-1925-v434-stable2' not in wrapper:
               raise SystemExit('production entry and wrapper are not on the same stable build')
           required = ['mentor-request-guard-v432.js','controls-v47.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','overdue-lock-v415.js','question-elimination-v412.js','timer-review-manual-v416.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','daily-goals-v428.js','daily-actions-v432.js','math-feedback-v429.js','priority-planner-v430.js','week-summary-v431.js']
           missing=[x for x in required if x not in wrapper]
@@ -56,8 +56,10 @@ jobs:
           controls=pathlib.Path('controls-v47.js').read_text(encoding='utf-8')
           for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
               if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
-          for x in ['SOMENTE LEITURA','materialize_due_reviews_v432','Replanejar esta semana','rebuild_smart_week_v431']:
+          for x in ['SOMENTE LEITURA','Replanejar esta semana','rebuild_smart_week_v431','mentor-preferences-changed','[data-action="replan"]','stopImmediatePropagation']:
               if x not in week: raise SystemExit('Stable week invariant missing: '+x)
+          if 'materialize_due_reviews_v432' in week:
+              raise SystemExit('Frontend review materialization returned; rebuild_smart_week_v431 must own review packing')
           for x in ['complete_topic_review_v432','adjust_learning_plan_progress','plan_item_id','subtopic_id','/functions/v1/record-external-practice','mentor-plan-changed','data-task-complete','data-task-review','data-task-bank','data-task-qc']:
               if x not in daily_actions: raise SystemExit('Direct daily action invariant missing: '+x)
           for forbidden in ['native.click','#dailyTasks','LEGACY_RELAY_ACTIONS']:
@@ -66,10 +68,10 @@ jobs:
               if x not in daily: raise SystemExit('Daily exact-result invariant missing: '+x)
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in guard: raise SystemExit('Mentor request guard missing: '+x)
-          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton','removeLegacyReopen']:
+          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton','removeLegacyReopen','mentor-preferences-changed']:
               if x not in controls: raise SystemExit('Centralized controls invariant missing: '+x)
-          for forbidden in ['manualComplete','function reopen','Reabrir na meta de hoje','dataset.v47Reopen =','dataset.v47Reopen=']:
-              if forbidden in controls: raise SystemExit('Legacy completion/reopen behavior returned: '+forbidden)
+          for forbidden in ['manualComplete','function reopen','Reabrir na meta de hoje','dataset.v47Reopen =','dataset.v47Reopen=','[data-action="replan"]']:
+              if forbidden in controls: raise SystemExit('Legacy completion/replan behavior returned: '+forbidden)
           print('Stabilization invariants validated')
       - name: Check V4.28 daily goals
         shell: python
