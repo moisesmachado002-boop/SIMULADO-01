@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in ./*.js; do
+          for file in ./*.js ./tests/*.mjs; do
             echo "Checking $file"
             node --check "$file"
           done
@@ -43,7 +43,10 @@ jobs:
           if loaded: raise SystemExit('Superseded planning modules still loaded: '+', '.join(loaded))
           for x in ['loadModule','attempt<3','module-load','mentorModuleError']:
               if x not in wrapper: raise SystemExit('Resilient loader missing: '+x)
-          if 'mentor-v4.html' not in wrapper or 'v2.js' not in core: raise SystemExit('Base shell incomplete')
+          for x in ['V5: carregar dados não altera o cronograma','bankSubtopic','plan-ui-v500']:
+              if x not in core: raise SystemExit('Minimal V5 bootstrap invariant missing: '+x)
+          if 'intelligence-core-v4.5.js' in core: raise SystemExit('Legacy intelligence core is still loaded')
+          if core.count('.replace(')>5: raise SystemExit('Bootstrap accumulated too many runtime patches again')
           print('V5 production entrypoints validated')
       - name: Check V5 plan controller
         shell: python
@@ -56,14 +59,6 @@ jobs:
           for forbidden in ['native.click','materialize_due_reviews_v432','apply_smart_priorities_v430']:
               if forbidden in p: raise SystemExit('Legacy planner dependency returned: '+forbidden)
           print('V5 plan controller validated')
-      - name: Check read-only base load
-        shell: python
-        run: |
-          import pathlib
-          core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          for x in ['carregar dados não altera o cronograma','autoPlanOnLoad']:
-              if x not in core: raise SystemExit('Read-only load invariant missing: '+x)
-          print('Base load remains read-only')
       - name: Check direct daily actions
         shell: python
         run: |
@@ -83,30 +78,34 @@ jobs:
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in g: raise SystemExit('Mentor request guard missing: '+x)
           print('Mentor request guard validated')
-      - name: Check math feedback
-        shell: python
-        run: |
-          import pathlib
-          f=pathlib.Path('math-feedback-v429.js').read_text(encoding='utf-8')
-          for x in ['Resolução passo a passo','Comentários das alternativas','Conferência do gabarito']:
-              if x not in f: raise SystemExit('Math feedback missing: '+x)
-          print('Math feedback validated')
-      - name: Check analytics and report
+      - name: Check analytics report math and PDF
         shell: python
         run: |
           import pathlib
           a=pathlib.Path('analytics-v423.js').read_text(encoding='utf-8')
           r=pathlib.Path('report-v422.js').read_text(encoding='utf-8')
+          m=pathlib.Path('math-feedback-v429.js').read_text(encoding='utf-8')
+          p=pathlib.Path('pdf-export-v424.js').read_text(encoding='utf-8')
           for x in ['Total de Questões Feitas','Por disciplina','Por assunto','Evolução por assunto','v423WeekGrid']:
               if x not in a: raise SystemExit('Analytics invariant missing: '+x)
           for x in [".in('status',['pending','in_progress','completed'])",'pending_review_topics','active_plan_items']:
               if x not in r: raise SystemExit('Report invariant missing: '+x)
-          print('Analytics/report validated')
-      - name: Check PDF
-        shell: python
-        run: |
-          import pathlib
-          p=pathlib.Path('pdf-export-v424.js').read_text(encoding='utf-8')
+          for x in ['Resolução passo a passo','Comentários das alternativas','Conferência do gabarito']:
+              if x not in m: raise SystemExit('Math feedback missing: '+x)
           for x in ['jspdf/2.5.1/jspdf.umd.min.js','mentor-download-binary','#r422Pdf']:
               if x not in p: raise SystemExit('PDF invariant missing: '+x)
-          print('PDF validated')
+          print('Secondary modules validated')
+      - name: Browser smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save playwright@1.55.0 http-server@14.1.1
+          npx playwright install chromium
+          npx http-server . -p 4173 -c-1 >/tmp/mentor-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/e2e-smoke.mjs
