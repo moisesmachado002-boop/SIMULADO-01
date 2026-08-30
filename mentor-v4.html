@@ -38,6 +38,10 @@
       if (!appJs.includes(oldEnsurePlan)) throw new Error('Planejador base mudou.');
       appJs = appJs.replace(oldEnsurePlan, newEnsurePlan);
 
+      const autoPlanOnLoad = "if(plan)queueMicrotask(()=>ensurePlan().catch(error=>console.warn('Planejamento:',error)));";
+      if (!appJs.includes(autoPlanOnLoad)) throw new Error('Disparo automático do planejamento mudou.');
+      appJs = appJs.replace(autoPlanOnLoad, "if(plan){/* V4.32 estabilização: carregar dados não altera o cronograma */}");
+
       const oldStartBank = "function startBank(q=null,taskId=null){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');state.bank.activeTaskId=taskId;showQuestion(q);}";
       const newStartBank = "function startBank(q=null,taskId=undefined){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');if(taskId!==undefined)state.bank.activeTaskId=taskId;showQuestion(q);}";
       if (appJs.includes(oldStartBank)) appJs = appJs.replace(oldStartBank, newStartBank);
