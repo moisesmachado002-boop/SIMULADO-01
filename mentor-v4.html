@@ -6,87 +6,44 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Mentor IA V4.21 — PMBA</title>
+  <title>Mentor IA V5 — Base</title>
   <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
 </head>
 <body>
-  <div class="loader"><strong>Mentor IA V4.21</strong><span>Organizando assuntos e subassuntos…</span></div>
+  <div class="loader"><strong>Mentor IA V5</strong><span>Carregando base consolidada…</span></div>
   <script>
     (async () => {
-      const [htmlResponse, jsResponse, coreResponse] = await Promise.all([
-        fetch('./v2.html?base=20260828-v421', { cache: 'no-store' }),
-        fetch('./v2.js?base=20260828-v421', { cache: 'no-store' }),
-        fetch('./intelligence-core-v4.5.js?base=20260828-v421', { cache: 'no-store' })
+      const [htmlResponse, jsResponse] = await Promise.all([
+        fetch('./v2.html?base=20260830-v500', { cache: 'no-store' }),
+        fetch('./v2.js?base=20260830-v500', { cache: 'no-store' })
       ]);
-      if (!htmlResponse.ok || !jsResponse.ok || !coreResponse.ok) throw new Error('Não foi possível carregar a interface base.');
-      let html = await htmlResponse.text(), appJs = await jsResponse.text(), coreJs = await coreResponse.text();
+      if (!htmlResponse.ok || !jsResponse.ok) throw new Error('Não foi possível carregar a interface base.');
+      let html = await htmlResponse.text(), appJs = await jsResponse.text();
 
-      coreJs = coreJs
-        .replace("const VERSION='4.5.0';", "const VERSION='4.21.0';")
-        .replace('SUBJECT_SAMPLE_MIN=8', 'SUBJECT_SAMPLE_MIN=2')
-        .replace("const MAX_SUBJECTS=2,MIN_DAILY_QUESTIONS=30,BASE_PER_SUBJECT=20,MEDIUM_PER_SUBJECT=30,CRITICAL_PER_SUBJECT=40;", "const MAX_SUBJECTS=2,MIN_DAILY_QUESTIONS=20,BASE_PER_SUBJECT=20,MEDIUM_PER_SUBJECT=20,CRITICAL_PER_SUBJECT=20;")
-        .replace("quota:n===1?MIN_DAILY_QUESTIONS:Math.floor(MIN_DAILY_QUESTIONS/n)", "quota:BASE_PER_SUBJECT")
-        .replace("function isGenerated(p){const s=String(p.source_reason||'');return s.startsWith(SOURCE_PREFIX)||OLD_PREFIXES.some(x=>s.startsWith(x))||s==='cap_fill_qconcursos'||s.startsWith('revisao_');}", "function isGenerated(p){const s=String(p.source_reason||'');return s.startsWith(SOURCE_PREFIX)||OLD_PREFIXES.some(x=>s.startsWith(x))||s==='cap_fill_qconcursos'||s.startsWith('revisao_')||s.startsWith('overdue_v412_')||s.startsWith('locked_overdue_')||s.startsWith('replanned_overdue_');}")
-        .replace("const completedCount=completedRows.reduce((s,p)=>s+Math.max(1,Number(p.question_target||1)),0);", "let completedCount=completedRows.reduce((s,p)=>s+(p.task_type==='questions'?Number(p.question_target||0):0),0);if(day===m.today&&completedRows.some(p=>p.carried_from_date))completedCount=Math.max(completedCount,quota);")
-        .replace("const reviewTarget=existingReview?Math.min(remaining,Math.max(1,Number(existingReview.question_target||1))):Math.min(MAX_REVIEW_QUESTIONS,due.length,remaining);\n        const questionTarget=existingQuestions?Math.max(1,Number(existingQuestions.question_target||1)):Math.max(0,remaining-reviewTarget);", "const completedReview=m.plan.some(p=>p.scheduled_for===day&&p.topic_id===topic.id&&p.task_type==='review'&&p.status==='completed'&&isGenerated(p));\n        const reviewTarget=completedReview?0:(existingReview?1:(due.length?1:0));\n        const risk=idx.maxRisk(topic.id),reviewMinutes=reviewTarget?(risk>=95||due.length>=4?15:risk>=80||due.length>=2?12:8):0;\n        const questionTarget=existingQuestions?Math.max(1,Number(existingQuestions.question_target||1)):remaining;")
-        .replace("const first=due[0]||{question_id:existingReview?.question_id},risk=forgettingRisk(idx.stateByQ.get(first.question_id));\n          desired.push({key:`${day}|review|${topic.id}`,scheduled_for:day,topic_id:topic.id,question_id:first.question_id||existingReview?.question_id,task_type:'review',question_target:reviewTarget,duration_minutes:Math.ceil(reviewTarget*paceSec/60),priority:risk>=95?100:risk>=85?96:90,status:'pending',source_reason:`${SOURCE_PREFIX}review`,plan_version:PLAN,sort_order:slot*100+10,progress_count:0});", "desired.push({key:`${day}|review|${topic.id}`,scheduled_for:day,topic_id:topic.id,question_id:null,task_type:'review',question_target:1,duration_minutes:reviewMinutes,priority:risk>=95?100:risk>=85?96:90,status:'pending',source_reason:`${SOURCE_PREFIX}review`,plan_version:PLAN,sort_order:slot*100+10,progress_count:0});")
-        .replace("schema:'mentor-ia-study-report-v1'", "schema:'mentor-ia-study-report-v2'")
-        .replace("target:Number(p.question_target||0)", "target_questions:p.task_type==='questions'?Number(p.question_target||0):0");
-
-      const oldEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
-      const newEnsurePlan = "async function ensurePlan(){if(!state.user||state.planBusy)return;if(window.MentorIntelligence?.run){await window.MentorIntelligence.run({reload:false});await loadData({plan:false});return;}await ensureReviewsInPlan();await normalizeAndFillPlan();renderAll();}";
-      if (!appJs.includes(oldEnsurePlan)) throw new Error('Planejador base mudou.');
-      appJs = appJs.replace(oldEnsurePlan, newEnsurePlan);
-
+      // V5: carregar dados não altera o cronograma. O plano é propriedade do backend V5.
       const autoPlanOnLoad = "if(plan)queueMicrotask(()=>ensurePlan().catch(error=>console.warn('Planejamento:',error)));";
-      if (!appJs.includes(autoPlanOnLoad)) throw new Error('Disparo automático do planejamento mudou.');
-      appJs = appJs.replace(autoPlanOnLoad, "if(plan){/* V4.32 estabilização: carregar dados não altera o cronograma */}");
+      if (!appJs.includes(autoPlanOnLoad)) throw new Error('Invariante de carregamento mudou.');
+      appJs = appJs.replace(autoPlanOnLoad, "if(plan){/* V5: carregar dados não altera o cronograma */}");
 
-      const oldStartBank = "function startBank(q=null,taskId=null){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');state.bank.activeTaskId=taskId;showQuestion(q);}";
-      const newStartBank = "function startBank(q=null,taskId=undefined){if(!requireUser())return;q=q||chooseBankQuestion();if(!q)return toast('Não há questão disponível neste filtro.','error');if(taskId!==undefined)state.bank.activeTaskId=taskId;showQuestion(q);}";
-      if (appJs.includes(oldStartBank)) appJs = appJs.replace(oldStartBank, newStartBank);
+      // O botão legado nunca chama o planejador V2. plan-ui-v500 é o único controlador de replanejamento.
+      const legacyReplan = "const repl=e.target.closest('[data-action=\"replan\"]');if(repl){replan().catch(showError);return;}";
+      if (appJs.includes(legacyReplan)) appJs = appJs.replace(legacyReplan, "const repl=e.target.closest('[data-action=\"replan\"]');if(repl){toast('Planejador V5 carregando…','neutral');return;}");
 
-      // V4.14+ — mantém o tópico oficial como métrica, mas permite filtrar questões por subassunto.
+      // Única adaptação de dados ainda feita na base: filtro por subassunto no banco de questões.
       appJs = appJs
         .replace("topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not", "topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind,subtopic_id').not")
         .replace("function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}", "function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',stid=$('#bankSubtopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(!stid||q.subtopic_id===stid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}")
         .replace("['bankSubject','bankTopic','bankMode'].forEach", "['bankSubject','bankTopic','bankSubtopic','bankMode'].forEach");
 
-      const reviewCode = `
-  function injectTopicReviewV46(){
-    if($('#topicReviewV46'))return;
-    const style=document.createElement('style');style.textContent='.trv46{position:fixed;inset:0;display:none;align-items:flex-end;justify-content:center;background:#0009;z-index:99999}.trv46.open{display:flex}.trs46{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:22px 22px 0 0;padding:22px}.st46{padding:14px;margin:12px 0;border-radius:12px;background:#f5f5f5;border-left:4px solid #f2c500}.al46{padding:12px;border-radius:12px;background:#fff2e5;margin:12px 0}.ac46{display:flex;gap:10px;flex-wrap:wrap}.ac46 button{flex:1}';document.head.appendChild(style);
-    const m=document.createElement('div');m.id='topicReviewV46';m.className='trv46';m.innerHTML='<div class="trs46"><div style="display:flex;justify-content:space-between;gap:12px"><div><small>REVISÃO ATIVA DO ASSUNTO</small><h2 id="rt46"></h2><p id="rm46" class="muted"></p></div><button class="secondary-button" id="rx46">×</button></div><div id="rb46"></div><div class="ac46"><button class="primary-button" id="rd46">Concluir revisão do assunto</button><button class="secondary-button" id="rv46">Voltar</button></div></div>';document.body.appendChild(m);$('#rx46').onclick=$('#rv46').onclick=()=>m.classList.remove('open');
-  }
-  async function openTopicReviewV46(item){
-    if(!item)return;injectTopicReviewV46();const t=topicById(item.topic_id),s=t?subjectById(t.subject_id):null;if(!t)return;
-    const rows=state.attempts.filter(a=>a.topic_id===t.id).slice(0,40),wrong=rows.filter(a=>!a.is_correct),hi=wrong.filter(a=>Number(a.confidence)>=5),lo=rows.filter(a=>a.is_correct&&Number(a.confidence)<=2),err={};wrong.forEach(a=>{const k=a.error_type||'erro não classificado';err[k]=(err[k]||0)+1});const top=Object.entries(err).sort((a,b)=>b[1]-a[1]).slice(0,3),mins=Number(item.duration_minutes||8),due=state.reviews.filter(r=>r.topic_id===t.id&&new Date(r.due_at)<=new Date()).length,alerts=[];
-    if(hi.length)alerts.push(hi.length+' erro(s) com confiança alta');if(lo.length)alerts.push(lo.length+' acerto(s) com confiança baixa');if(due)alerts.push(due+' revisão(ões) espaçada(s) vencidas');
-    $('#rt46').textContent=(t.syllabus_code||'')+' • '+t.title;$('#rm46').textContent=(s?.name||'')+' • '+mins+' min reservados';$('#rb46').innerHTML=(alerts.length?'<div class="al46"><strong>Por que este assunto voltou</strong><br>'+alerts.map(x=>'• '+esc(x)).join('<br>')+'</div>':'')+'<div class="st46"><strong>1. Recuperação sem olhar — 2 min</strong>Explique em voz alta ou no papel tudo que lembra de <b>'+esc(t.title)+'</b>. Não abra a questão errada.</div><div class="st46"><strong>2. Revisão focada — '+Math.max(3,mins-4)+' min</strong>Abra sua teoria, resumo ou lei e confira somente os pontos que não conseguiu recuperar.'+(top.length?' Erros mais registrados: '+top.map(([k,n])=>esc(k)+' ('+n+')').join(', ')+'.':'')+'</div><div class="st46"><strong>3. Fechamento — 2 min</strong>Anote uma regra, exceção ou pegadinha. Depois faça as questões novas do mesmo assunto para testar a revisão.</div>';
-    const b=$('#rd46');b.onclick=async()=>{b.disabled=true;try{const now=new Date(),started=new Date(now.getTime()-mins*60000);let r=await state.db.from('study_plan_items').update({status:'completed',progress_count:1,completed_at:now.toISOString()}).eq('id',item.id).eq('user_id',state.user.id);if(r.error)throw r.error;r=await state.db.from('reviews').update({status:'completed',completed_at:now.toISOString(),updated_at:now.toISOString()}).eq('user_id',state.user.id).eq('topic_id',t.id).eq('status','pending').lte('due_at',now.toISOString());if(r.error)throw r.error;await state.db.from('study_sessions').insert({user_id:state.user.id,subject_id:t.subject_id,topic_id:t.id,started_at:started.toISOString(),ended_at:now.toISOString(),duration_minutes:mins,questions_answered:0,correct_answers:0});$('#topicReviewV46').classList.remove('open');await loadData();}finally{b.disabled=false;}};$('#topicReviewV46').classList.add('open');
-  }
-`;
-      const bootMarker = '  async function boot(){';
-      if (!appJs.includes(bootMarker)) throw new Error('Ponto da revisão não encontrado.');
-      appJs = appJs.replace(bootMarker, reviewCode + '\n' + bootMarker);
-
-      const oldReviewHandler = "const r=e.target.closest('[data-task-review]');if(r){const item=state.plan.find(x=>x.id===r.dataset.taskReview),q=state.questions.find(x=>x.id===item?.question_id);navigate('questions',{tab:'bank'});if(q)startBank(q,item.id);else{if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}startBank(null,item?.id);}return;}";
-      const newReviewHandler = "const r=e.target.closest('[data-task-review]');if(r){const item=state.plan.find(x=>x.id===r.dataset.taskReview);openTopicReviewV46(item).catch(showError);return;}";
-      if (!appJs.includes(oldReviewHandler)) throw new Error('Ação de revisão mudou.');
-      appJs = appJs.replace(oldReviewHandler, newReviewHandler)
-        .replace('>Resolver revisão</button>', '>Revisar assunto</button>')
-        .replace("p.task_type==='review'?'Revisão':`${target} questão(ões)`", "p.task_type==='review'?'Revisão do assunto':`${target} questão(ões)`")
-        .replace("p.task_type==='review'?1:Number(p.question_target||0)", "p.task_type==='review'?0:Number(p.question_target||0)")
-        .replace("p.task_type==='review'?'1 revisão':`${p.question_target||0} questões`", "p.task_type==='review'?'Revisão do assunto':`${p.question_target||0} questões`");
-
-      const oldBankOpen = "if(item?.topic_id){$('#bankTopic').value=item.topic_id;renderBankCounts();}state.bank.activeTaskId=item?.id||null;startBank();";
-      const newBankOpen = "if(item?.topic_id){const t=topicById(item.topic_id);if(t&&$('#bankSubject')){$('#bankSubject').value=t.subject_id;$('#bankSubject').dispatchEvent(new Event('change'));}$('#bankTopic').value=item.topic_id;}if($('#bankMode'))$('#bankMode').value='unseen';renderBankCounts();startBank(null,item?.id);";
-      if (appJs.includes(oldBankOpen)) appJs = appJs.replace(oldBankOpen, newBankOpen);
-
-      const coreBlobUrl=URL.createObjectURL(new Blob([coreJs],{type:'text/javascript'})),appBlobUrl=URL.createObjectURL(new Blob([appJs],{type:'text/javascript'}));
-      const oldScript='<script src="v2.js?v=3.0.0"><\/script>',newScripts='<script src="'+coreBlobUrl+'"><\/script><script src="'+appBlobUrl+'"><\/script>';
-      if(!html.includes(oldScript))throw new Error('Carregador da interface mudou.');html=html.replace(oldScript,newScripts);document.open();document.write(html);document.close();
-    })().catch(error=>{document.body.innerHTML='<div class="loader"><strong>Falha ao carregar o Mentor IA</strong><span>'+String(error.message||error)+'</span></div>';});
+      const appBlobUrl=URL.createObjectURL(new Blob([appJs],{type:'text/javascript'}));
+      const oldScript='<script src="v2.js?v=3.0.0"><\/script>';
+      if (!html.includes(oldScript)) throw new Error('Script base mudou.');
+      html=html.replace(oldScript,'<script src="'+appBlobUrl+'"><\/script>');
+      document.open();document.write(html);document.close();
+    })().catch(error => {
+      console.error(error);
+      document.body.innerHTML='<div style="font:600 14px system-ui;padding:24px;color:#7f1d1d">Falha ao carregar a base V5. Atualize a página.</div>';
+    });
   </script>
 </body>
 </html>
