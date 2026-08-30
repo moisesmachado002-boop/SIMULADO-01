@@ -62,8 +62,7 @@
       if(error)throw error;if(!data?.ok)throw new Error('Não foi possível salvar os horários.');
       window.MentorRequestGuard?.invalidate?.();
       document.dispatchEvent(new CustomEvent('mentor-preferences-changed',{detail:data}));
-      toast('Horários salvos. Replanejando a semana...','ok');
-      setTimeout(()=>document.querySelector('[data-action="replan"]')?.click(),80);
+      toast('Horários salvos. A semana será recalculada pelo planejador estável.','ok');
     } finally {
       if(btn){btn.disabled=false;delete btn.dataset.busy;}
     }
