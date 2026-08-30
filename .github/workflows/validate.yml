@@ -66,10 +66,10 @@ jobs:
               if x not in daily: raise SystemExit('Daily exact-result invariant missing: '+x)
           for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
               if x not in guard: raise SystemExit('Mentor request guard missing: '+x)
-          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton']:
+          for x in ['update_study_preferences_v434','#savePreferencesButton','questionSkipButton','removeLegacyReopen']:
               if x not in controls: raise SystemExit('Centralized controls invariant missing: '+x)
-          for forbidden in ['manualComplete','data-v47-reopen','function reopen']:
-              if forbidden in controls: raise SystemExit('Legacy completion/reopen control returned: '+forbidden)
+          for forbidden in ['manualComplete','function reopen','Reabrir na meta de hoje','dataset.v47Reopen =','dataset.v47Reopen=']:
+              if forbidden in controls: raise SystemExit('Legacy completion/reopen behavior returned: '+forbidden)
           print('Stabilization invariants validated')
       - name: Check V4.28 daily goals
         shell: python
