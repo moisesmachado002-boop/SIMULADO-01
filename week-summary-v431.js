@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  if (window.__mentorWeekSummaryV432) return;
-  window.__mentorWeekSummaryV432 = true;
+  if (window.__mentorWeekSummaryV434) return;
+  window.__mentorWeekSummaryV434 = true;
 
   const URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
   const KEY='sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
@@ -9,7 +9,7 @@
   const db=window.supabase?.createClient?.(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   if(!db)return;
   const $=s=>document.querySelector(s);
-  const esc=(v='')=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc=(v='')=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const dateKey=(d=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
   const addDays=(key,n)=>{const d=new Date(`${key}T15:00:00Z`);d.setUTCDate(d.getUTCDate()+n);return dateKey(d);};
   const today=()=>dateKey();
@@ -27,7 +27,8 @@
   `;document.head.appendChild(s);}
 
   function mondayOf(key){const d=new Date(`${key}T15:00:00Z`),w=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+1-w);return dateKey(d);}
-  function inferStart(){const heads=[...document.querySelectorAll('#v423WeekGrid .v423-day-head')];if(heads.length){const m=heads[0].textContent.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return `${m[3]}-${m[2]}-${m[1]}`;}return activeStart||mondayOf(today());}
+  function defaultReplanStart(){const key=today(),d=new Date(`${key}T15:00:00Z`),w=d.getUTCDay()||7;return w===7?addDays(key,1):mondayOf(key);}
+  function inferStart(){const heads=[...document.querySelectorAll('#v423WeekGrid .v423-day-head')];if(heads.length){const m=heads[0].textContent.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return `${m[3]}-${m[2]}-${m[1]}`;}return activeStart||defaultReplanStart();}
   function br(k){const [y,m,d]=k.split('-');return `${d}/${m}/${y}`;}
   function weekday(k){return new Intl.DateTimeFormat('pt-BR',{timeZone:TZ,weekday:'long'}).format(new Date(`${k}T15:00:00Z`)).replace(/^./,x=>x.toUpperCase());}
 
@@ -51,17 +52,44 @@
   }
 
   function render(start,ctx){const host=$('#v423WeekGrid');if(!host||!ctx)return;style();activeStart=start;const studyDays=new Set((ctx.prefs.study_days||[1,2,3,4,5,6]).map(Number));const days=Array.from({length:7},(_,i)=>addDays(start,i));const title=$('#v423WeekTitle');if(title){const nowMon=mondayOf(today()),delta=Math.round((new Date(`${start}T12:00:00Z`)-new Date(`${nowMon}T12:00:00Z`))/604800000);title.textContent=`Veja sua programação: ${delta===0?'semana atual':delta===1?'próxima semana':delta===-1?'semana anterior':delta>0?`${delta} semanas à frente`:`${Math.abs(delta)} semanas atrás`}`;}
-    host.innerHTML=`<div class="v431-week-note"><div><strong>Semana em modo estável</strong><br><span>Abrir, atualizar ou navegar pela semana não altera o cronograma. Mudanças só acontecem quando você manda replanejar.</span></div><div class="v432-week-actions"><b>SOMENTE LEITURA</b><button class="v432-replan" id="v432ReplanWeek">Replanejar esta semana</button></div></div><div class="v431-week-grid">${days.map(day=>{const items=ctx.plan.filter(x=>x.scheduled_for===day),groups=groupsForDay(items,ctx),dow=new Date(`${day}T15:00:00Z`).getUTCDay()||7,total=items.reduce((z,x)=>z+Number(x.duration_minutes||0),0);return `<section class="v431-day"><div class="v431-day-head">${esc(weekday(day))}<br>${br(day)}<small>${groups.length?`${groups.length} foco(s) • ${total} min`:studyDays.has(dow)?'sem foco registrado':'descanso'}</small></div><div class="v431-day-body">${groups.length?groups.map(g=>focusHtml(g,ctx)).join(''):(studyDays.has(dow)?'<div class="v431-empty">Sem meta planejada.</div>':'<div class="v431-rest">Descanso</div>')}</div>${groups.length?`<div class="v431-day-total">Total do dia: <strong>${total} min</strong></div>`:''}</section>`;}).join('')}</div>`;
+    host.innerHTML=`<div class="v431-week-note"><div><strong>Semana em modo estável</strong><br><span>Abrir, atualizar ou navegar pela semana não altera o cronograma. Mudanças só acontecem quando você manda replanejar ou salva novos horários.</span></div><div class="v432-week-actions"><b>SOMENTE LEITURA</b><button class="v432-replan" id="v432ReplanWeek">Replanejar esta semana</button></div></div><div class="v431-week-grid">${days.map(day=>{const items=ctx.plan.filter(x=>x.scheduled_for===day),groups=groupsForDay(items,ctx),dow=new Date(`${day}T15:00:00Z`).getUTCDay()||7,total=items.reduce((z,x)=>z+Number(x.duration_minutes||0),0);return `<section class="v431-day"><div class="v431-day-head">${esc(weekday(day))}<br>${br(day)}<small>${groups.length?`${groups.length} foco(s) • ${total} min`:studyDays.has(dow)?'sem foco registrado':'descanso'}</small></div><div class="v431-day-body">${groups.length?groups.map(g=>focusHtml(g,ctx)).join(''):(studyDays.has(dow)?'<div class="v431-empty">Sem meta planejada.</div>':'<div class="v431-rest">Descanso</div>')}</div>${groups.length?`<div class="v431-day-total">Total do dia: <strong>${total} min</strong></div>`:''}</section>`;}).join('')}</div>`;
   }
 
   async function refresh(start=inferStart()){if(busy)return;busy=true;try{const ctx=await fetchWeek(start);if(ctx)render(start,ctx);}catch(e){console.warn('week summary stable',e);toast('Não foi possível atualizar a semana.','error');}finally{busy=false;}}
 
-  async function explicitReplan(){if(busy)return;const start=activeStart||inferStart(),end=addDays(start,6),btn=$('#v432ReplanWeek');if(!confirm('Replanejar esta semana? Revisões vencidas terão prioridade e tarefas pendentes podem ser reorganizadas.'))return;busy=true;if(btn)btn.disabled=true;try{
-    const r1=await db.rpc('materialize_due_reviews_v432',{p_start:start,p_end:end});if(r1.error)throw r1.error;
-    const r2=await db.rpc('rebuild_smart_week_v431',{p_week_start:start});if(r2.error)throw r2.error;
-    const status=r2.data?.status||'ok';toast(status==='frozen'?'A semana já começou e foi mantida como está.':'Semana replanejada com revisões primeiro.','ok');
-  }catch(e){console.warn('explicit week replan',e);toast(e?.message||'Não foi possível replanejar.','error');}finally{busy=false;if(btn)btn.disabled=false;await refresh(start);}}
+  async function stableReplan(start,{confirmUser=true,fallbackNext=false}={}){
+    if(busy)return null;
+    if(confirmUser&&!confirm('Replanejar esta semana? Revisões vencidas terão prioridade e tarefas pendentes podem ser reorganizadas.'))return null;
+    busy=true;const btn=$('#v432ReplanWeek');if(btn)btn.disabled=true;
+    try{
+      let target=start||defaultReplanStart();
+      let r=await db.rpc('rebuild_smart_week_v431',{p_week_start:target});if(r.error)throw r.error;
+      if(r.data?.status==='frozen'&&fallbackNext){target=addDays(target,7);r=await db.rpc('rebuild_smart_week_v431',{p_week_start:target});if(r.error)throw r.error;}
+      activeStart=target;
+      window.MentorRequestGuard?.invalidate?.();
+      document.dispatchEvent(new CustomEvent('mentor-plan-changed',{detail:{kind:'stable_replan',week_start:target,status:r.data?.status||'ok'}}));
+      toast(r.data?.status==='frozen'?'A semana já começou e foi mantida como está.':'Semana replanejada com revisões primeiro.','ok');
+      return r.data||null;
+    }catch(e){console.warn('stable week replan',e);toast(e?.message||'Não foi possível replanejar.','error');return null;}
+    finally{busy=false;if(btn)btn.disabled=false;await refresh(activeStart||start||defaultReplanStart());}
+  }
 
-  function boot(){style();setTimeout(()=>refresh(inferStart()),1500);document.addEventListener('click',e=>{if(e.target.closest('#v432ReplanWeek')){e.preventDefault();explicitReplan();return;}if(e.target.closest('#v423PrevWeek,#v423NextWeek,#v423CurrentWeek'))setTimeout(()=>{activeStart='';refresh(inferStart());},180);if(e.target.closest('[data-task-complete],[data-task-qc],[data-task-bank],[data-task-review]'))setTimeout(()=>refresh(activeStart||inferStart()),1000);},true);setInterval(()=>{const host=$('#v423WeekGrid');if(!host)return;if(!host.querySelector('.v431-week-grid')&&!busy){activeStart='';refresh(inferStart());}},2500);window.addEventListener('focus',()=>setTimeout(()=>refresh(activeStart||inferStart()),350));}
+  function boot(){
+    style();setTimeout(()=>refresh(inferStart()),1500);
+    document.addEventListener('click',e=>{
+      const generic=e.target.closest('[data-action="replan"]');
+      if(generic){e.preventDefault();e.stopImmediatePropagation();stableReplan(defaultReplanStart(),{confirmUser:true});return;}
+      if(e.target.closest('#v432ReplanWeek')){e.preventDefault();e.stopImmediatePropagation();stableReplan(activeStart||inferStart(),{confirmUser:true});return;}
+      if(e.target.closest('#v423PrevWeek,#v423NextWeek,#v423CurrentWeek'))setTimeout(()=>{activeStart='';refresh(inferStart());},180);
+      if(e.target.closest('[data-task-complete],[data-task-qc],[data-task-bank],[data-task-review]'))setTimeout(()=>refresh(activeStart||inferStart()),1000);
+    },true);
+    document.addEventListener('mentor-preferences-changed',()=>{
+      const start=defaultReplanStart();
+      stableReplan(start,{confirmUser:false,fallbackNext:true});
+    });
+    document.addEventListener('mentor-plan-changed',e=>{if(e.detail?.kind!=='stable_replan')setTimeout(()=>refresh(activeStart||inferStart()),250);});
+    setInterval(()=>{const host=$('#v423WeekGrid');if(!host)return;if(!host.querySelector('.v431-week-grid')&&!busy){activeStart='';refresh(inferStart());}},2500);
+    window.addEventListener('focus',()=>setTimeout(()=>refresh(activeStart||inferStart()),350));
+  }
   boot();
 })();
