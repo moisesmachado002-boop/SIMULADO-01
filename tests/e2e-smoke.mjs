@@ -27,9 +27,10 @@ await weekNav.click();
 await frame.waitForTimeout(180);
 if(!(await frame.locator('[data-page-view="week"].active').count()))throw new Error('Week navigation failed');
 
-const forbidden=['mentorV47ControlsScript','mentorV428DailyGoalsScript','mentorV430PriorityPlannerScript','mentorV431WeekSummaryScript'];
-for(const id of forbidden)if(await frame.locator('#'+id).count())throw new Error('Superseded planning module loaded: '+id);
+const forbidden=['mentorV47ControlsScript','mentorV428DailyGoalsScript','mentorV430PriorityPlannerScript','mentorV431WeekSummaryScript','mentorV415OverdueLockScript','mentorV416TimerReviewManualScript'];
+for(const id of forbidden)if(await frame.locator('#'+id).count())throw new Error('Superseded planning/action module loaded: '+id);
 if(!(await frame.locator('#mentorV500PlanUiScript').count()))throw new Error('V5 plan controller was not injected');
+if(!(await frame.locator('#mentorV432DailyActionsScript').count()))throw new Error('Direct Daily actions were not injected');
 
 const fatal=errors.filter(x=>!/Sessão expirada|Failed to fetch|NetworkError/i.test(x));
 if(fatal.length)throw new Error('Browser page errors: '+fatal.join(' | '));
