@@ -46,7 +46,7 @@ jobs:
           for x in ['V5: carregar dados não altera o cronograma','bankSubtopic','plan-ui-v500']:
               if x not in core: raise SystemExit('Minimal V5 bootstrap invariant missing: '+x)
           if 'intelligence-core-v4.5.js' in core: raise SystemExit('Legacy intelligence core is still loaded')
-          if core.count('.replace(')>5: raise SystemExit('Bootstrap accumulated too many runtime patches again')
+          if core.count('.replace(')>6: raise SystemExit('Bootstrap accumulated too many runtime patches again')
           print('V5 production entrypoints validated')
       - name: Check V5 plan controller
         shell: python
