@@ -6,18 +6,17 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>Mentor IA V4.35 — Estabilização</title>
+<title>Mentor IA V5.0 — Consolidação</title>
 <style>html,body{margin:0;width:100%;height:100%;background:#f4f4f4;overflow:hidden}iframe{display:block;width:100%;height:100dvh;border:0;background:#f4f4f4}</style>
 </head>
 <body>
 <iframe id="mentorFrame" title="Mentor IA"></iframe>
 <script>
 (() => {
-  const BUILD='20260830-1945-v435-stable';
+  const BUILD='20260830-2025-v500-consolidated';
   const frame=document.getElementById('mentorFrame');
   const modules=[
     ['mentorV432RequestGuardScript','./mentor-request-guard-v432.js?build='+BUILD],
-    ['mentorV47ControlsScript','./controls-v47.js?build='+BUILD],
     ['mentorV48OutsideStudyScript','./outside-study-v48.js?build='+BUILD],
     ['mentorV49LayoutScript','./nav-layout-v49.js?build='+BUILD],
     ['mentorV49ResourcesScript','./resources-v49.js?build='+BUILD],
@@ -33,11 +32,9 @@
     ['mentorV418HistoryScript','./learning-history-v418.js?build='+BUILD],
     ['mentorV423AnalyticsScript','./analytics-v423.js?build='+BUILD],
     ['mentorV424PdfScript','./pdf-export-v424.js?build='+BUILD],
-    ['mentorV428DailyGoalsScript','./daily-goals-v428.js?build='+BUILD],
+    ['mentorV500PlanUiScript','./plan-ui-v500.js?build='+BUILD],
     ['mentorV432DailyActionsScript','./daily-actions-v432.js?build='+BUILD],
-    ['mentorV429MathFeedbackScript','./math-feedback-v429.js?build='+BUILD],
-    ['mentorV430PriorityPlannerScript','./priority-planner-v430.js?build='+BUILD],
-    ['mentorV431WeekSummaryScript','./week-summary-v431.js?build='+BUILD]
+    ['mentorV429MathFeedbackScript','./math-feedback-v429.js?build='+BUILD]
   ];
   function normalizedHash(value){const h=String(value||'').trim();return h&&h.startsWith('#')?h:'#daily';}
   function loadFrame(hash){frame.src='./mentor-v4.html?build='+BUILD+normalizedHash(hash);}
