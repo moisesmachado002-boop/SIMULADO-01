@@ -6,11 +6,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Mentor IA V5 — Base</title>
+  <title>Mentor IA V5.02 — Base</title>
   <style>body{font-family:system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f4f4f4;color:#222}.loader{text-align:center}.loader strong{display:block;font-size:20px;margin-bottom:8px}</style>
 </head>
 <body>
-  <div class="loader"><strong>Mentor IA V5</strong><span>Carregando base consolidada…</span></div>
+  <div class="loader"><strong>Mentor IA V5.02</strong><span>Carregando base consolidada…</span></div>
   <script>
     (async () => {
       const [htmlResponse, jsResponse] = await Promise.all([
@@ -29,11 +29,22 @@
       const legacyReplan = "const repl=e.target.closest('[data-action=\"replan\"]');if(repl){replan().catch(showError);return;}";
       if (appJs.includes(legacyReplan)) appJs = appJs.replace(legacyReplan, "const repl=e.target.closest('[data-action=\"replan\"]');if(repl){toast('Planejador V5 carregando…','neutral');return;}");
 
-      // Única adaptação de dados ainda feita na base: filtro por subassunto no banco de questões.
+      // Adaptação de dados: filtro por subassunto no banco de questões.
       appJs = appJs
         .replace("topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not", "topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind,subtopic_id').not")
         .replace("function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}", "function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',stid=$('#bankSubtopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(!stid||q.subtopic_id===stid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}")
         .replace("['bankSubject','bankTopic','bankMode'].forEach", "['bankSubject','bankTopic','bankSubtopic','bankMode'].forEach");
+
+      // V5.02: o modo Inéditas termina quando não há mais questão nova; nunca cai silenciosamente para repetidas.
+      const legacyChoose = "function chooseBankQuestion(){let rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const mode=$('#bankMode')?.value||'unseen';if(mode==='unseen'){const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));if(unseen.length)rows=unseen;}if(mode==='review'){const rev=rows.filter(q=>state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date());if(rev.length)rows=rev;}return rows.length?rows[Math.floor(Math.random()*rows.length)]:null;}";
+      const safeChoose = "function chooseBankQuestion(){let rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const mode=$('#bankMode')?.value||'unseen';if(mode==='unseen'){const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));if(!unseen.length)return null;rows=unseen;}if(mode==='review'){const rev=rows.filter(q=>state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date());if(rev.length)rows=rev;}return rows.length?rows[Math.floor(Math.random()*rows.length)]:null;}";
+      if (!appJs.includes(legacyChoose)) throw new Error('Seletor de questões mudou.');
+      appJs = appJs.replace(legacyChoose, safeChoose);
+
+      // V5.02: expõe somente o ID técnico da questão atual para o RPC de progresso único da Meta Diária.
+      const showAnchor = "function showQuestion(q){state.bank.current=q;";
+      if (!appJs.includes(showAnchor)) throw new Error('Renderizador de questão mudou.');
+      appJs = appJs.replace(showAnchor, "function showQuestion(q){state.bank.current=q;if($('#questionCard'))$('#questionCard').dataset.questionId=q.id;");
 
       const appBlobUrl=URL.createObjectURL(new Blob([appJs],{type:'text/javascript'}));
       const oldScript='<script src="v2.js?v=3.0.0"><\/script>';
@@ -42,7 +53,7 @@
       document.open();document.write(html);document.close();
     })().catch(error => {
       console.error(error);
-      document.body.innerHTML='<div style="font:600 14px system-ui;padding:24px;color:#7f1d1d">Falha ao carregar a base V5. Atualize a página.</div>';
+      document.body.innerHTML='<div style="font:600 14px system-ui;padding:24px;color:#7f1d1d">Falha ao carregar a base V5.02. Atualize a página.</div>';
     });
   </script>
 </body>
