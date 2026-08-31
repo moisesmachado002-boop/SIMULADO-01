@@ -24,7 +24,7 @@ if(!(await frame.locator('#savePreferencesButton').count()))throw new Error('Sch
 if(!(await frame.locator('#mentorV503PasswordSecurityScript[data-loaded="1"]').count()))throw new Error('V5.03 password security module missing');
 
 if(!(await frame.locator('#authModal.open').count()))await frame.locator('#accountButton').click();
-if(frame.locator('#authModal').getAttribute('data-mode')!=='signup')await frame.locator('#authSwitch').click();
+if((await frame.locator('#authModal').getAttribute('data-mode'))!=='signup')await frame.locator('#authSwitch').click();
 await frame.locator('#authEmail').fill('ci-password-test@example.invalid');
 await frame.locator('#authPassword').fill('password');
 await frame.locator('#authSubmit').click();
