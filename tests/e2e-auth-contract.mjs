@@ -118,8 +118,8 @@ if(Number(capturedPrefs.p_daily_minutes)!==320)throw new Error(`Expected 320 dai
 if(!Array.isArray(capturedPrefs.p_study_days)||!capturedPrefs.p_study_days.length)throw new Error('Study days were not sent with preferences');
 
 await page.waitForTimeout(1200);
-await frame.waitForSelector('#mentorV432DailyActionsScript[data-loaded="1"]',{timeout:10000});
-await frame.waitForSelector('#mentorV502QuestionExecutionScript[data-loaded="1"]',{timeout:10000});
+await frame.waitForSelector('#mentorV432DailyActionsScript[data-loaded="1"]',{state:'attached',timeout:10000});
+await frame.waitForSelector('#mentorV502QuestionExecutionScript[data-loaded="1"]',{state:'attached',timeout:10000});
 const dailyNav=frame.locator('.v49-direct[data-page="daily"], [data-page="daily"]:visible').first();
 if(!(await dailyNav.count()))throw new Error('Visible Daily navigation missing in authenticated flow');
 await dailyNav.click();
