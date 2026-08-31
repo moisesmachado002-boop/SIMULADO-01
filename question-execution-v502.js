@@ -24,8 +24,6 @@
   function readCtx(key){
     try{const v=JSON.parse(sessionStorage.getItem(key)||'null');if(!v)return null;if(Date.now()-Number(v.created_at||0)>CONTEXT_TTL){sessionStorage.removeItem(key);return null;}return v;}catch{return null;}
   }
-  function writeCtx(key,patch){const old=readCtx(key)||{};sessionStorage.setItem(key,JSON.stringify({...old,...patch,created_at:old.created_at||Date.now()}));}
-  function clearCtx(key){sessionStorage.removeItem(key);}
   function emit(kind){window.MentorRequestGuard?.invalidate?.();document.dispatchEvent(new CustomEvent('mentor-evidence-changed',{detail:{kind}}));document.dispatchEvent(new CustomEvent('mentor-plan-changed',{detail:{kind}}));}
 
   async function loadStats(taskIds){
@@ -59,25 +57,12 @@
         const actions=row.querySelector('.v500-actions');if(!actions)continue;
         const buttons=[];
         if(st.bankCount>0)buttons.push(`<button class="primary-button" data-task-bank="${id}">Banco próprio (${st.bankCount})</button>`);
-        if(st.qcCount>0)buttons.push(`<button class="${st.bankCount>0?'secondary-button':'primary-button'}" data-task-qc="${id}">QConcursos (${st.qcCount})</button>`);
+        if(st.qcCount>0)buttons.push(`<button class="${st.bankCount>0?'secondary-button':'primary-button'}" data-task-qc="${id}" data-qc-count="${st.qcCount}">QConcursos (${st.qcCount})</button>`);
         actions.innerHTML=buttons.join('')||'<span style="font-weight:900;color:#187137;font-size:11px">✓ meta preenchida</span>';
         const small=row.querySelector('small');if(small){if(!small.dataset.v502Base)small.dataset.v502Base=small.textContent||'';small.textContent=`${small.dataset.v502Base} • ${st.unseen} inédita(s) disponíveis${st.qcCount>0?` • completar ${st.qcCount} no QConcursos`:''}`;}
         row.dataset.v502QuestionTask='1';
       }
     }catch(e){console.warn('question execution decorate',e);}finally{busy=false;}
-  }
-
-  async function recordBankEvidence(){
-    const ctx=readCtx(BANK_KEY);if(!ctx)return;
-    const qid=$('#questionCard')?.dataset.questionId;if(!qid)return;
-    try{
-      const r=await db().rpc('record_plan_question_progress_v502',{p_plan_item_id:ctx.task_id,p_question_id:qid});
-      if(r.error)throw r.error;const data=r.data||{};
-      if(!data.ok){console.warn('question evidence rejected',data.error);return;}
-      if(data.changed){writeCtx(BANK_KEY,{progress:Number(data.progress||0)});emit('question_unique');if(data.status==='completed'){clearCtx(BANK_KEY);toast('Meta de questões concluída com evidências válidas.','ok');}}
-      else if(data.duplicate){toast('Questão repetida: não contou novamente na meta.','neutral');}
-      setTimeout(decorateDaily,80);setTimeout(()=>guardNextButton(ctx.task_id),120);
-    }catch(e){console.warn('question evidence progress',e);}
   }
 
   async function guardNextButton(taskId){
@@ -93,7 +78,7 @@
   function bindFeedback(){
     const node=$('#questionFeedback');if(!node||node.dataset.v502Bound)return;
     node.dataset.v502Bound='1';lastFeedback=!node.classList.contains('hidden');
-    new MutationObserver(()=>{const visible=!node.classList.contains('hidden');if(visible&&!lastFeedback)recordBankEvidence();lastFeedback=visible;}).observe(node,{attributes:true,attributeFilter:['class']});
+    new MutationObserver(()=>{const visible=!node.classList.contains('hidden');if(visible&&!lastFeedback){const ctx=readCtx(BANK_KEY);if(ctx)setTimeout(()=>guardNextButton(ctx.task_id),120);}lastFeedback=visible;}).observe(node,{attributes:true,attributeFilter:['class']});
   }
 
   async function recordManualSubtopicQc(btn){
