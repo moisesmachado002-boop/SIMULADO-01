@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  if (window.__mentorDailyActionsV433) return;
-  window.__mentorDailyActionsV433 = true;
+  if (window.__mentorDailyActionsV502) return;
+  window.__mentorDailyActionsV502 = true;
 
   const URL='https://uysrtgyfnwyocdlaeyum.supabase.co';
   const KEY='sb_publishable_CezrTxDDvgs8iAjD7vexNQ_0zVphE8j';
@@ -51,6 +51,7 @@
     try{
       const item=await taskInfo(id);
       if(item.status==='completed'||item.completed_at){toast('Esta meta já está concluída.','ok');return;}
+      if(item.task_type==='questions'){toast('Meta de questões só é concluída por respostas registradas ou bateria externa.','neutral');return;}
       const {data:{user}}=await db.auth.getUser();const target=Math.max(1,Number(item.question_target||1));
       const r=await db.from('study_plan_items').update({status:'completed',progress_count:target,completed_at:new Date().toISOString()}).eq('id',id).eq('user_id',user.id).in('status',['pending','in_progress']);
       if(r.error)throw r.error;emitChanged('complete');toast('Meta concluída.','ok');
@@ -108,12 +109,14 @@
   }
   async function incrementBankTask(){
     const ctx=readCtx(BANK_KEY);if(!bankContextMatches(ctx))return;
-    const r=await db.rpc('adjust_learning_plan_progress',{p_plan_item_id:ctx.task_id,p_delta:1});if(r.error)throw r.error;if(!r.data?.changed)return;
-    setCtx(BANK_KEY,{progress:Number(r.data.progress||0)});emitChanged('question');
-    if(r.data.status==='completed'){clearCtx(BANK_KEY);toast('Meta de questões concluída.','ok');}
+    const questionId=$('#questionCard')?.dataset.questionId;if(!questionId)return;
+    const r=await db.rpc('record_plan_question_progress_v502',{p_plan_item_id:ctx.task_id,p_question_id:questionId});if(r.error)throw r.error;
+    if(!r.data?.ok)return;
+    if(r.data.changed){setCtx(BANK_KEY,{progress:Number(r.data.progress||0)});emitChanged('question_unique');if(r.data.status==='completed'){clearCtx(BANK_KEY);toast('Meta de questões concluída com evidências válidas.','ok');}}
+    else if(r.data.duplicate){toast('Questão repetida: não contou novamente na meta.','neutral');}
   }
 
-  async function configureQcTask(id){
+  async function configureQcTask(id,desiredCount=0){
     try{
       const item=await taskInfo(id);if(item.task_type!=='questions')throw new Error('Esta meta não é de questões.');
       saveCtx(QC_KEY,{task_id:item.id,topic_id:item.topic_id,subtopic_id:item.subtopic_id||null,subject_id:item.subject_id,target:Number(item.question_target||0),progress:Number(item.progress_count||0),pending_key:null,pending_sig:null});
@@ -121,7 +124,7 @@
       const subject=await waitFor('#qcSubject'),topic=await waitFor('#qcTopic');if(!subject||!topic)throw new Error('QConcursos ainda não carregou.');
       subject.value=item.subject_id||'';subject.dispatchEvent(new Event('change',{bubbles:true}));await wait(60);topic.value=item.topic_id;topic.dispatchEvent(new Event('change',{bubbles:true}));
       if(item.subtopic_id){const sub=await waitFor('#qcSubtopic');if(sub){await wait(80);sub.value=item.subtopic_id;sub.dispatchEvent(new Event('change',{bubbles:true}));}}
-      const remaining=Math.max(1,Number(item.question_target||0)-Number(item.progress_count||0));if($('#qcTotal'))$('#qcTotal').value=String(remaining);
+      const remaining=Math.max(1,Number(item.question_target||0)-Number(item.progress_count||0)),requested=Math.max(0,Number(desiredCount||0));if($('#qcTotal'))$('#qcTotal').value=String(requested||remaining);
       toast(`Bateria vinculada à meta: ${item.subtopic_title||item.topic_title}.`,'ok');
     }catch(e){clearCtx(QC_KEY);console.error('qc task',e);toast(e?.message||'Não foi possível abrir o QConcursos.','error');}
   }
@@ -153,12 +156,12 @@
 
   document.addEventListener('click',e=>{
     const reviewDone=e.target.closest('#v433ReviewDone');if(reviewDone){e.preventDefault();e.stopImmediatePropagation();completeReview(reviewDone);return;}
-    const goals=e.target.closest('#v428Goals');
+    const goals=e.target.closest('#v428Goals,#v500Daily');
     if(goals){
       const complete=e.target.closest('[data-task-complete]');if(complete){e.preventDefault();e.stopImmediatePropagation();completeDirect(complete.dataset.taskComplete,complete);return;}
       const review=e.target.closest('[data-task-review]');if(review){e.preventDefault();e.stopImmediatePropagation();openReview(review.dataset.taskReview);return;}
       const bank=e.target.closest('[data-task-bank]');if(bank){e.preventDefault();e.stopImmediatePropagation();configureBankTask(bank.dataset.taskBank);return;}
-      const qc=e.target.closest('[data-task-qc]');if(qc){e.preventDefault();e.stopImmediatePropagation();configureQcTask(qc.dataset.taskQc);return;}
+      const qc=e.target.closest('[data-task-qc]');if(qc){e.preventDefault();e.stopImmediatePropagation();configureQcTask(qc.dataset.taskQc,Number(qc.dataset.qcCount||0));return;}
     }
     const record=e.target.closest('#qcRecordButton');if(record&&readCtx(QC_KEY)){e.preventDefault();e.stopImmediatePropagation();recordQcTask(record);}
   },true);
