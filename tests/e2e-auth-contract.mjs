@@ -103,7 +103,12 @@ await frame.waitForFunction(()=>document.querySelector('#accountName')?.textCont
 if(await frame.locator('#authModal.open').count())throw new Error('Authenticated fixture incorrectly opened login modal');
 if(!(await frame.locator('#bankTopic option').filter({hasText:'Aplicação da Lei Penal'}).count()))throw new Error('Mentoria ZD topic is not available as a normal topic');
 
-await frame.locator('[data-page="plan"]').first().click();
+const planGroup=frame.locator('[data-v49-toggle="plan"]');
+if(!(await planGroup.count()))throw new Error('Plan navigation group missing in authenticated flow');
+await planGroup.click();
+const planNav=frame.locator('[data-v49-sub="plan"] [data-page="plan"]:visible').first();
+if(!(await planNav.count()))throw new Error('Visible Plan navigation missing in authenticated flow');
+await planNav.click();
 await frame.waitForTimeout(250);
 await frame.locator('#prefDailyMinutes').fill('320');
 await frame.locator('#savePreferencesButton').click();
@@ -112,7 +117,9 @@ if(!capturedPrefs)throw new Error('Saving preferences did not call update_study_
 if(Number(capturedPrefs.p_daily_minutes)!==320)throw new Error(`Expected 320 daily minutes, received ${capturedPrefs.p_daily_minutes}`);
 if(!Array.isArray(capturedPrefs.p_study_days)||!capturedPrefs.p_study_days.length)throw new Error('Study days were not sent with preferences');
 
-await frame.locator('[data-page="daily"]').first().click();
+const dailyNav=frame.locator('.v49-direct[data-page="daily"], [data-page="daily"]:visible').first();
+if(!(await dailyNav.count()))throw new Error('Visible Daily navigation missing in authenticated flow');
+await dailyNav.click();
 await frame.waitForTimeout(1200);
 const bankButton=frame.locator('#v500Daily [data-task-bank]').first();
 if(!(await bankButton.count()))throw new Error('Authenticated daily plan did not expose bank action');
@@ -120,7 +127,8 @@ await bankButton.click();
 await frame.waitForSelector('#questionCard:not(.hidden)',{timeout:8000});
 const qid=await frame.locator('#questionCard').getAttribute('data-question-id');
 if(![QUESTION1,QUESTION2].includes(qid))throw new Error('Question technical id was not exposed by static core');
-await frame.locator('#questionAnswers [data-answer="A"]').click();
+const correctAnswer=qid===QUESTION1?'A':'B';
+await frame.locator(`#questionAnswers [data-answer="${correctAnswer}"]`).click();
 await frame.locator('#questionConfirmButton').click();
 for(let i=0;i<40&&!capturedProgress;i++)await page.waitForTimeout(100);
 if(attemptCalls<1)throw new Error('Question attempt RPC was not called');
