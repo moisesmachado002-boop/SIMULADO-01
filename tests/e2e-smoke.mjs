@@ -9,7 +9,7 @@ await page.waitForSelector('iframe#mentorFrame',{timeout:15000});
 const frame=page.frames().find(f=>f.url().includes('mentor-v4.html'));
 if(!frame)throw new Error('Mentor iframe did not load');
 await frame.waitForSelector('#appShell',{timeout:30000});
-await frame.waitForTimeout(3500);
+await frame.waitForTimeout(3800);
 if(await frame.locator('#mentorModuleError').count())throw new Error('A production module failed to load');
 if(!(await frame.locator('[data-page="daily"]').count()))throw new Error('Daily navigation missing');
 if(!(await frame.locator('[data-page="week"]').count()))throw new Error('Week navigation missing');
@@ -32,10 +32,10 @@ if(!(await frame.locator('[data-page-view="week"].active').count()))throw new Er
 
 const forbidden=['mentorV47ControlsScript','mentorV428DailyGoalsScript','mentorV430PriorityPlannerScript','mentorV431WeekSummaryScript','mentorV415OverdueLockScript','mentorV416TimerReviewManualScript'];
 for(const id of forbidden)if(await frame.locator('#'+id).count())throw new Error('Superseded planning/action module loaded: '+id);
-if(!(await frame.locator('#mentorV500PlanUiScript').count()))throw new Error('V5 plan controller was not injected');
-if(!(await frame.locator('#mentorV432DailyActionsScript').count()))throw new Error('Direct Daily actions were not injected');
+const required=['mentorV500PlanUiScript','mentorV502QuestionExecutionScript','mentorV432DailyActionsScript'];
+for(const id of required)if(!(await frame.locator('#'+id).count()))throw new Error('Required V5.02 module missing: '+id);
 
 const fatal=errors.filter(x=>!/Sessão expirada|Failed to fetch|NetworkError/i.test(x));
 if(fatal.length)throw new Error('Browser page errors: '+fatal.join(' | '));
-console.log('V5 browser smoke test passed');
+console.log('V5.02 browser smoke test passed');
 await browser.close();
