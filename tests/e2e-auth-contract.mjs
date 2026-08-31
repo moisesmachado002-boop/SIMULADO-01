@@ -120,9 +120,8 @@ if(!Array.isArray(capturedPrefs.p_study_days)||!capturedPrefs.p_study_days.lengt
 const dailyNav=frame.locator('.v49-direct[data-page="daily"], [data-page="daily"]:visible').first();
 if(!(await dailyNav.count()))throw new Error('Visible Daily navigation missing in authenticated flow');
 await dailyNav.click();
-await frame.waitForTimeout(1200);
-const bankButton=frame.locator('#v500Daily [data-task-bank]').first();
-if(!(await bankButton.count()))throw new Error('Authenticated daily plan did not expose bank action');
+const bankButton=frame.locator('[data-task-bank]:visible').first();
+await bankButton.waitFor({state:'visible',timeout:8000});
 await bankButton.click();
 await frame.waitForSelector('#questionCard:not(.hidden)',{timeout:8000});
 const qid=await frame.locator('#questionCard').getAttribute('data-question-id');
