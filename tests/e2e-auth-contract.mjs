@@ -120,6 +120,8 @@ if(!Array.isArray(capturedPrefs.p_study_days)||!capturedPrefs.p_study_days.lengt
 await page.waitForTimeout(1200);
 await frame.waitForSelector('#mentorV432DailyActionsScript[data-loaded="1"]',{state:'attached',timeout:10000});
 await frame.waitForSelector('#mentorV502QuestionExecutionScript[data-loaded="1"]',{state:'attached',timeout:10000});
+// daily-actions binds the unique-evidence feedback observer on a short delayed timer.
+await frame.waitForTimeout(1500);
 const dailyNav=frame.locator('.v49-direct[data-page="daily"], [data-page="daily"]:visible').first();
 if(!(await dailyNav.count()))throw new Error('Visible Daily navigation missing in authenticated flow');
 await dailyNav.click();
