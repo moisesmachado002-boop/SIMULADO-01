@@ -32,7 +32,7 @@ jobs:
           index=pathlib.Path('index.html').read_text(encoding='utf-8')
           wrapper=pathlib.Path('mentor-v431.html').read_text(encoding='utf-8')
           core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          build='20260830-v500-final1'
+          build='20260831-v501-subtopics1'
           if build not in index or build not in wrapper: raise SystemExit('Production build mismatch')
           if 'mentor-v431.html' not in index: raise SystemExit('Production entry missing')
           required=['mentor-request-guard-v432.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','question-elimination-v412.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','plan-ui-v500.js','daily-actions-v432.js','math-feedback-v429.js']
@@ -47,7 +47,25 @@ jobs:
               if x not in core: raise SystemExit('Minimal V5 bootstrap invariant missing: '+x)
           if 'intelligence-core-v4.5.js' in core: raise SystemExit('Legacy intelligence core is still loaded')
           if core.count('.replace(')>6: raise SystemExit('Bootstrap accumulated too many runtime patches again')
-          print('V5 production entrypoints validated')
+          print('V5.01 production entrypoints validated')
+      - name: Check V5.01 database planner contract
+        shell: python
+        run: |
+          import pathlib
+          path=pathlib.Path('supabase/migrations/20260831001229_fix_filter_subtopics_and_split_targets_v501.sql')
+          if not path.exists(): raise SystemExit('V5.01 planner contract migration missing')
+          sql=path.read_text(encoding='utf-8')
+          required=[
+              "c.source_name='filter_subtopic' and c.is_official_syllabus=true",
+              "source_name='filter_subtopic' and is_official_syllabus=true order by position",
+              "st.source_name='filter_subtopic' and st.is_official_syllabus=true",
+              "v_qtarget:=20;v_qminutes:=greatest(8,ceil(v_qtarget*1.5)::int);",
+              "not in ('v500_group_questions','v500_split_questions')",
+              "question_guard_pattern_count_"
+          ]
+          missing=[x for x in required if x not in sql]
+          if missing: raise SystemExit('V5.01 DB contract invariant missing: '+', '.join(missing))
+          print('V5.01 database planner contract validated')
       - name: Check V5 plan controller
         shell: python
         run: |
