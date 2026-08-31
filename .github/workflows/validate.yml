@@ -82,7 +82,9 @@ jobs:
             '20260831005816_retire_legacy_question_progress_rpc_v502.sql',
             '20260831010529_fill_week_capacity_v502.sql',
             '20260831010551_route_preferences_through_v502_planner.sql',
-            '20260831010959_refine_capacity_fill_same_subject_v502.sql'
+            '20260831010959_refine_capacity_fill_same_subject_v502.sql',
+            '20260831011415_centralize_plan_completion_v502.sql',
+            '20260831011616_lock_question_evidence_table_v502.sql'
           ]
           missing=[x for x in required_files if x not in files]
           if missing: raise SystemExit('Missing V5.02 migrations: '+', '.join(missing))
@@ -99,7 +101,12 @@ jobs:
               if x not in capacity: raise SystemExit('Capacity contract missing: '+x)
           prefs=files['20260831010551_route_preferences_through_v502_planner.sql']
           if 'rebuild_smart_week_v431' not in prefs: raise SystemExit('Preferences are not routed through V5.02 planner')
-          print('V5.02 evidence and capacity DB contracts validated')
+          completion=files['20260831011415_centralize_plan_completion_v502.sql']
+          for x in ['complete_plan_item_v502','evidence_required','revoke update on public.study_plan_items']:
+              if x not in completion: raise SystemExit('Centralized completion contract missing: '+x)
+          evidence_lock=files['20260831011616_lock_question_evidence_table_v502.sql']
+          if 'revoke all on table public.study_plan_question_evidence' not in evidence_lock: raise SystemExit('Evidence table is not locked')
+          print('V5.02 evidence, capacity and write contracts validated')
 
       - name: Check V5.02 execution routing
         shell: python
@@ -110,9 +117,10 @@ jobs:
           edge=pathlib.Path('supabase/functions/record-external-practice/index.ts').read_text(encoding='utf-8')
           for x in ['bankCount','qcCount','data-qc-count','Sem inéditas — use o QConcursos','subtopic_id:subtopic']:
               if x not in q: raise SystemExit('Question routing invariant missing: '+x)
-          for x in ['record_plan_question_progress_v502','questionId','Meta de questões só é concluída','data-qc-count','subtopic_id:ctx.subtopic_id']:
+          for x in ['record_plan_question_progress_v502','complete_plan_item_v502','questionId','Meta de questões só é concluída','data-qc-count','subtopic_id:ctx.subtopic_id']:
               if x not in a: raise SystemExit('Daily evidence invariant missing: '+x)
-          if 'adjust_learning_plan_progress' in a: raise SystemExit('Legacy +1 progress returned to Daily actions')
+          for forbidden in ['adjust_learning_plan_progress',".from('study_plan_items').update",'.from("study_plan_items").update']:
+              if forbidden in a: raise SystemExit('Direct/legacy plan write returned to Daily actions: '+forbidden)
           for x in ["source_name,is_official_syllabus", "source_name==='filter_subtopic'", 'is_official_syllabus===true', "evidence_json:{source:'external_practice_v8'"]:
               if x not in edge: raise SystemExit('External V8 technical-subtopic contract missing: '+x)
           print('V5.02 execution routing validated')
