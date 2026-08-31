@@ -52,10 +52,10 @@
       const item=await taskInfo(id);
       if(item.status==='completed'||item.completed_at){toast('Esta meta já está concluída.','ok');return;}
       if(item.task_type==='questions'){toast('Meta de questões só é concluída por respostas registradas ou bateria externa.','neutral');return;}
-      const {data:{user}}=await db.auth.getUser();const target=Math.max(1,Number(item.question_target||1));
-      const r=await db.from('study_plan_items').update({status:'completed',progress_count:target,completed_at:new Date().toISOString()}).eq('id',id).eq('user_id',user.id).in('status',['pending','in_progress']);
-      if(r.error)throw r.error;emitChanged('complete');toast('Meta concluída.','ok');
-    }catch(error){console.error('daily complete direct',error);toast(error?.message||'Não foi possível concluir a meta.','error');}
+      const r=await db.rpc('complete_plan_item_v502',{p_plan_item_id:id});
+      if(r.error)throw r.error;if(!r.data?.ok)throw new Error(r.data?.error||'Não foi possível concluir a meta.');
+      emitChanged('complete');toast(r.data.duplicate?'Esta meta já estava concluída.':'Meta concluída.','ok');
+    }catch(error){console.error('daily complete rpc',error);toast(error?.message||'Não foi possível concluir a meta.','error');}
     finally{if(btn){delete btn.dataset.busy;btn.disabled=false;}}
   }
 
