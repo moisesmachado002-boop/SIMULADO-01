@@ -17,10 +17,11 @@
     try {
       const body = typeof init.body === 'string' ? JSON.parse(init.body) : {};
       const intent = String(body?.intent || 'today');
+      const topicId = String(body?.topic_id || '');
       const persist = body?.persist === true;
-      return { key: `${intent}|${persist ? 'persist' : 'read'}`, persist };
+      return { key: `${intent}|${topicId}|${persist ? 'persist' : 'read'}`, persist };
     } catch {
-      return { key: 'today|read', persist: false };
+      return { key: 'today||read', persist: false };
     }
   }
 
