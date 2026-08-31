@@ -74,7 +74,7 @@ jobs:
         shell: python
         run: |
           import pathlib
-          files={p.name:p.read_text(encoding='utf-8') for p in pathlib.Path('supabase/migrations').glob('*v502.sql')}
+          files={p.name:p.read_text(encoding='utf-8') for p in pathlib.Path('supabase/migrations').glob('*.sql') if 'v502' in p.name}
           required_files=[
             '20260831005348_question_evidence_v502.sql',
             '20260831005406_record_plan_question_progress_v502.sql',
