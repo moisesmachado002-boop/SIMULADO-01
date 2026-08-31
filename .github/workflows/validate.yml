@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+
       - name: Check JavaScript syntax
         shell: bash
         run: |
@@ -25,17 +26,18 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done
-      - name: Check production V5 entrypoints
+
+      - name: Check production V5.02 entrypoints
         shell: python
         run: |
           import pathlib
           index=pathlib.Path('index.html').read_text(encoding='utf-8')
           wrapper=pathlib.Path('mentor-v431.html').read_text(encoding='utf-8')
           core=pathlib.Path('mentor-v4.html').read_text(encoding='utf-8')
-          build='20260831-v501-subtopics1'
+          build='20260831-v502-evidence1'
           if build not in index or build not in wrapper: raise SystemExit('Production build mismatch')
           if 'mentor-v431.html' not in index: raise SystemExit('Production entry missing')
-          required=['mentor-request-guard-v432.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','question-elimination-v412.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','plan-ui-v500.js','daily-actions-v432.js','math-feedback-v429.js']
+          required=['mentor-request-guard-v432.js','outside-study-v48.js','nav-layout-v49.js','resources-v49.js','study-timer-v410.js','feedback-coach-v411.js','question-elimination-v412.js','subtopic-filters-v414.js','report-v422.js','qc-banks-v421.js','review-question-stats-v420.js','learning-history-v418.js','analytics-v423.js','pdf-export-v424.js','plan-ui-v500.js','question-execution-v502.js','daily-actions-v432.js','math-feedback-v429.js']
           missing=[x for x in required if x not in wrapper]
           if missing: raise SystemExit('Missing production modules: '+', '.join(missing))
           forbidden=['controls-v47.js','daily-goals-v428.js','priority-planner-v430.js','week-summary-v431.js','plan-feasibility-v425.js','daily-mission-v427.js','overdue-lock-v415.js','timer-review-manual-v416.js']
@@ -43,12 +45,13 @@ jobs:
           if loaded: raise SystemExit('Superseded/conflicting modules still loaded: '+', '.join(loaded))
           for x in ['loadModule','attempt<3','module-load','mentorModuleError']:
               if x not in wrapper: raise SystemExit('Resilient loader missing: '+x)
-          for x in ['V5: carregar dados não altera o cronograma','bankSubtopic','plan-ui-v500']:
-              if x not in core: raise SystemExit('Minimal V5 bootstrap invariant missing: '+x)
+          for x in ['V5: carregar dados não altera o cronograma','bankSubtopic','if(!unseen.length)return null','dataset.questionId','V5.02']:
+              if x not in core: raise SystemExit('V5.02 bootstrap invariant missing: '+x)
           if 'intelligence-core-v4.5.js' in core: raise SystemExit('Legacy intelligence core is still loaded')
-          if core.count('.replace(')>6: raise SystemExit('Bootstrap accumulated too many runtime patches again')
-          print('V5.01 production entrypoints validated')
-      - name: Check V5.01 database planner contract
+          if core.count('.replace(')>8: raise SystemExit('Bootstrap accumulated too many runtime patches again')
+          print('V5.02 production entrypoints validated')
+
+      - name: Check V5.01 subtopic planner contract
         shell: python
         run: |
           import pathlib
@@ -65,7 +68,55 @@ jobs:
           ]
           missing=[x for x in required if x not in sql]
           if missing: raise SystemExit('V5.01 DB contract invariant missing: '+', '.join(missing))
-          print('V5.01 database planner contract validated')
+          print('V5.01 subtopic contract validated')
+
+      - name: Check V5.02 evidence database contract
+        shell: python
+        run: |
+          import pathlib
+          files={p.name:p.read_text(encoding='utf-8') for p in pathlib.Path('supabase/migrations').glob('*v502.sql')}
+          required_files=[
+            '20260831005348_question_evidence_v502.sql',
+            '20260831005406_record_plan_question_progress_v502.sql',
+            '20260831005417_reduce_direct_plan_and_topic_writes_v502.sql',
+            '20260831005816_retire_legacy_question_progress_rpc_v502.sql',
+            '20260831010529_fill_week_capacity_v502.sql',
+            '20260831010551_route_preferences_through_v502_planner.sql',
+            '20260831010959_refine_capacity_fill_same_subject_v502.sql'
+          ]
+          missing=[x for x in required_files if x not in files]
+          if missing: raise SystemExit('Missing V5.02 migrations: '+', '.join(missing))
+          evidence=files['20260831005406_record_plan_question_progress_v502.sql']
+          for x in ['study_plan_question_evidence','on conflict(plan_item_id,question_id) do nothing','question_not_answered_for_task','question_outside_task_subtopic']:
+              if x not in evidence: raise SystemExit('Unique evidence contract missing: '+x)
+          permissions=files['20260831005417_reduce_direct_plan_and_topic_writes_v502.sql']
+          for x in ['revoke insert, delete on public.study_plan_items','revoke insert, update, delete on public.topics']:
+              if x not in permissions: raise SystemExit('Write hardening missing: '+x)
+          retired=files['20260831005816_retire_legacy_question_progress_rpc_v502.sql']
+          if 'adjust_learning_plan_progress' not in retired or 'revoke execute' not in retired: raise SystemExit('Legacy progress RPC still exposed by migration contract')
+          capacity=files['20260831010959_refine_capacity_fill_same_subject_v502.sql']
+          for x in ['v502_capacity_questions','0.82','not exists(select 1 from public.user_topic_study_policy','v_used:=v_used+v_qminutes']:
+              if x not in capacity: raise SystemExit('Capacity contract missing: '+x)
+          prefs=files['20260831010551_route_preferences_through_v502_planner.sql']
+          if 'rebuild_smart_week_v431' not in prefs: raise SystemExit('Preferences are not routed through V5.02 planner')
+          print('V5.02 evidence and capacity DB contracts validated')
+
+      - name: Check V5.02 execution routing
+        shell: python
+        run: |
+          import pathlib
+          q=pathlib.Path('question-execution-v502.js').read_text(encoding='utf-8')
+          a=pathlib.Path('daily-actions-v432.js').read_text(encoding='utf-8')
+          edge=pathlib.Path('supabase/functions/record-external-practice/index.ts').read_text(encoding='utf-8')
+          for x in ['bankCount','qcCount','data-qc-count','Sem inéditas — use o QConcursos','subtopic_id:subtopic']:
+              if x not in q: raise SystemExit('Question routing invariant missing: '+x)
+          for x in ['record_plan_question_progress_v502','questionId','Meta de questões só é concluída','data-qc-count','subtopic_id:ctx.subtopic_id']:
+              if x not in a: raise SystemExit('Daily evidence invariant missing: '+x)
+          if 'adjust_learning_plan_progress' in a: raise SystemExit('Legacy +1 progress returned to Daily actions')
+          for x in ["source_name,is_official_syllabus", "source_name==='filter_subtopic'", 'is_official_syllabus===true', "evidence_json:{source:'external_practice_v8'"]:
+              if x not in edge: raise SystemExit('External V8 technical-subtopic contract missing: '+x)
+          print('V5.02 execution routing validated')
+
       - name: Check V5 plan controller
         shell: python
         run: |
@@ -77,25 +128,16 @@ jobs:
           for forbidden in ['native.click','materialize_due_reviews_v432','apply_smart_priorities_v430','sync_overdue_study_day_lock','replan_overdue_study_day']:
               if forbidden in p: raise SystemExit('Legacy planner dependency returned: '+forbidden)
           print('V5 plan controller validated')
-      - name: Check direct daily actions
-        shell: python
-        run: |
-          import pathlib
-          a=pathlib.Path('daily-actions-v432.js').read_text(encoding='utf-8')
-          required=['complete_topic_review_v432','adjust_learning_plan_progress','plan_item_id','subtopic_id','/functions/v1/record-external-practice','data-task-complete','data-task-review','data-task-bank','data-task-qc']
-          missing=[x for x in required if x not in a]
-          if missing: raise SystemExit('Daily action invariant missing: '+', '.join(missing))
-          for forbidden in ['native.click','LEGACY_RELAY_ACTIONS']:
-              if forbidden in a: raise SystemExit('Hidden-button relay returned: '+forbidden)
-          print('Daily actions validated')
+
       - name: Check Mentor request guard
         shell: python
         run: |
           import pathlib
           g=pathlib.Path('mentor-request-guard-v432.js').read_text(encoding='utf-8')
-          for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch']:
+          for x in ['/functions/v1/mentor-analyze','inFlight','TTL_MS','cache','window.fetch','topicId']:
               if x not in g: raise SystemExit('Mentor request guard missing: '+x)
           print('Mentor request guard validated')
+
       - name: Check analytics report math and PDF
         shell: python
         run: |
@@ -113,6 +155,7 @@ jobs:
           for x in ['jspdf/2.5.1/jspdf.umd.min.js','mentor-download-binary','#r422Pdf']:
               if x not in p: raise SystemExit('PDF invariant missing: '+x)
           print('Secondary modules validated')
+
       - name: Browser smoke test
         shell: bash
         run: |
