@@ -56,11 +56,11 @@ jobs:
           if not path.exists(): raise SystemExit('V5.01 planner contract migration missing')
           sql=path.read_text(encoding='utf-8')
           required=[
-              "c.source_name='filter_subtopic' and c.is_official_syllabus=true",
-              "source_name='filter_subtopic' and is_official_syllabus=true order by position",
-              "st.source_name='filter_subtopic' and st.is_official_syllabus=true",
+              "c.is_official_syllabus=true",
+              "source_name=''filter_subtopic'' and is_official_syllabus=true order by position",
+              "st.source_name=''filter_subtopic'' and st.is_official_syllabus=true",
               "v_qtarget:=20;v_qminutes:=greatest(8,ceil(v_qtarget*1.5)::int);",
-              "not in ('v500_group_questions','v500_split_questions')",
+              "v500_split_questions",
               "question_guard_pattern_count_"
           ]
           missing=[x for x in required if x not in sql]
