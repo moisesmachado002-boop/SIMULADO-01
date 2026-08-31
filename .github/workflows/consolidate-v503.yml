@@ -1,0 +1,96 @@
+name: Consolidate V5.03 Core
+
+on:
+  push:
+    branches: ["main"]
+    paths: [".github/workflows/consolidate-v503.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bake V5.03 invariants into static core
+        shell: python
+        run: |
+          import pathlib
+
+          def must_replace(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f'Missing expected source for {label}')
+              return text.replace(old, new, 1)
+
+          p=pathlib.Path('v2.js')
+          js=p.read_text(encoding='utf-8')
+          js=must_replace(js,"const VERSION = '3.0.0';","const VERSION = '5.03';",'version')
+          js=must_replace(js,"const APP_URL = 'https://moisesmachado002-boop.github.io/SIMULADO-01/v2.html';","const APP_URL = 'https://moisesmachado002-boop.github.io/SIMULADO-01/';",'auth redirect')
+          js=must_replace(js,"topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind').not","topic_label,statement,alternatives,correct_answer,explanation,option_explanations,answer_key_note,difficulty,source_kind,subtopic_id').not",'question subtopic select')
+          js=must_replace(js,"if(plan)queueMicrotask(()=>ensurePlan().catch(error=>console.warn('Planejamento:',error)));","if(plan){/* V5.03: leitura de dados nunca reescreve o cronograma */}",'no auto plan')
+          old_bank="function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}"
+          new_bank="function bankFiltered(){const sid=$('#bankSubject')?.value||'',tid=$('#bankTopic')?.value||'',stid=$('#bankSubtopic')?.value||'',mode=$('#bankMode')?.value||'unseen';return state.questions.filter(q=>(!sid||q.subject_id===sid)&&(!tid||q.topic_id===tid)&&(!stid||q.subtopic_id===stid)&&(mode!=='review'||state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date()));}"
+          js=must_replace(js,old_bank,new_bank,'bank subtopic filter')
+          old_choose="function chooseBankQuestion(){let rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const mode=$('#bankMode')?.value||'unseen';if(mode==='unseen'){const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));if(unseen.length)rows=unseen;}if(mode==='review'){const rev=rows.filter(q=>state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date());if(rev.length)rows=rev;}return rows.length?rows[Math.floor(Math.random()*rows.length)]:null;}"
+          new_choose="function chooseBankQuestion(){let rows=bankFiltered().filter(q=>q.id!==state.bank.current?.id);const mode=$('#bankMode')?.value||'unseen';if(mode==='unseen'){const unseen=rows.filter(q=>!Number(state.qStates.get(q.id)?.seen_count||0));if(!unseen.length)return null;rows=unseen;}if(mode==='review'){const rev=rows.filter(q=>state.qStates.get(q.id)?.next_review_at&&new Date(state.qStates.get(q.id).next_review_at)<=new Date());if(rev.length)rows=rev;}return rows.length?rows[Math.floor(Math.random()*rows.length)]:null;}"
+          js=must_replace(js,old_choose,new_choose,'unseen exhaustion')
+          js=must_replace(js,"function showQuestion(q){state.bank.current=q;","function showQuestion(q){state.bank.current=q;if($('#questionCard'))$('#questionCard').dataset.questionId=q.id;",'question id exposure')
+          js=must_replace(js,"['bankSubject','bankTopic','bankMode'].forEach","['bankSubject','bankTopic','bankSubtopic','bankMode'].forEach",'bank subtopic change binding')
+
+          start=js.find('  async function ensureReviewsInPlan()')
+          end=js.find('  function bindInteractions()',start)
+          if start<0 or end<0:
+              raise SystemExit('Legacy planner block not found')
+          static_plan="""  // V5.03: o navegador não possui mais planejador/escritor legado.\n  async function ensureReviewsInPlan(){return;}\n  async function normalizeAndFillPlan(){return;}\n  async function ensurePlan(){return;}\n  async function replan(){toast('Planejamento controlado pelo V5.03.','neutral');}\n  async function advanceTaskProgress(){return;}\n  async function completeTask(){toast('Conclusão controlada pelo V5.03.','neutral');}\n\n"""
+          js=js[:start]+static_plan+js[end:]
+
+          start=js.find('  async function savePreferences()')
+          end=js.find('  function renderSyllabus()',start)
+          if start<0 or end<0:
+              raise SystemExit('Legacy preference writer not found')
+          js=js[:start]+"  async function savePreferences(){toast('Horários são salvos pelo controlador V5.03.','neutral');}\n\n"+js[end:]
+
+          forbidden=[".from('study_plan_items').insert",".from('study_plan_items').update"]
+          for token in forbidden:
+              if token in js:
+                  raise SystemExit('Legacy direct plan write survived consolidation: '+token)
+          for token in ['bankSubtopic','if(!unseen.length)return null','dataset.questionId','V5.03: leitura de dados nunca reescreve o cronograma']:
+              if token not in js:
+                  raise SystemExit('Static core invariant missing: '+token)
+          p.write_text(js,encoding='utf-8')
+
+          html=pathlib.Path('v2.html').read_text(encoding='utf-8')
+          html=must_replace(html,'v2.js?v=3.0.0','v2.js?v=5.03','static JS cache key')
+          pathlib.Path('v2.html').write_text(html,encoding='utf-8')
+
+          compat='''<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentor IA V5.03</title></head><body><script>location.replace('./mentor-v431.html?build=20260831-v503-consolidated1'+(location.hash||'#daily'));</script></body></html>\n'''
+          pathlib.Path('mentor-v4.html').write_text(compat,encoding='utf-8')
+
+          w=pathlib.Path('mentor-v431.html')
+          wrapper=w.read_text(encoding='utf-8')
+          wrapper=wrapper.replace('Mentor IA V5.02 — Execução por evidência','Mentor IA V5.03 — Núcleo consolidado')
+          wrapper=must_replace(wrapper,"const BUILD='20260831-v502-evidence1';","const BUILD='20260831-v503-consolidated1';",'wrapper build')
+          wrapper=must_replace(wrapper,"frame.src='./mentor-v4.html?build='+BUILD+normalizedHash(hash);","frame.src='./v2.html?build='+BUILD+normalizedHash(hash);",'direct static core')
+          w.write_text(wrapper,encoding='utf-8')
+
+          idx=pathlib.Path('index.html')
+          index=idx.read_text(encoding='utf-8')
+          if '20260831-v502-evidence1' not in index:
+              raise SystemExit('Index V5.02 build marker missing')
+          index=index.replace('20260831-v502-evidence1','20260831-v503-consolidated1')
+          idx.write_text(index,encoding='utf-8')
+
+      - name: Commit consolidated core
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v2.js v2.html mentor-v4.html mentor-v431.html index.html
+          git diff --cached --check
+          git commit -m "refactor: bake V5.03 invariants into static core"
+          git push
