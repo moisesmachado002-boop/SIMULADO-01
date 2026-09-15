@@ -3,8 +3,7 @@
   if (window.__mentorQuestionSourceTabsV505) return;
   window.__mentorQuestionSourceTabsV505 = true;
 
-  const $ = s => document.querySelector(s);
-  let switching = false;
+  const $ = selector => document.querySelector(selector);
   let currentSource = 'qconcursos';
 
   function injectStyles() {
@@ -24,7 +23,18 @@
     return document.querySelector(`#externalSourceTabs [data-external-source="${kind}"]`);
   }
 
-  function syncActive(kind = currentSource) {
+  function setInnerSource(kind, attempt = 0) {
+    const inner = innerSourceButton(kind);
+    if (inner) {
+      if (!inner.classList.contains('active')) inner.click();
+      currentSource = kind;
+      syncActive();
+      return;
+    }
+    if (attempt < 30) setTimeout(() => setInnerSource(kind, attempt + 1), 100);
+  }
+
+  function syncActive() {
     const tabs = $('[data-page-view="questions"] > .tabs');
     if (!tabs) return;
     const bank = tabs.querySelector('[data-question-tab="bank"]');
@@ -33,85 +43,80 @@
     const presencial = tabs.querySelector('[data-top-source="presencial"]');
     const externalVisible = $('[data-question-panel="external"]')?.classList.contains('active');
 
-    [bank,qc,internet,presencial].forEach(btn => btn?.classList.remove('active'));
+    [bank, qc, internet, presencial].forEach(button => button?.classList.remove('active'));
     if (!externalVisible) bank?.classList.add('active');
-    else if (kind === 'internet') internet?.classList.add('active');
-    else if (kind === 'presencial') presencial?.classList.add('active');
+    else if (currentSource === 'internet') internet?.classList.add('active');
+    else if (currentSource === 'presencial') presencial?.classList.add('active');
     else qc?.classList.add('active');
   }
 
-  function chooseInnerWhenReady(kind, attempt = 0) {
-    const inner = innerSourceButton(kind);
-    if (inner) {
-      inner.click();
-      currentSource = kind;
-      syncActive(kind);
-      return;
-    }
-    if (attempt < 40) setTimeout(() => chooseInnerWhenReady(kind, attempt + 1), 100);
-  }
-
-  function selectExternal(kind) {
+  function openExternal(kind) {
     currentSource = kind;
     const qcTop = $('[data-page-view="questions"] > .tabs [data-question-tab="external"]');
-    if (!qcTop) return;
-    switching = true;
-    qcTop.click();
-    switching = false;
-    syncActive(kind);
-    chooseInnerWhenReady(kind);
+    const panel = $('[data-question-panel="external"]');
+    if (!qcTop || !panel) return;
+    if (!panel.classList.contains('active')) qcTop.click();
+    setInnerSource(kind);
+    setTimeout(syncActive, 0);
   }
 
   function inject() {
     const tabs = $('[data-page-view="questions"] > .tabs');
+    const bank = tabs?.querySelector('[data-question-tab="bank"]');
     const qcTop = tabs?.querySelector('[data-question-tab="external"]');
-    if (!tabs || !qcTop) return false;
+    if (!tabs || !bank || !qcTop) return false;
 
     injectStyles();
     tabs.classList.add('mentor-source-top-tabs');
-    qcTop.dataset.topSource = 'qconcursos';
 
-    if (!tabs.querySelector('[data-top-source="internet"]')) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'tab';
-      button.dataset.topSource = 'internet';
-      button.textContent = 'Questões Internet';
-      qcTop.insertAdjacentElement('afterend', button);
+    let internet = tabs.querySelector('[data-top-source="internet"]');
+    if (!internet) {
+      internet = document.createElement('button');
+      internet.type = 'button';
+      internet.className = 'tab';
+      internet.dataset.topSource = 'internet';
+      internet.textContent = 'Questões Internet';
+      qcTop.insertAdjacentElement('afterend', internet);
     }
 
-    if (!tabs.querySelector('[data-top-source="presencial"]')) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'tab';
-      button.dataset.topSource = 'presencial';
-      button.textContent = 'Presencial';
-      tabs.appendChild(button);
+    let presencial = tabs.querySelector('[data-top-source="presencial"]');
+    if (!presencial) {
+      presencial = document.createElement('button');
+      presencial.type = 'button';
+      presencial.className = 'tab';
+      presencial.dataset.topSource = 'presencial';
+      presencial.textContent = 'Presencial';
+      tabs.appendChild(presencial);
     }
 
-    if (!tabs.dataset.sourceTabsBound) {
-      tabs.dataset.sourceTabsBound = '1';
-      tabs.addEventListener('click', event => {
-        const sourceButton = event.target.closest('[data-top-source]');
-        if (!sourceButton || switching) return;
-        const kind = sourceButton.dataset.topSource;
-        if (kind === 'internet' || kind === 'presencial') {
-          event.preventDefault();
-          selectExternal(kind);
-          return;
-        }
-        if (kind === 'qconcursos') {
-          currentSource = 'qconcursos';
-          setTimeout(() => chooseInnerWhenReady('qconcursos'), 0);
-          setTimeout(() => syncActive('qconcursos'), 0);
-        }
+    if (!bank.dataset.sourceTopBound) {
+      bank.dataset.sourceTopBound = '1';
+      bank.addEventListener('click', () => setTimeout(syncActive, 0));
+    }
+
+    if (!qcTop.dataset.sourceTopBound) {
+      qcTop.dataset.sourceTopBound = '1';
+      qcTop.addEventListener('click', () => {
+        currentSource = 'qconcursos';
+        setInnerSource('qconcursos');
+        setTimeout(syncActive, 0);
       });
     }
 
-    const bank = tabs.querySelector('[data-question-tab="bank"]');
-    if (bank && !bank.dataset.sourceBankBound) {
-      bank.dataset.sourceBankBound = '1';
-      bank.addEventListener('click', () => setTimeout(() => syncActive('bank'), 0));
+    if (!internet.dataset.sourceTopBound) {
+      internet.dataset.sourceTopBound = '1';
+      internet.addEventListener('click', event => {
+        event.preventDefault();
+        openExternal('internet');
+      });
+    }
+
+    if (!presencial.dataset.sourceTopBound) {
+      presencial.dataset.sourceTopBound = '1';
+      presencial.addEventListener('click', event => {
+        event.preventDefault();
+        openExternal('presencial');
+      });
     }
 
     syncActive();
@@ -123,8 +128,4 @@
     tries += 1;
     if (inject() || tries > 160) clearInterval(timer);
   }, 120);
-
-  new MutationObserver(() => {
-    if (!$('[data-page-view="questions"] > .tabs.mentor-source-top-tabs')) inject();
-  }).observe(document.documentElement,{childList:true,subtree:true});
 })();
