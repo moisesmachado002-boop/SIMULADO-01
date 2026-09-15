@@ -6,7 +6,6 @@ const cors={
   'Access-Control-Allow-Methods':'POST, OPTIONS',
   'Content-Type':'application/json; charset=utf-8'
 };
-const SOURCE_LABELS={qconcursos:'QConcursos',internet:'Internet',official:'fonte oficial',other:'externa',presencial:'Presencial'};
 function cleanUrl(value){const raw=String(value||'').trim();if(!raw)return null;try{const u=new URL(raw);return u.protocol==='https:'?u.toString():null;}catch{return null;}}
 function uuidOrNull(value){const s=String(value||'').trim();return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)?s:null;}
 async function sha256(value){const bytes=new TextEncoder().encode(value);const hash=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');}
@@ -23,7 +22,7 @@ Deno.serve(async req=>{
     if(userError||!user)return new Response(JSON.stringify({error:'unauthorized'}),{status:401,headers:cors});
 
     const body=await req.json().catch(()=>({}));
-    const sourceKind=['qconcursos','internet','official','other','presencial'].includes(body?.source_kind)?body.source_kind:null;
+    const sourceKind=['qconcursos','internet','official','other'].includes(body?.source_kind)?body.source_kind:null;
     const topicId=uuidOrNull(body?.topic_id),subjectId=uuidOrNull(body?.subject_id);
     const subtopicId=body?.subtopic_id==null||body?.subtopic_id===''?null:uuidOrNull(body.subtopic_id);
     const planItemId=body?.plan_item_id==null||body?.plan_item_id===''?null:uuidOrNull(body.plan_item_id);
@@ -75,18 +74,17 @@ Deno.serve(async req=>{
     const accuracy=Math.round(correct/total*100);
 
     if(saved.duplicate!==true){
-      const sourceLabel=SOURCE_LABELS[sourceKind]||'externa';
       const insight=await db.from('mentor_insights').insert({
         user_id:user.id,topic_id:topicId,insight_type:'external_practice',
-        content:`Bateria ${sourceLabel}: ${correct}/${total} (${accuracy}%) em ${topicR.data.title}.`,
-        evidence_json:{source:'external_practice_v8_1',source_kind:sourceKind,syllabus_code:topicR.data.syllabus_code||'',subtopic_id:subtopicId,plan_item_id:planItemId,total_questions:total,correct_count:correct,accuracy,confidence,duration_minutes:duration,source_url:sourceUrl,batch_id:saved.batch_id,plan:saved.plan||null}
+        content:`Bateria ${sourceKind==='qconcursos'?'QConcursos':'externa'}: ${correct}/${total} (${accuracy}%) em ${topicR.data.title}.`,
+        evidence_json:{source:'external_practice_v8',source_kind:sourceKind,syllabus_code:topicR.data.syllabus_code||'',subtopic_id:subtopicId,plan_item_id:planItemId,total_questions:total,correct_count:correct,accuracy,confidence,duration_minutes:duration,source_url:sourceUrl,batch_id:saved.batch_id,plan:saved.plan||null}
       });
       if(insight.error)console.warn('mentor_insight_not_saved',insight.error.message);
     }
 
-    return new Response(JSON.stringify({ok:true,duplicate:saved.duplicate===true,batch_id:saved.batch_id,practiced_at:saved.practiced_at,topic_id:topicId,subtopic_id:subtopicId,plan_item_id:planItemId,total_questions:total,correct_count:correct,accuracy,source_kind:sourceKind,plan:saved.plan||null}),{status:200,headers:cors});
+    return new Response(JSON.stringify({ok:true,duplicate:saved.duplicate===true,batch_id:saved.batch_id,practiced_at:saved.practiced_at,topic_id:topicId,subtopic_id:subtopicId,plan_item_id:planItemId,total_questions:total,correct_count:correct,accuracy,plan:saved.plan||null}),{status:200,headers:cors});
   }catch(error){
-    console.error('record-external-practice-v8.1',error);
+    console.error('record-external-practice-v8',error);
     return new Response(JSON.stringify({error:'record_failed'}),{status:500,headers:cors});
   }
 });
