@@ -128,9 +128,8 @@
     if (e.target.closest('[data-task-review]')) setTimeout(() => refresh(true), 900);
   }, true);
 
-  const observer = new MutationObserver(() => {
-    if (document.querySelector('[data-task-review]')) refresh(false);
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  // Evita observar o DOM inteiro. O observador anterior reagia a praticamente
+  // qualquer alteração da página e podia disparar refresh repetidamente.
   setTimeout(() => refresh(true), 1400);
+  setTimeout(() => refresh(false), 4500);
 })();
