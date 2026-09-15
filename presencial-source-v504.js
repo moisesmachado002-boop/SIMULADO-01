@@ -209,12 +209,17 @@
     recordNonQc();
   }, true);
 
-  const observer = new MutationObserver(() => {
+  function normalizeHistoryLabels() {
     document.querySelectorAll('#externalHistory .table-row span').forEach(node => {
-      node.textContent = node.textContent.replace(/\bpresencial\b/gi, 'Presencial').replace(/\binternet\b/gi, 'Internet');
+      const current = node.textContent || '';
+      const next = current.replace(/\bpresencial\b/gi, 'Presencial').replace(/\binternet\b/gi, 'Internet');
+      if (next !== current) node.textContent = next;
     });
-  });
+  }
+
+  const observer = new MutationObserver(() => normalizeHistoryLabels());
   observer.observe(document.documentElement, { childList: true, subtree: true });
+  normalizeHistoryLabels();
 
   let tries = 0;
   const timer = setInterval(() => {
