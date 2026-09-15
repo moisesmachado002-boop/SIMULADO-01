@@ -5,6 +5,7 @@
 
   const $ = s => document.querySelector(s);
   let switching = false;
+  let currentSource = 'qconcursos';
 
   function injectStyles() {
     if ($('#mentorQuestionSourceTabsV505Styles')) return;
@@ -13,6 +14,7 @@
     style.textContent = `
       [data-page-view="questions"] > .tabs.mentor-source-top-tabs{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
       [data-page-view="questions"] > .tabs.mentor-source-top-tabs .tab{min-width:0;white-space:normal;line-height:1.15;text-align:center}
+      #externalSourceTabs{display:none!important}
       @media(max-width:620px){[data-page-view="questions"] > .tabs.mentor-source-top-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
     `;
     document.head.appendChild(style);
@@ -22,7 +24,7 @@
     return document.querySelector(`#externalSourceTabs [data-external-source="${kind}"]`);
   }
 
-  function syncActive(kind) {
+  function syncActive(kind = currentSource) {
     const tabs = $('[data-page-view="questions"] > .tabs');
     if (!tabs) return;
     const bank = tabs.querySelector('[data-question-tab="bank"]');
@@ -38,22 +40,32 @@
     else qc?.classList.add('active');
   }
 
+  function chooseInnerWhenReady(kind, attempt = 0) {
+    const inner = innerSourceButton(kind);
+    if (inner) {
+      inner.click();
+      currentSource = kind;
+      syncActive(kind);
+      return;
+    }
+    if (attempt < 40) setTimeout(() => chooseInnerWhenReady(kind, attempt + 1), 100);
+  }
+
   function selectExternal(kind) {
+    currentSource = kind;
     const qcTop = $('[data-page-view="questions"] > .tabs [data-question-tab="external"]');
     if (!qcTop) return;
     switching = true;
     qcTop.click();
     switching = false;
-    const inner = innerSourceButton(kind);
-    if (inner) inner.click();
     syncActive(kind);
+    chooseInnerWhenReady(kind);
   }
 
   function inject() {
     const tabs = $('[data-page-view="questions"] > .tabs');
     const qcTop = tabs?.querySelector('[data-question-tab="external"]');
-    const innerTabs = $('#externalSourceTabs');
-    if (!tabs || !qcTop || !innerTabs) return false;
+    if (!tabs || !qcTop) return false;
 
     injectStyles();
     tabs.classList.add('mentor-source-top-tabs');
@@ -80,22 +92,19 @@
     if (!tabs.dataset.sourceTabsBound) {
       tabs.dataset.sourceTabsBound = '1';
       tabs.addEventListener('click', event => {
-        const custom = event.target.closest('[data-top-source]');
-        if (!custom || switching) return;
-        const kind = custom.dataset.topSource;
+        const sourceButton = event.target.closest('[data-top-source]');
+        if (!sourceButton || switching) return;
+        const kind = sourceButton.dataset.topSource;
         if (kind === 'internet' || kind === 'presencial') {
           event.preventDefault();
           selectExternal(kind);
           return;
         }
         if (kind === 'qconcursos') {
-          setTimeout(() => {
-            innerSourceButton('qconcursos')?.click();
-            syncActive('qconcursos');
-          }, 0);
-          return;
+          currentSource = 'qconcursos';
+          setTimeout(() => chooseInnerWhenReady('qconcursos'), 0);
+          setTimeout(() => syncActive('qconcursos'), 0);
         }
-        if (custom.dataset.questionTab === 'bank') setTimeout(() => syncActive('bank'), 0);
       });
     }
 
@@ -105,7 +114,7 @@
       bank.addEventListener('click', () => setTimeout(() => syncActive('bank'), 0));
     }
 
-    syncActive('qconcursos');
+    syncActive();
     return true;
   }
 
@@ -113,5 +122,9 @@
   const timer = setInterval(() => {
     tries += 1;
     if (inject() || tries > 160) clearInterval(timer);
-  }, 150);
+  }, 120);
+
+  new MutationObserver(() => {
+    if (!$('[data-page-view="questions"] > .tabs.mentor-source-top-tabs')) inject();
+  }).observe(document.documentElement,{childList:true,subtree:true});
 })();
