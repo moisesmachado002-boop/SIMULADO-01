@@ -13,7 +13,7 @@
 <iframe id="mentorFrame" title="Mentor IA"></iframe>
 <script>
 (() => {
-  const BUILD='20260831-v503-consolidated1';
+  const BUILD='20260915-stability2';
   const frame=document.getElementById('mentorFrame');
   const modules=[
     ['mentorV503PasswordSecurityScript','./password-security-v503.js?build='+BUILD],
@@ -33,8 +33,6 @@
     ['mentorV424PdfScript','./pdf-export-v424.js?build='+BUILD],
     ['mentorV500PlanUiScript','./plan-ui-v500.js?build='+BUILD],
     ['mentorV504ReviewFocusScript','./review-focus-v504.js?build='+BUILD],
-    ['mentorV502QuestionExecutionScript','./question-execution-v502.js?build='+BUILD],
-    ['mentorV432DailyActionsScript','./daily-actions-v432.js?build='+BUILD],
     ['mentorV429MathFeedbackScript','./math-feedback-v429.js?build='+BUILD]
   ];
   function normalizedHash(value){const h=String(value||'').trim();return h&&h.startsWith('#')?h:'#daily';}
