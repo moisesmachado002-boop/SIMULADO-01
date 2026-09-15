@@ -31,7 +31,7 @@
       syncActive();
       return;
     }
-    if (attempt < 30) setTimeout(() => setInnerSource(kind, attempt + 1), 100);
+    if (attempt < 12) setTimeout(() => setInnerSource(kind, attempt + 1), 150);
   }
 
   function syncActive() {
@@ -57,7 +57,7 @@
     if (!qcTop || !panel) return;
     if (!panel.classList.contains('active')) qcTop.click();
     setInnerSource(kind);
-    setTimeout(syncActive, 0);
+    queueMicrotask(syncActive);
   }
 
   function inject() {
@@ -91,7 +91,7 @@
 
     if (!bank.dataset.sourceTopBound) {
       bank.dataset.sourceTopBound = '1';
-      bank.addEventListener('click', () => setTimeout(syncActive, 0));
+      bank.addEventListener('click', () => queueMicrotask(syncActive));
     }
 
     if (!qcTop.dataset.sourceTopBound) {
@@ -99,7 +99,7 @@
       qcTop.addEventListener('click', () => {
         currentSource = 'qconcursos';
         setInnerSource('qconcursos');
-        setTimeout(syncActive, 0);
+        queueMicrotask(syncActive);
       });
     }
 
@@ -123,9 +123,13 @@
     return true;
   }
 
-  let tries = 0;
-  const timer = setInterval(() => {
-    tries += 1;
-    if (inject() || tries > 160) clearInterval(timer);
-  }, 120);
+  let attempts = 0;
+  const maxAttempts = 12;
+  const retry = () => {
+    if (inject()) return;
+    attempts += 1;
+    if (attempts < maxAttempts) setTimeout(retry, Math.min(100 + attempts * 150, 900));
+  };
+
+  retry();
 })();
